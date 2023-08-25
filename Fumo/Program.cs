@@ -1,5 +1,7 @@
 ﻿using Autofac;
+using Fumo.Database;
 using Fumo.Extensions.AutoFacInstallers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -7,7 +9,7 @@ namespace Fumo;
 
 internal class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         var cwd = Directory.GetCurrentDirectory();
         var configPath = args.Length > 0 ? args[0] : "config.json";
@@ -17,16 +19,18 @@ internal class Program
             .AddJsonFile(configPath, optional: false, reloadOnChange: true)
             .Build();
 
-        var builder = new ContainerBuilder();
-
-        builder
+        var container = new ContainerBuilder()
+            .InstallGlobalCancellationToken(configuration)
             .InstallConfig(configuration)
             .InstallSerilog(configuration)
-            .InstallDatabase(configuration);
+            .InstallDatabase(configuration)
+            .Build();
 
-        var container = builder.Build();
+        using (var scope = container.BeginLifetimeScope())
+        {
+            await scope.Resolve<DatabaseContext>().Database.MigrateAsync();
+        }
 
-        Log.Logger.Information("xd");
 
         //var builder = new ContainerBuilder();
         //builder.RegisterType<Idiot>().InstancePerDependency();
