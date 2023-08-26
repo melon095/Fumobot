@@ -18,7 +18,7 @@ internal static class AutoFacDatabaseInstaller
         builder.Register(x =>
         {
             return new DatabaseContext(options);
-        }).AsSelf().InstancePerLifetimeScope();
+        }).AsSelf();
 
         return builder;
     }

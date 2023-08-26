@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Serilog;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 
 namespace Fumo;
 
@@ -23,7 +25,13 @@ public class MessageHandler
 
     public IrcClient IrcClient { get; }
 
-    public MessageHandler(Serilog.ILogger logger, IConfiguration config, ICommandHandler commadHandler, DatabaseContext database, IUserRepository userRepository, CancellationTokenSource cancellationTokenSource)
+    public MessageHandler(
+        Serilog.ILogger logger,
+        IConfiguration config,
+        ICommandHandler commadHandler,
+        DatabaseContext database,
+        IUserRepository userRepository,
+        CancellationTokenSource cancellationTokenSource)
     {
         this.Logger = logger.ForContext<MessageHandler>();
         this.Config = config;
@@ -38,10 +46,15 @@ public class MessageHandler
             x.OAuth = config["Connections:Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
             x.Logger = new LoggerFactory().AddSerilog(logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
         });
+
+        this.IrcClient.OnConnect += IrcClient_OnConnect;
+        this.IrcClient.OnReconnect += IrcClient_OnConnect;
     }
 
     public async Task StartAsync()
     {
+        this.Logger.Information("Connecting to TMI");
+
         var connected = await this.IrcClient.ConnectAsync(cancellationToken: this.CancellationToken);
 
         if (!connected)
@@ -50,9 +63,19 @@ public class MessageHandler
             return;
         }
 
-        // TODO: Join channels
+        this.Logger.Information("Connected to TMI");
 
         this.IrcClient.OnMessage += IrcClient_OnMessage;
+    }
+
+    private async ValueTask IrcClient_OnConnect()
+    {
+        var channels = this.Database.Channels
+            .Where(x => !x.SetForDeletion)
+            .ToList()
+            .Select(x => x.TwitchName);
+
+        await this.IrcClient.JoinChannels(channels, this.CancellationToken);
     }
 
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)

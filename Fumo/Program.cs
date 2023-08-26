@@ -38,6 +38,14 @@ internal class Program
             await scope.Resolve<MessageHandler>().StartAsync();
         }
 
+        var user = container.Resolve<DatabaseContext>().Channels.Where(x => x.TwitchID == "123").Single();
+
+        foreach (var setting in user.Settings)
+        {
+            Console.WriteLine($"{setting.Key} -> {setting.Value}");
+        }
+
+        Console.ReadLine();
 
         //var builder = new ContainerBuilder();
         //builder.RegisterType<Idiot>().InstancePerDependency();

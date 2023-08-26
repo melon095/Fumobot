@@ -12,12 +12,9 @@ public static class AutoFacScopedInstaller
     {
         builder
             .RegisterType<UserRepository>()
-            .As<IUserRepository>()
-            .InstancePerDependency();
+            .As<IUserRepository>();
 
-        builder
-            .RegisterType<ThreeLetterAPIBuilder>()
-             .InstancePerDependency();
+        builder.RegisterType<ThreeLetterAPIBuilder>();
 
         return builder;
     }

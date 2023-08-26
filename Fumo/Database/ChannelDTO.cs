@@ -20,6 +20,8 @@ public class ChannelDTO
     public required string UserTwitchID { get; set; }
     public required UserDTO User { get; set; }
 
+    public required bool SetForDeletion { get; set; }
+
     [Column(TypeName = "jsonb")]
     public required Setting[] Settings { get; set; }
 
