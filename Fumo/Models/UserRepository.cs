@@ -1,6 +1,8 @@
-﻿using Fumo.Database;
+﻿using Autofac;
+using Fumo.Database;
 using Fumo.Interfaces;
 using Fumo.ThirdParty.ThreeLetterAPI;
+using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
@@ -9,11 +11,11 @@ public class UserRepository : IUserRepository
 {
     private static readonly Regex UsernameCleanRegex = new("[@#]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
-    public ThreeLetterAPIBuilder ThreeLetterAPI { get; }
+    public IComponentContext ComponentContext { get; }
 
-    public UserRepository(ThreeLetterAPIBuilder threeLetterAPI)
+    public UserRepository(IComponentContext componentContext)
     {
-        ThreeLetterAPI = threeLetterAPI;
+        ComponentContext = componentContext;
     }
 
     /// <inheritdoc/>

@@ -37,6 +37,10 @@ public class DatabaseContext : DbContext
             .Property(x => x.Settings)
             .HasDefaultValueSql("'[]'::jsonb");
 
+        modelBuilder.Entity<ChannelDTO>()
+            .Property(x => x.SetForDeletion)
+            .HasDefaultValue(false);
+
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.DateSeen)
             .HasDefaultValueSql("now()");

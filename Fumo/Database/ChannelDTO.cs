@@ -14,16 +14,16 @@ public class ChannelDTO
 
     public required string TwitchName { get; set; }
 
-    public required DateTime DateJoined { get; set; }
+    public DateTime DateJoined { get; set; }
 
     [ForeignKey("User")]
-    public required string UserTwitchID { get; set; }
-    public required UserDTO User { get; set; }
+    public string UserTwitchID { get; set; }
+    public UserDTO User { get; set; }
 
-    public required bool SetForDeletion { get; set; }
+    public bool SetForDeletion { get; set; }
 
     [Column(TypeName = "jsonb")]
-    public required Setting[] Settings { get; set; }
+    public List<Setting> Settings { get; set; }
 
     public string GetSetting(string key)
     {

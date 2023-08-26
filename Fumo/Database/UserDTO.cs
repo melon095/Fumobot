@@ -11,10 +11,10 @@ public class UserDTO
 
     public required string TwitchName { get; set; }
 
-    public required string[] UsernameHistory { get; set; }
+    public string[] UsernameHistory { get; set; }
 
-    public required DateTime DateSeen { get; set; }
+    public DateTime DateSeen { get; set; }
 
     [Column(TypeName = "jsonb")]
-    public required Setting[] Settings { get; set; }
+    public List<Setting> Settings { get; set; }
 }

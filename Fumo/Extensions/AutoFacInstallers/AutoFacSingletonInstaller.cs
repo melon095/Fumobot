@@ -2,7 +2,6 @@
 using Fumo.Interfaces;
 using Fumo.Models;
 using Microsoft.Extensions.Configuration;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Fumo.Extensions.AutoFacInstallers;
 

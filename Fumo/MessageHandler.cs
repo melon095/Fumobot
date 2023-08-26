@@ -42,8 +42,8 @@ public class MessageHandler
 
         this.IrcClient = new(x =>
         {
-            x.Username = config["Connections:Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
-            x.OAuth = config["Connections:Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
+            x.Username = config["Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
+            x.OAuth = config["Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
             x.Logger = new LoggerFactory().AddSerilog(logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
         });
 

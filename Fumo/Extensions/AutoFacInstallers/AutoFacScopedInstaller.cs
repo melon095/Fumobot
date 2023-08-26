@@ -14,7 +14,7 @@ public static class AutoFacScopedInstaller
             .RegisterType<UserRepository>()
             .As<IUserRepository>();
 
-        builder.RegisterType<ThreeLetterAPIBuilder>();
+        builder.RegisterType<ThreeLetterAPI>().As<IThreeLetterAPI>();
 
         return builder;
     }

@@ -1,9 +1,14 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Extensions.AutoFacInstallers;
+using Fumo.ThirdParty.Exceptions;
+using Fumo.ThirdParty.ThreeLetterAPI;
+using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
+using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using System.Text.Json;
 
 namespace Fumo;
 
@@ -28,22 +33,55 @@ internal class Program
             .InstallScoped(configuration)
             .Build();
 
+
         using (var scope = container.BeginLifetimeScope())
         {
+            // The simplest way of handling the bot's channel/user is just initializing it here.
+            var config = scope.Resolve<IConfiguration>();
+            var tlp = scope.Resolve<ThreeLetterAPI<UserByIDResponse>>();
+            var db = scope.Resolve<DatabaseContext>();
+
+            var botChannel = await db.Channels
+                .Where(x => x.UserTwitchID.Equals(config["Twitch:UserID"]))
+                .SingleOrDefaultAsync();
+
+            if (botChannel is null)
+            {
+                var response = await tlp
+                    .AddInstruction(new UserByIDInstruction())
+                    .AddVariables(new { id = config["Twitch:UserID"] })
+                    .SendAsync();
+
+                UserDTO user = new()
+                {
+                    TwitchID = response.User.ID,
+                    TwitchName = response.User.Login,
+                };
+
+                ChannelDTO channel = new()
+                {
+                    TwitchID = response.User.ID,
+                    TwitchName = response.User.Login,
+                    UserTwitchID = response.User.ID,
+                };
+
+                // add to database
+                db.Channels.Add(channel);
+                db.Users.Add(user);
+
+                await db.SaveChangesAsync();
+            }
+
             var ctoken = scope.Resolve<CancellationTokenSource>().Token;
 
             Log.Information("Checking for Pending migrations");
-            await scope.Resolve<DatabaseContext>().Database.MigrateAsync(ctoken);
+            await db.Database.MigrateAsync(ctoken);
 
             await scope.Resolve<MessageHandler>().StartAsync();
         }
 
-        var user = container.Resolve<DatabaseContext>().Channels.Where(x => x.TwitchID == "123").Single();
 
-        foreach (var setting in user.Settings)
-        {
-            Console.WriteLine($"{setting.Key} -> {setting.Value}");
-        }
+
 
         Console.ReadLine();
 
