@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fumo.ThirdParty", "Fumo.ThirdParty\Fumo.ThirdParty.csproj", "{0967E4CE-60E5-494F-AE50-A50B42FD5648}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{C4CF57A6-08DE-49A7-A66E-3998F43C901C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4CF57A6-08DE-49A7-A66E-3998F43C901C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4CF57A6-08DE-49A7-A66E-3998F43C901C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0967E4CE-60E5-494F-AE50-A50B42FD5648}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0967E4CE-60E5-494F-AE50-A50B42FD5648}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0967E4CE-60E5-494F-AE50-A50B42FD5648}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0967E4CE-60E5-494F-AE50-A50B42FD5648}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

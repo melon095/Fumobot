@@ -4,6 +4,10 @@
         "OutputFolder": "/var/log/fumobot"
     },
     "Connections": {
-        "Postgres": "Host=my_host;Database=my_database;Username=my_user;Password=my_pw;Port=my_port;"
+        "Postgres": "Host=my_host;Database=my_database;Username=my_user;Password=my_pw;Port=my_port;",
+        "Twitch": {
+            "Username": "",
+            "Token": ""
+        }
     }
 }

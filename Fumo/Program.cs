@@ -24,11 +24,18 @@ internal class Program
             .InstallConfig(configuration)
             .InstallSerilog(configuration)
             .InstallDatabase(configuration)
+            .InstallSingletons(configuration)
+            .InstallScoped(configuration)
             .Build();
 
         using (var scope = container.BeginLifetimeScope())
         {
-            await scope.Resolve<DatabaseContext>().Database.MigrateAsync();
+            var ctoken = scope.Resolve<CancellationTokenSource>().Token;
+
+            Log.Information("Checking for Pending migrations");
+            await scope.Resolve<DatabaseContext>().Database.MigrateAsync(ctoken);
+
+            await scope.Resolve<MessageHandler>().StartAsync();
         }
 
 

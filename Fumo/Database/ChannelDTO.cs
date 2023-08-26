@@ -22,4 +22,9 @@ public class ChannelDTO
 
     [Column(TypeName = "jsonb")]
     public required Setting[] Settings { get; set; }
+
+    public string GetSetting(string key)
+    {
+        return Settings.FirstOrDefault(x => x.Key == key)?.Value ?? "";
+    }
 }
