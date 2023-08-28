@@ -1,8 +1,11 @@
 ﻿using Autofac;
 using Fumo.Database;
+using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.ThirdParty.ThreeLetterAPI;
+using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
+using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
@@ -11,23 +14,79 @@ public class UserRepository : IUserRepository
 {
     private static readonly Regex UsernameCleanRegex = new("[@#]", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
-    public IComponentContext ComponentContext { get; }
+    public DatabaseContext Database { get; }
 
-    public UserRepository(IComponentContext componentContext)
+    // FIXME: In memory caching
+
+    public IThreeLetterAPI ThreeLetterAPI { get; }
+
+    public UserRepository(DatabaseContext database, IThreeLetterAPI threeLetterAPI)
     {
-        ComponentContext = componentContext;
+        Database = database;
+        ThreeLetterAPI = threeLetterAPI;
+    }
+
+    private async Task<UserDTO?> SearchWithThreeLetterAPI(object variable, CancellationToken cancellationToken)
+    {
+        var tlaUser = await this.ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(), variable, cancellationToken);
+
+        if (tlaUser is null)
+        {
+            return null;
+
+        }
+
+        UserDTO user = new()
+        {
+            TwitchID = tlaUser.User.ID,
+            TwitchName = tlaUser.User.Login,
+        };
+
+        await this.Database.Users.AddAsync(user, cancellationToken);
+        await this.Database.SaveChangesAsync(cancellationToken);
+
+        return user;
     }
 
     /// <inheritdoc/>
-    public Task<UserDTO> SearchIDAsync(string id, CancellationToken? cancellationToken)
+    public async Task<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var dbUser = await this.Database
+            .Users
+            .Where(x => x.TwitchID.Equals(id))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (dbUser is not null)
+        {
+            return dbUser;
+        }
+
+        return await this.SearchWithThreeLetterAPI(new { id }, cancellationToken) switch
+        {
+            null => throw new UserNotFoundException($"The user with the id {id} does not exist"),
+            var user => user,
+        };
     }
 
     /// <inheritdoc/>
-    public Task<UserDTO> SearchNameAsync(string username, CancellationToken? cancellationToken)
+    public async Task<UserDTO> SearchNameAsync(string username, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var cleanedUsername = CleanUsername(username);
+
+        var dbUser = await this.Database.Users
+            .Where(x => x.TwitchName.Equals(cleanedUsername))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (dbUser is not null)
+        {
+            return dbUser;
+        }
+
+        return await this.SearchWithThreeLetterAPI(new { login = cleanedUsername }, cancellationToken) switch
+        {
+            null => throw new UserNotFoundException($"The user with the name {cleanedUsername} does not exist"),
+            var user => user,
+        };
     }
 
     public static string CleanUsername(string username) => UsernameCleanRegex.Replace(username.ToLower(), "");

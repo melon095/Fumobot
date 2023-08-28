@@ -2,7 +2,7 @@
 
 namespace Fumo.ThirdParty.ThreeLetterAPI.Response;
 
-public record UserByIDResponse(
+public record BasicUserResponse(
     [property: JsonPropertyName("user")] InnerUser User
 );
 

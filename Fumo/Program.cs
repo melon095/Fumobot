@@ -1,14 +1,13 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Extensions.AutoFacInstallers;
-using Fumo.ThirdParty.Exceptions;
+using Fumo.Handlers;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using System.Text.Json;
 
 namespace Fumo;
 
@@ -38,8 +37,9 @@ internal class Program
         {
             // The simplest way of handling the bot's channel/user is just initializing it here.
             var config = scope.Resolve<IConfiguration>();
-            var tlp = scope.Resolve<ThreeLetterAPI<UserByIDResponse>>();
+            var tlp = scope.Resolve<IThreeLetterAPI>();
             var db = scope.Resolve<DatabaseContext>();
+            var ctoken = scope.Resolve<CancellationTokenSource>().Token;
 
             var botChannel = await db.Channels
                 .Where(x => x.UserTwitchID.Equals(config["Twitch:UserID"]))
@@ -47,10 +47,7 @@ internal class Program
 
             if (botChannel is null)
             {
-                var response = await tlp
-                    .AddInstruction(new UserByIDInstruction())
-                    .AddVariables(new { id = config["Twitch:UserID"] })
-                    .SendAsync();
+                var response = await tlp.SendAsync<BasicUserResponse>(new BasicUserInstruction(), new { id = config["Twitch:UserID"] }, ctoken);
 
                 UserDTO user = new()
                 {
@@ -72,7 +69,6 @@ internal class Program
                 await db.SaveChangesAsync();
             }
 
-            var ctoken = scope.Resolve<CancellationTokenSource>().Token;
 
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);

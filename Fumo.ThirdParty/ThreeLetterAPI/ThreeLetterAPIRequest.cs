@@ -2,11 +2,11 @@
 
 namespace Fumo.ThirdParty.ThreeLetterAPI;
 
-internal class ThreeLetterAPIRequest
+public class ThreeLetterAPIRequest
 {
     [JsonPropertyName("operationName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string OperationName { get; set; }
+    public string? OperationName { get; set; }
 
     [JsonPropertyName("extensions")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -14,9 +14,9 @@ internal class ThreeLetterAPIRequest
 
     [JsonPropertyName("query")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string Query { get; set; }
+    public string? Query { get; set; }
 
     [JsonPropertyName("variables")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object Variables { get; set; }
+    public object? Variables { get; set; }
 }

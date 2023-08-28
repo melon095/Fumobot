@@ -1,16 +1,14 @@
-﻿using Fumo.Database;
+﻿using Autofac;
+using Fumo.Database;
 using Fumo.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Serilog;
-using System.Collections.Immutable;
-using System.Runtime.InteropServices;
 
-namespace Fumo;
+namespace Fumo.Handlers;
 
 public class MessageHandler
 {
@@ -19,8 +17,11 @@ public class MessageHandler
     public IConfiguration Config { get; }
 
     public ICommandHandler CommadHandler { get; }
+
     public DatabaseContext Database { get; }
+
     public IUserRepository UserRepository { get; }
+
     public CancellationToken CancellationToken { get; }
 
     public IrcClient IrcClient { get; }
@@ -31,61 +32,54 @@ public class MessageHandler
         ICommandHandler commadHandler,
         DatabaseContext database,
         IUserRepository userRepository,
-        CancellationTokenSource cancellationTokenSource)
+        CancellationTokenSource cancellationTokenSource,
+        IrcClient ircClient)
     {
-        this.Logger = logger.ForContext<MessageHandler>();
-        this.Config = config;
-        this.CommadHandler = commadHandler;
-        this.Database = database;
-        this.UserRepository = userRepository;
-        this.CancellationToken = cancellationTokenSource.Token;
+        Logger = logger.ForContext<MessageHandler>();
+        Config = config;
+        CommadHandler = commadHandler;
+        Database = database;
+        UserRepository = userRepository;
+        CancellationToken = cancellationTokenSource.Token;
+        IrcClient = ircClient;
 
-        this.IrcClient = new(x =>
-        {
-            x.Username = config["Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
-            x.OAuth = config["Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
-            x.Logger = new LoggerFactory().AddSerilog(logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
-        });
-
-        this.IrcClient.OnConnect += IrcClient_OnConnect;
-        this.IrcClient.OnReconnect += IrcClient_OnConnect;
+        IrcClient.OnConnect += IrcClient_OnConnect;
+        IrcClient.OnReconnect += IrcClient_OnConnect;
     }
 
     public async Task StartAsync()
     {
-        this.Logger.Information("Connecting to TMI");
+        Logger.Information("Connecting to TMI");
 
-        var connected = await this.IrcClient.ConnectAsync(cancellationToken: this.CancellationToken);
+        var connected = await IrcClient.ConnectAsync(cancellationToken: CancellationToken);
 
         if (!connected)
         {
-            this.Logger.Fatal("Failed to connect to TMI");
+            Logger.Fatal("Failed to connect to TMI");
             return;
         }
 
-        this.Logger.Information("Connected to TMI");
+        Logger.Information("Connected to TMI");
 
-        this.IrcClient.OnMessage += IrcClient_OnMessage;
+        IrcClient.OnMessage += IrcClient_OnMessage;
     }
 
     private async ValueTask IrcClient_OnConnect()
     {
-        var channels = this.Database.Channels
+        var channels = Database.Channels
             .Where(x => !x.SetForDeletion)
             .ToList()
             .Select(x => x.TwitchName);
 
-        await this.IrcClient.JoinChannels(channels, this.CancellationToken);
+        await IrcClient.JoinChannels(channels, CancellationToken);
     }
 
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)
     {
-        var channel = await this.Database.Channels.SingleOrDefaultAsync(x => x.TwitchID.Equals(privmsg.Channel.Id));
+        var channel = await Database.Channels.SingleOrDefaultAsync(x => x.TwitchID.Equals(privmsg.Channel.Id));
         if (channel is null) return;
 
-        var user = await this.UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), this.CancellationToken);
-
-        var prefix = this.GetPrefixForChannel(channel);
+        var prefix = GetPrefixForChannel(channel);
         var (commandName, input) = ParseMessage(privmsg.Content, prefix);
         if (commandName is null) return;
 
@@ -93,15 +87,17 @@ public class MessageHandler
 
         try
         {
-            var result = await this.CommadHandler.TryExecute(channel, user, commandName, input);
+            var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationToken);
+
+            var result = await CommadHandler.TryExecute(channel, user, commandName, input);
 
             if (result is null) return;
 
-            await this.IrcClient.ReplyTo(privmsg, result.Message, cancellationToken: this.CancellationToken);
+            await IrcClient.ReplyTo(privmsg, result.Message, cancellationToken: CancellationToken);
         }
         catch (Exception ex)
         {
-            this.Logger.Error(ex, "Failed to execute command in {Channel}", channel.TwitchName);
+            Logger.Error(ex, "Failed to execute command in {Channel}", channel.TwitchName);
             return;
         }
     }
@@ -115,7 +111,7 @@ public class MessageHandler
             return channelPrefix;
         }
 
-        return this.Config["GlobalPrefix"]!;
+        return Config["GlobalPrefix"]!;
     }
 
     private static (string? commandName, string[] input) ParseMessage(string message, string prefix)

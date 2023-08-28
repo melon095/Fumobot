@@ -5,11 +5,13 @@ using System.Collections.ObjectModel;
 
 namespace Fumo.Models;
 
-internal abstract class ChatCommand : IChatCommand
+public abstract class ChatCommand : IChatCommand
 {
     public readonly ChannelDTO Channel;
     public readonly UserDTO User;
     public readonly string[] Input;
+
+    public ChatCommand() { }
 
     /// <summary>
     /// Name of the command used for executing the command
