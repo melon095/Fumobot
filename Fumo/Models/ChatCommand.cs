@@ -1,22 +1,27 @@
 ﻿using Fumo.Database;
 using Fumo.Enums;
 using Fumo.Interfaces.Command;
+using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
 
 public abstract class ChatCommand : IChatCommand
 {
-    public readonly ChannelDTO Channel;
-    public readonly UserDTO User;
-    public readonly string[] Input;
-
-    public ChatCommand() { }
+    public ChannelDTO Channel { get; set; }
+    public UserDTO User { get; set; }
+    public List<string> Input { get; set; }
+    public Privmsg Privmsg { get; set; }
 
     /// <summary>
-    /// Name of the command used for executing the command
+    /// Regex that matches the command
     /// </summary>
-    public string Name { get; }
+    /// 
+    /// <note>
+    ///     NameMatcher = new(..., RegexOptions.Compiled);
+    /// </note>
+    public Regex NameMatcher { get; }
 
     /// <summary>
     /// Flgas that change behaviour
@@ -31,7 +36,9 @@ public abstract class ChatCommand : IChatCommand
     /// 
     /// Every user has "default"
     /// </summary>
-    public readonly ReadOnlyCollection<string> Permission = new(new string[] { "default" });
+    protected List<string> PrivatePermissions = new(new string[] { "default" });
+
+    public IReadOnlyList<string> Permissions => this.PrivatePermissions;
 
     /// <summary>
     /// If Moderators and Broadcasters are the only ones that can execute this command in a chat
@@ -43,7 +50,7 @@ public abstract class ChatCommand : IChatCommand
     /// </summary>
     public bool BroadcasterOnly => ((Flags & ChatCommandFlags.BroadcasterOnly) != 0);
 
-    public abstract Task<string> Execute(CancellationToken ct);
+    public abstract Task<CommandResult> Execute(CancellationToken ct);
 
-    public abstract Task<List<string>>? GenerateWebsiteDescription(CancellationToken ct);
+    public abstract Task<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
 }

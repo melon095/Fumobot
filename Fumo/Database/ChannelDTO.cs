@@ -29,4 +29,22 @@ public class ChannelDTO
     {
         return Settings.FirstOrDefault(x => x.Key == key)?.Value ?? "";
     }
+
+    public string SetSetting(string key, string value)
+    {
+        var setting = Settings.FirstOrDefault(x => x.Key == key);
+        if (setting is null)
+        {
+            Setting newSetting = new()
+            {
+                Key = key,
+                Value = value
+            };
+
+            Settings.Add(newSetting);
+            return value;
+        }
+        setting.Value = value;
+        return value;
+    }
 }

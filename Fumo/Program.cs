@@ -2,6 +2,8 @@
 using Fumo.Database;
 using Fumo.Extensions.AutoFacInstallers;
 using Fumo.Handlers;
+using Fumo.Interfaces;
+using Fumo.Models;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
@@ -32,9 +34,12 @@ internal class Program
             .InstallScoped(configuration)
             .Build();
 
-
         using (var scope = container.BeginLifetimeScope())
         {
+            Log.Information("Loading assembly commands");
+            var commandRepo = scope.Resolve<CommandRepository>();
+            commandRepo.LoadAssemblyCommands();
+
             // The simplest way of handling the bot's channel/user is just initializing it here.
             var config = scope.Resolve<IConfiguration>();
             var tlp = scope.Resolve<IThreeLetterAPI>();
@@ -73,6 +78,7 @@ internal class Program
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);
 
+            scope.Resolve<IMessageSenderHandler>().Init();
             await scope.Resolve<MessageHandler>().StartAsync();
         }
 

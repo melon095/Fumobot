@@ -1,4 +1,7 @@
-﻿namespace Fumo.Interfaces.Command;
+﻿using Fumo.Models;
+using System.Collections.ObjectModel;
+
+namespace Fumo.Interfaces.Command;
 
 public interface IChatCommand
 {
@@ -8,7 +11,7 @@ public interface IChatCommand
     /// <returns>
     /// A string that is outputted in chat
     /// </returns>
-    public Task<string> Execute(CancellationToken ct);
+    public Task<CommandResult> Execute(CancellationToken ct);
 
     /// <summary>
     /// Optional function that can generate extra data on the website
@@ -20,5 +23,5 @@ public interface IChatCommand
     /// <returns>
     /// A list of data.
     /// </returns>
-    public Task<List<string>>? GenerateWebsiteDescription(CancellationToken ct);
+    public Task<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
 }

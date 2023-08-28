@@ -53,6 +53,10 @@ public class DatabaseContext : DbContext
             .Property(x => x.UsernameHistory)
             .HasDefaultValueSql("'{}'::text[]");
 
+        modelBuilder.Entity<UserDTO>()
+            .Property(x => x.Permissions)
+            .HasDefaultValueSql("'{}'::text[]");
+
         base.OnModelCreating(modelBuilder);
     }
 }

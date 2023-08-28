@@ -1,25 +1,25 @@
-﻿using Autofac.Core.Activators;
+﻿using Autofac;
+using Autofac.Core.Activators;
 using Fumo.Interfaces.Command;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
 
 public class CommandRepository
 {
-    /// <summary>
-    /// Contains the list of commands read from the assembly.
-    /// They're are not capable of being ran.
-    /// </summary>
-    private ReadOnlyCollection<ChatCommand> InitializedCommands;
+    private ReadOnlyDictionary<Regex, Type> Commands;
 
-    public CommandRepository(ILogger logger)
+    public CommandRepository(ILogger logger, ILifetimeScope lifetimeScope)
     {
         Logger = logger.ForContext<CommandRepository>();
+        LifetimeScope = lifetimeScope;
     }
 
     public ILogger Logger { get; }
+    public ILifetimeScope LifetimeScope { get; }
 
     public void LoadAssemblyCommands()
     {
@@ -43,7 +43,7 @@ public class CommandRepository
             }
         }
 
-        List<ChatCommand> anotherList = new();
+        Dictionary<Regex, Type> anotherList = new();
         foreach (var command in commands)
         {
             this.Logger.Debug("Command loaded {Name}", command.Name);
@@ -51,18 +51,24 @@ public class CommandRepository
             var instance = Activator.CreateInstance(command) as ChatCommand;
             if (instance is not null)
             {
-                anotherList.Add(instance);
+                anotherList.Add(instance.NameMatcher, instance.GetType());
             }
         }
 
-        this.InitializedCommands = new(anotherList);
+        this.Commands = new(anotherList);
     }
 
-    public ChatCommand? GetCommand(string identifier)
+    // FIXME: Yes this would create a memory leak if the one that runs the command doesn't call Dispose. I have no idea how else i should structure this.
+    public ILifetimeScope? CreateCommandScope(string identifier)
     {
-        if (this.InitializedCommands.Where(x => x.Name.Equals(identifier)) is ChatCommand command)
+        // Try to match identifier by regex
+        foreach (var command in this.Commands)
         {
-            return (ChatCommand)Activator.CreateInstance(command.GetType())!;
+            if (command.Key.IsMatch(identifier))
+            {
+                var scope = this.LifetimeScope.BeginLifetimeScope(x => x.RegisterType(command.Value).As<ChatCommand>());
+                return scope;
+            }
         }
 
         return null;
