@@ -1,4 +1,4 @@
-﻿using Fumo.Database;
+﻿using Fumo.Database.DTO;
 using MiniTwitch.Irc.Models;
 
 namespace Fumo.Models;

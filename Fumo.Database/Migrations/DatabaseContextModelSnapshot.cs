@@ -23,7 +23,7 @@ namespace Fumo.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Fumo.Database.ChannelDTO", b =>
+            modelBuilder.Entity("Fumo.Database.DTO.ChannelDTO", b =>
                 {
                     b.Property<string>("TwitchID")
                         .HasColumnType("text");
@@ -63,7 +63,7 @@ namespace Fumo.Database.Migrations
                     b.ToTable("Channels");
                 });
 
-            modelBuilder.Entity("Fumo.Database.UserDTO", b =>
+            modelBuilder.Entity("Fumo.Database.DTO.UserDTO", b =>
                 {
                     b.Property<string>("TwitchID")
                         .HasColumnType("text");
@@ -100,9 +100,9 @@ namespace Fumo.Database.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Fumo.Database.ChannelDTO", b =>
+            modelBuilder.Entity("Fumo.Database.DTO.ChannelDTO", b =>
                 {
-                    b.HasOne("Fumo.Database.UserDTO", "User")
+                    b.HasOne("Fumo.Database.DTO.UserDTO", "User")
                         .WithMany()
                         .HasForeignKey("UserTwitchID")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Fumo.Database.DTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fumo.Database;
 
@@ -55,7 +56,7 @@ public class DatabaseContext : DbContext
 
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.Permissions)
-            .HasDefaultValueSql("'{}'::text[]");
+            .HasDefaultValueSql("'{\"default\"}'::text[]");
 
         base.OnModelCreating(modelBuilder);
     }

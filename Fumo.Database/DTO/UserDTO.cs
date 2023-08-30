@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Fumo.Database;
+namespace Fumo.Database.DTO;
 
 public class UserDTO
 {

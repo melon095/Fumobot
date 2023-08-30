@@ -1,4 +1,4 @@
-﻿using Fumo.Database;
+﻿using Fumo.Database.DTO;
 using Fumo.Enums;
 using Fumo.Interfaces.Command;
 using MiniTwitch.Irc.Models;
@@ -49,6 +49,8 @@ public abstract class ChatCommand : IChatCommand
     /// If the Broadcaster of the chat is the only one that can execute this command in a chat
     /// </summary>
     public bool BroadcasterOnly => ((Flags & ChatCommandFlags.BroadcasterOnly) != 0);
+
+    public TimeSpan Cooldown = TimeSpan.FromSeconds(5);
 
     public abstract Task<CommandResult> Execute(CancellationToken ct);
 

@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Fumo.Database;
+namespace Fumo.Database.DTO;
 
 [Index(nameof(TwitchID), IsUnique = true)]
 [Index(nameof(UserTwitchID), IsUnique = true)]

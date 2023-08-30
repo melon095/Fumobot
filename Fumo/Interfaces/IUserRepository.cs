@@ -1,4 +1,4 @@
-﻿using Fumo.Database;
+﻿using Fumo.Database.DTO;
 
 namespace Fumo.Interfaces;
 

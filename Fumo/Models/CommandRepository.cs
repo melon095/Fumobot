@@ -23,6 +23,8 @@ public class CommandRepository
 
     public void LoadAssemblyCommands()
     {
+        this.Logger.Information("Loading commands");
+
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
         List<Type> commands = new();

@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
+using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
 using Fumo.Interfaces;
 using Fumo.Models;
@@ -33,9 +34,10 @@ internal class Program
             .InstallScoped(configuration)
             .Build();
 
+        Log.Logger.Information("Starting up");
+
         using (var scope = container.BeginLifetimeScope())
         {
-            Log.Information("Loading assembly commands");
             var commandRepo = scope.Resolve<CommandRepository>();
             commandRepo.LoadAssemblyCommands();
 
@@ -57,6 +59,7 @@ internal class Program
                 {
                     TwitchID = response.User.ID,
                     TwitchName = response.User.Login,
+                    Permissions = new() { "default", "bot" }
                 };
 
                 ChannelDTO channel = new()

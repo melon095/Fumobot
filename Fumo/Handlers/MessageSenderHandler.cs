@@ -29,7 +29,7 @@ public class MessageSenderHandler : IMessageSenderHandler
 
     private CancellationToken CancellationToken { get; }
 
-    private ConcurrentDictionary<string, long> SendHistory = new();
+    private readonly ConcurrentDictionary<string, long> SendHistory = new();
 
     private Task MessageTask { get; }
 
@@ -76,9 +76,7 @@ public class MessageSenderHandler : IMessageSenderHandler
 
     private static long Unix() => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-    /// <summary>
-    /// Schedule a message to be sent to a channel after the global message interval rule
-    /// </summary>
+    /// <inheritdoc/>
     public void ScheduleMessage(string channel, string message, string? replyID = null)
     {
         this.SendHistory[channel] = Unix();
@@ -92,9 +90,7 @@ public class MessageSenderHandler : IMessageSenderHandler
         queue.Enqueue((channel, message, replyID));
     }
 
-    /// <summary>
-    /// Will directly send a message to chat without obeying the message queue
-    /// </summary>
+    /// <inheritdoc/>
     public ValueTask SendMessage(string channel, string message, string? replyID = null)
     {
         this.Logger.Debug("Sending message to {Channel}: {Message}", channel, message);

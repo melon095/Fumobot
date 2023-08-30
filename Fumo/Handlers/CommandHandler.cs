@@ -1,12 +1,11 @@
 ﻿using Fumo.Database;
 using Fumo.Interfaces;
 using Fumo.Models;
-using MiniTwitch.Irc.Models;
-using MiniTwitch.Irc;
 using Serilog;
 using Microsoft.Extensions.Configuration;
 using Autofac;
 using Fumo.Exceptions;
+using Fumo.Database.DTO;
 
 namespace Fumo.Handlers;
 
@@ -55,6 +54,8 @@ public class CommandHandler : ICommandHandler
 
         if (!input.ElementAt(0).StartsWith(prefix)) return;
 
+        var replyId = message.Privmsg.Reply.HasContent ? message.Privmsg.Reply.ParentMessageId : null;
+
         using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
 
         try
@@ -74,7 +75,7 @@ public class CommandHandler : ICommandHandler
 
             if (!allowedToRun) return;
 
-            bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command, cancellationToken);
+            bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
             if (onCooldown) return;
 
             // FIXME: Add arguments thing here.
@@ -89,14 +90,14 @@ public class CommandHandler : ICommandHandler
 
             var result = await command.Execute(cancellationToken);
 
-            await this.CooldownHandler.SetCooldown(message, command, cancellationToken);
+            await this.CooldownHandler.SetCooldownAsync(message, command);
 
-            var replyId = message.Privmsg.Reply.HasContent ? message.Privmsg.Reply.ParentMessageId : null;
             this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, replyId);
         }
         catch (InvalidInputException ex)
         {
-
+            this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, ex.Message, replyId);
+            return;
         }
         catch (Exception ex)
         {

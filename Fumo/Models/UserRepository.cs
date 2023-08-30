@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
+using Fumo.Database.DTO;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.ThirdParty.ThreeLetterAPI;

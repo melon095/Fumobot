@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
+using Fumo.Database.DTO;
 using Fumo.Interfaces;
 using Fumo.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ public class Application
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage;
 
-    public List<ChannelDTO> Channels = new();
+    public Dictionary<string, ChannelDTO> Channels = new();
 
     private ILogger Logger { get; }
 
@@ -42,6 +43,7 @@ public class Application
 
         IrcClient.OnConnect += IrcClient_OnConnect;
         IrcClient.OnReconnect += IrcClient_OnConnect;
+        IrcClient.OnMessage += IrcClient_OnMessage;
     }
 
     public async Task StartAsync()
@@ -58,11 +60,10 @@ public class Application
 
         Logger.Information("Connected to TMI");
 
-        IrcClient.OnMessage += IrcClient_OnMessage;
 
         var channels = await this.Database.Channels.ToListAsync(CancellationTokenSource.Token);
 
-        this.Channels = channels;
+        this.Channels = channels.ToDictionary(x => x.TwitchName);
 
         await IrcClient.JoinChannels(channels.Select(x => x.TwitchName), CancellationTokenSource.Token);
     }
@@ -81,7 +82,7 @@ public class Application
     {
         try
         {
-            var channel = await Database.Channels.SingleOrDefaultAsync(x => x.TwitchID.Equals(privmsg.Channel.Id));
+            var channel = this.Channels[privmsg.Channel.Name];
             if (channel is null) return;
             var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);
 

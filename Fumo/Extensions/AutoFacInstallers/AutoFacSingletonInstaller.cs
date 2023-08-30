@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
 using Serilog;
+using StackExchange.Redis;
+using StackExchange.Redis.KeyspaceIsolation;
 
 namespace Fumo.Extensions.AutoFacInstallers;
 
@@ -33,7 +35,13 @@ public static class AutoFacSingletonInstaller
             });
 
             return ircClient;
-        });
+        }).SingleInstance();
+
+        // Register Multiplexer
+        builder.RegisterInstance(ConnectionMultiplexer.Connect(config["Connections:Redis"]!)).SingleInstance();
+
+        // Register redis IDatabase with key prefix
+        builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot"));
 
         builder
             .RegisterType<CommandHandler>()
@@ -42,23 +50,23 @@ public static class AutoFacSingletonInstaller
 
         builder
             .RegisterType<Application>()
-            .AsSelf()
-            .SingleInstance();
+                .AsSelf()
+                .SingleInstance();
 
         builder
             .RegisterType<CooldownHandler>()
-            .As<ICooldownHandler>()
-            .SingleInstance();
+                .As<ICooldownHandler>()
+                .SingleInstance();
 
         builder
             .RegisterType<MessageSenderHandler>()
-            .As<IMessageSenderHandler>()
-            .SingleInstance();
+                .As<IMessageSenderHandler>()
+                .SingleInstance();
 
         builder
             .RegisterType<CommandRepository>()
-            .AsSelf()
-            .SingleInstance();
+                .AsSelf()
+                .SingleInstance();
 
         return builder;
     }
