@@ -14,7 +14,7 @@ public class CommandHandler : ICommandHandler
 {
     public ILifetimeScope LifetimeScope { get; }
 
-    private IMessageHandler MessageHandler { get; }
+    private Application Application { get; }
 
     private ILogger Logger { get; }
 
@@ -28,7 +28,7 @@ public class CommandHandler : ICommandHandler
 
     public CommandHandler(
         ILifetimeScope lifetimeScope,
-        IMessageHandler messageHandler,
+        Application application,
         ILogger logger,
         ICooldownHandler cooldownHandler,
         IConfiguration configuration,
@@ -36,14 +36,14 @@ public class CommandHandler : ICommandHandler
         IMessageSenderHandler messageSenderHandler)
     {
         LifetimeScope = lifetimeScope;
-        MessageHandler = messageHandler;
+        Application = application;
         Logger = logger;
         CooldownHandler = cooldownHandler;
         Configuration = configuration;
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
 
-        this.MessageHandler.OnMessage += this.OnMessage;
+        this.Application.OnMessage += this.OnMessage;
     }
 
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
@@ -63,7 +63,7 @@ public class CommandHandler : ICommandHandler
             var command = commandScope.Resolve<ChatCommand>();
 
 
-            bool isMod = message.Data.Privmsg.Author.IsMod;
+            bool isMod = message.Privmsg.Author.IsMod;
             bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
 
             bool allowedToRun = (
@@ -85,13 +85,13 @@ public class CommandHandler : ICommandHandler
             command.Channel = message.Channel;
             command.User = message.User;
             command.Input = message.Input;
-            command.Privmsg = message.Data.Privmsg;
+            command.Privmsg = message.Privmsg;
 
             var result = await command.Execute(cancellationToken);
 
             await this.CooldownHandler.SetCooldown(message, command, cancellationToken);
 
-            var replyId = message.Data.Privmsg.Reply.HasContent ? message.Data.Privmsg.Reply.ParentMessageId : null;
+            var replyId = message.Privmsg.Reply.HasContent ? message.Privmsg.Reply.ParentMessageId : null;
             this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, replyId);
         }
         catch (InvalidInputException ex)

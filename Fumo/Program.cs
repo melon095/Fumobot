@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Extensions.AutoFacInstallers;
-using Fumo.Handlers;
 using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.ThirdParty.ThreeLetterAPI;
@@ -78,8 +77,7 @@ internal class Program
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);
 
-            scope.Resolve<IMessageSenderHandler>().Init();
-            await scope.Resolve<MessageHandler>().StartAsync();
+            await scope.Resolve<Application>().StartAsync();
         }
 
 

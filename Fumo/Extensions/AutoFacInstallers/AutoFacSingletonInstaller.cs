@@ -41,7 +41,7 @@ public static class AutoFacSingletonInstaller
             .SingleInstance();
 
         builder
-            .RegisterType<MessageHandler>()
+            .RegisterType<Application>()
             .AsSelf()
             .SingleInstance();
 

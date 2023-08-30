@@ -9,11 +9,13 @@ using MiniTwitch.Irc.Models;
 using Serilog;
 using System.Runtime.InteropServices;
 
-namespace Fumo.Handlers;
+namespace Fumo;
 
-public class MessageHandler : IMessageHandler
+public class Application
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage;
+
+    public List<ChannelDTO> Channels = new();
 
     private ILogger Logger { get; }
 
@@ -25,14 +27,14 @@ public class MessageHandler : IMessageHandler
 
     private IrcClient IrcClient { get; }
 
-    public MessageHandler(
+    public Application(
         ILogger logger,
         DatabaseContext database,
         IUserRepository userRepository,
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient)
     {
-        Logger = logger.ForContext<MessageHandler>();
+        Logger = logger.ForContext<Application>();
         Database = database;
         UserRepository = userRepository;
         CancellationTokenSource = cancellationTokenSource;
@@ -46,7 +48,7 @@ public class MessageHandler : IMessageHandler
     {
         Logger.Information("Connecting to TMI");
 
-        var connected = await IrcClient.ConnectAsync(cancellationToken: this.CancellationTokenSource.Token);
+        var connected = await IrcClient.ConnectAsync(cancellationToken: CancellationTokenSource.Token);
 
         if (!connected)
         {
@@ -57,6 +59,12 @@ public class MessageHandler : IMessageHandler
         Logger.Information("Connected to TMI");
 
         IrcClient.OnMessage += IrcClient_OnMessage;
+
+        var channels = await this.Database.Channels.ToListAsync(CancellationTokenSource.Token);
+
+        this.Channels = channels;
+
+        await IrcClient.JoinChannels(channels.Select(x => x.TwitchName), CancellationTokenSource.Token);
     }
 
     private async ValueTask IrcClient_OnConnect()
@@ -66,7 +74,7 @@ public class MessageHandler : IMessageHandler
             .ToList()
             .Select(x => x.TwitchName);
 
-        await IrcClient.JoinChannels(channels, this.CancellationTokenSource.Token);
+        await IrcClient.JoinChannels(channels, CancellationTokenSource.Token);
     }
 
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)
@@ -75,20 +83,20 @@ public class MessageHandler : IMessageHandler
         {
             var channel = await Database.Channels.SingleOrDefaultAsync(x => x.TwitchID.Equals(privmsg.Channel.Id));
             if (channel is null) return;
-            var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), this.CancellationTokenSource.Token);
+            var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);
 
             await CheckForRename(privmsg.Author, user);
 
             var input = privmsg.Content.Split(' ').ToList();
 
-            ChatMessage message = new(channel, user, input, new(privmsg));
-            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(this.CancellationTokenSource.Token).Token;
+            ChatMessage message = new(channel, user, input, privmsg);
+            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
-            await this.OnMessage.Invoke(message, token);
+            await OnMessage.Invoke(message, token);
         }
         catch (Exception ex)
         {
-            this.Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel);
+            Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel);
         }
     }
 
@@ -98,8 +106,8 @@ public class MessageHandler : IMessageHandler
         {
             user.TwitchName = tmiUser.Name;
 
-            this.Database.Entry(user).State = EntityState.Modified;
-            await this.Database.SaveChangesAsync(this.CancellationTokenSource.Token);
+            Database.Entry(user).State = EntityState.Modified;
+            await Database.SaveChangesAsync(CancellationTokenSource.Token);
         }
     }
 }
