@@ -61,6 +61,19 @@ public class CommandRepository
         this.Commands = new(anotherList);
     }
 
+    public ChatCommand? GetCommand(string identifier)
+    {
+        foreach (var command in this.Commands)
+        {
+            if (command.Key.IsMatch(identifier))
+            {
+                return Activator.CreateInstance(command.Value) as ChatCommand;
+            }
+        }
+
+        return null;
+    }
+
     // FIXME: Yes this would create a memory leak if the one that runs the command doesn't call Dispose. I have no idea how else i should structure this.
     public ILifetimeScope? CreateCommandScope(string identifier)
     {

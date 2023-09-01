@@ -7,6 +7,10 @@ using Autofac;
 using Fumo.Exceptions;
 using Fumo.Database.DTO;
 using System.Threading;
+using Fumo.ThirdParty.Pajbot1;
+using System.Runtime.CompilerServices;
+using Fumo.Enums;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Fumo.Handlers;
 
@@ -25,6 +29,8 @@ public class CommandHandler : ICommandHandler
     private CommandRepository CommandRepository { get; }
 
     private IMessageSenderHandler MessageSenderHandler { get; }
+
+    private PajbotClient Pajbot { get; } = new();
 
     public CommandHandler(
         ILifetimeScope lifetimeScope,
@@ -50,12 +56,11 @@ public class CommandHandler : ICommandHandler
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
     {
         var prefix = GetPrefixForChannel(message.Channel);
+        if (!message.Input.ElementAt(0).StartsWith(prefix)) return;
+
         var (commandName, input) = ParseMessage(message.Input, prefix);
         if (commandName is null) return;
 
-        if (!message.Input.ElementAt(0).StartsWith(prefix)) return;
-
-        // FIXME: This is very ugly, so figure out how to replace the input list without changing ChatMessage from a record.
         message.Input.Clear();
         message.Input.AddRange(input);
 
@@ -63,16 +68,14 @@ public class CommandHandler : ICommandHandler
 
         if (result is null) return;
 
-        var replyId = message.Privmsg.Reply.HasContent ? message.Privmsg.Reply.ParentMessageId : null;
-
-        this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, replyId);
+        this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, result.ReplyID);
     }
 
     private string GetPrefixForChannel(ChannelDTO channel)
     {
         var channelPrefix = channel.GetSetting(ChannelSettingKey.Prefix);
 
-        if (channelPrefix is not "")
+        if (!string.IsNullOrEmpty(channelPrefix))
         {
             return channelPrefix;
         }
@@ -80,8 +83,51 @@ public class CommandHandler : ICommandHandler
         return this.Configuration["GlobalPrefix"]!;
     }
 
-    private static (string? commandName, string[] input) ParseMessage(List<string> message, string prefix)
-        => (message.Count > 0 ? message[0].Replace(prefix, "") : null, message.Skip(1).ToArray());
+    private static (string?, List<string>) ParseMessage(List<string> message, string prefix)
+    {
+        var cleanMessage = message
+            .Select(x => x.Replace(prefix, string.Empty))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        var commandName = cleanMessage.FirstOrDefault();
+
+        return (commandName, cleanMessage.Skip(1).ToList());
+    }
+
+    private async Task<(bool Banned, string Reason)> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken)
+    {
+        foreach (var func in BanphraseRegex.GlobalRegex)
+        {
+            if (func(message))
+            {
+                return (true, "Global banphrase");
+            }
+        }
+
+        var pajbot1Instance = channel.GetSetting(ChannelSettingKey.Pajbot1);
+        if (string.IsNullOrEmpty(pajbot1Instance))
+        {
+            return (false, string.Empty);
+        }
+
+        try
+        {
+            var result = await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
+
+            if (result.Banned)
+            {
+                return (true, "Pajbot");
+            }
+
+            return (false, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            this.Logger.Error(ex, "Asking pajbot for banphrase for {Channel}", channel.TwitchName);
+            return (true, "Internal error");
+        }
+    }
 
     public async Task<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
@@ -127,6 +173,19 @@ public class CommandHandler : ICommandHandler
 
             await this.CooldownHandler.SetCooldownAsync(message, command);
 
+            // FIXME: add some result logging
+
+            var (pajbotBanned, pajbotReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
+            if (pajbotBanned)
+            {
+                result.Message = $"monkaS the response was blocked due to {pajbotReason}";
+            }
+
+            if ((command.Flags & ChatCommandFlags.Reply) != 0)
+            {
+                result.ReplyID = message.Privmsg.Id;
+            }
+
             return result;
         }
         catch (InvalidInputException ex)
@@ -140,3 +199,4 @@ public class CommandHandler : ICommandHandler
         }
     }
 }
+

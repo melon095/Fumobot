@@ -2,7 +2,6 @@
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
-using Fumo.Handlers;
 using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.ThirdParty.ThreeLetterAPI;
@@ -88,9 +87,6 @@ internal class Program
 
             await scope.Resolve<Application>().StartAsync();
         }
-
-
-
 
         Console.ReadLine();
     }

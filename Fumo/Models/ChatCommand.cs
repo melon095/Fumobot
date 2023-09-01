@@ -45,6 +45,13 @@ public abstract class ChatCommand : IChatCommand
         protected set => _permissions = value;
     }
 
+    private string? _description;
+    public string Description
+    {
+        get => _description ?? "No description provided";
+        protected set => _description = value;
+    }
+
     /// <summary>
     /// If Moderators and Broadcasters are the only ones that can execute this command in a chat
     /// </summary>
@@ -69,7 +76,7 @@ public abstract class ChatCommand : IChatCommand
         => null;
 
     protected void SetName(string regex)
-        => this.NameMatcher = new(regex, RegexOptions.Compiled);
+        => this.NameMatcher = new($"^{regex}", RegexOptions.Compiled);
 
     protected void SetCooldown(TimeSpan cd)
         => this.Cooldown = cd;
@@ -80,4 +87,6 @@ public abstract class ChatCommand : IChatCommand
     protected void AddPermission(string permission)
         => this.Permissions.Add(permission);
 
+    protected void SetDescription(string description)
+        => this.Description = description;
 }

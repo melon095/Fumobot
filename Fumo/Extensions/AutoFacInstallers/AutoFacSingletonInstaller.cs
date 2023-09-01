@@ -17,16 +17,6 @@ public static class AutoFacSingletonInstaller
     {
         builder.Register(x =>
         {
-            var socket = new SocketsHttpHandler()
-            {
-                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            };
-
-            return new HttpClient(socket);
-        });
-
-        builder.Register(x =>
-        {
             var ircClient = new IrcClient(x =>
             {
                 x.Username = config["Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");

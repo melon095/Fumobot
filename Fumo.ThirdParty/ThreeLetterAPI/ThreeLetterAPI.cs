@@ -21,11 +21,10 @@ public class ThreeLetterAPI : IThreeLetterAPI, IDisposable
 
     private bool disposed = false;
 
-    public ThreeLetterAPI(IConfiguration config, HttpClient? httpClient = null)
+    public ThreeLetterAPI(IConfiguration config)
     {
         this.Config = config;
-        // FIXME: Use a custom IHttpClientFactory implementation
-        this.HttpClient = httpClient ?? new HttpClient();
+        this.HttpClient = new HttpClient();
 
         this.HttpClient.DefaultRequestHeaders.Add("Client-ID", Config["Twitch:ThreeLetterAPI"]);
         this.HttpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0");

@@ -35,7 +35,6 @@ wss.on("connection", async function (ws) {
 		const input = new TextDecoder().decode(buf.subarray(0, n)).trim();
 
 		if (input) {
-			console.log(input);
 			ws.send(CreatePrivmsg(input));
 		}
 	}

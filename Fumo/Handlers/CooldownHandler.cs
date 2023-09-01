@@ -21,13 +21,13 @@ public class CooldownHandler : ICooldownHandler
     {
         var key = Key(message, command);
 
-        return await this.Redis.KeyExistsAsync(key);
+        return (await this.Redis.KeyExistsAsync(key)) == true;
     }
 
     public async Task SetCooldownAsync(ChatMessage message, ChatCommand command)
     {
         var key = Key(message, command);
 
-        await this.Redis.StringGetSetExpiryAsync(key, command.Cooldown);
+        await this.Redis.StringSetAsync(key, 1, expiry: command.Cooldown);
     }
 }
