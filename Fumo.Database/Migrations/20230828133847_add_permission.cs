@@ -16,7 +16,7 @@ namespace Fumo.Database.Migrations
                 table: "Users",
                 type: "text[]",
                 nullable: false,
-                defaultValueSql: "'{}'::text[]");
+                defaultValueSql: "'{\"default\"}'::text[]");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "SetForDeletion",

@@ -5,6 +5,7 @@ using Fumo.Interfaces;
 using Fumo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using MiniTwitch.Common.Extensions;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Serilog;
@@ -14,12 +15,14 @@ namespace Fumo;
 
 public class Application
 {
-    public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage;
+    public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
 
     public Dictionary<string, ChannelDTO> Channels = new();
 
-    private ILogger Logger { get; }
+    public DateTime StartTime { get; } = DateTime.Now;
 
+    private ILogger Logger { get; }
+    public IConfiguration Configuration { get; }
     private DatabaseContext Database { get; }
 
     private IUserRepository UserRepository { get; }
@@ -30,27 +33,37 @@ public class Application
 
     public Application(
         ILogger logger,
+        IConfiguration configuration,
         DatabaseContext database,
         IUserRepository userRepository,
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient)
     {
         Logger = logger.ForContext<Application>();
+        Configuration = configuration;
         Database = database;
         UserRepository = userRepository;
         CancellationTokenSource = cancellationTokenSource;
         IrcClient = ircClient;
 
-        IrcClient.OnConnect += IrcClient_OnConnect;
-        IrcClient.OnReconnect += IrcClient_OnConnect;
+        IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
     }
 
     public async Task StartAsync()
     {
+        var channels = await this.Database.Channels.Where(x => !x.SetForDeletion).ToListAsync(CancellationTokenSource.Token);
+
+        this.Channels = channels.ToDictionary(x => x.TwitchName);
+
         Logger.Information("Connecting to TMI");
 
-        var connected = await IrcClient.ConnectAsync(cancellationToken: CancellationTokenSource.Token);
+        var debugTMI = this.Configuration.GetValue<bool>("DebugTMI");
+        var connected = debugTMI switch
+        {
+            true => await IrcClient.ConnectAsync("ws://localhost:6969/", CancellationTokenSource.Token),
+            false => await IrcClient.ConnectAsync(cancellationToken: CancellationTokenSource.Token)
+        };
 
         if (!connected)
         {
@@ -60,15 +73,11 @@ public class Application
 
         Logger.Information("Connected to TMI");
 
-
-        var channels = await this.Database.Channels.ToListAsync(CancellationTokenSource.Token);
-
-        this.Channels = channels.ToDictionary(x => x.TwitchName);
-
-        await IrcClient.JoinChannels(channels.Select(x => x.TwitchName), CancellationTokenSource.Token);
+        await IrcClient.JoinChannels(Channels.Select(x => x.Key), CancellationTokenSource.Token);
+        await IrcClient.JoinChannel("melon095");
     }
 
-    private async ValueTask IrcClient_OnConnect()
+    private async ValueTask IrcClient_OnReconnect()
     {
         var channels = Database.Channels
             .Where(x => !x.SetForDeletion)
@@ -82,6 +91,8 @@ public class Application
     {
         try
         {
+            this.Logger.Information(privmsg.Content);
+
             var channel = this.Channels[privmsg.Channel.Name];
             if (channel is null) return;
             var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);
@@ -93,11 +104,11 @@ public class Application
             ChatMessage message = new(channel, user, input, privmsg);
             CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
-            await OnMessage.Invoke(message, token);
+            await (OnMessage?.Invoke(message, token) ?? ValueTask.CompletedTask);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel);
+            Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel.Name);
         }
     }
 

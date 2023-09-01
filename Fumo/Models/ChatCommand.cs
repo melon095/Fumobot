@@ -3,6 +3,7 @@ using Fumo.Enums;
 using Fumo.Interfaces.Command;
 using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
@@ -17,28 +18,32 @@ public abstract class ChatCommand : IChatCommand
     /// <summary>
     /// Regex that matches the command
     /// </summary>
-    /// 
-    /// <note>
-    ///     NameMatcher = new(..., RegexOptions.Compiled);
-    /// </note>
-    public Regex NameMatcher { get; }
+    public Regex NameMatcher { get; protected set; }
+
+
+    private ChatCommandFlags _flags = ChatCommandFlags.None;
 
     /// <summary>
-    /// Flgas that change behaviour
+    /// Flags that change behaviour
     /// </summary>
     public ChatCommandFlags Flags
     {
-        get => ChatCommandFlags.None;
+        get => _flags;
+        protected set => _flags = value;
     }
+
+    private List<string> _permissions = new() { "default" };
 
     /// <summary>
     /// Permissions a user requires to execute this command
     /// 
     /// Every user has "default"
     /// </summary>
-    protected List<string> PrivatePermissions = new(new string[] { "default" });
-
-    public IReadOnlyList<string> Permissions => this.PrivatePermissions;
+    public List<string> Permissions
+    {
+        get => _permissions;
+        protected set => _permissions = value;
+    }
 
     /// <summary>
     /// If Moderators and Broadcasters are the only ones that can execute this command in a chat
@@ -48,11 +53,31 @@ public abstract class ChatCommand : IChatCommand
     /// <summary>
     /// If the Broadcaster of the chat is the only one that can execute this command in a chat
     /// </summary>
-    public bool BroadcasterOnly => ((Flags & ChatCommandFlags.BroadcasterOnly) != 0);
+    public bool BroadcasterOnly => (Flags & ChatCommandFlags.BroadcasterOnly) != 0;
 
-    public TimeSpan Cooldown = TimeSpan.FromSeconds(5);
+    private TimeSpan _cooldown = TimeSpan.FromSeconds(5);
+    public TimeSpan Cooldown
+    {
+        get => _cooldown;
+        protected set => _cooldown = value;
+    }
 
-    public abstract Task<CommandResult> Execute(CancellationToken ct);
+    public virtual ValueTask<CommandResult> Execute(CancellationToken ct)
+        => throw new NotImplementedException();
 
-    public abstract Task<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
+    public virtual ValueTask<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct)
+        => null;
+
+    protected void SetName(string regex)
+        => this.NameMatcher = new(regex, RegexOptions.Compiled);
+
+    protected void SetCooldown(TimeSpan cd)
+        => this.Cooldown = cd;
+
+    protected void SetFlags(ChatCommandFlags flags)
+        => Flags = flags;
+
+    protected void AddPermission(string permission)
+        => this.Permissions.Add(permission);
+
 }

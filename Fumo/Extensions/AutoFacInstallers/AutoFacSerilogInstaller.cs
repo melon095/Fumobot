@@ -8,7 +8,7 @@ namespace Fumo.Extensions.AutoFacInstallers;
 
 internal static class AutoFacSerilogInstaller
 {
-    private static readonly ExpressionTemplate LoggingFormat = new("[{@t:HH:mm:ss} {@l}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}");
+    private static readonly ExpressionTemplate LoggingFormat = new("[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}");
     private static readonly string LoggingFileFormat = "logs_.txt";
 
     public static ContainerBuilder InstallSerilog(this ContainerBuilder builder, IConfiguration config)

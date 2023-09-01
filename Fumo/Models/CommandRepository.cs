@@ -4,6 +4,7 @@ using Fumo.Interfaces.Command;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;

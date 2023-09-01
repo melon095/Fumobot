@@ -1,7 +1,9 @@
 ﻿namespace Fumo.Models;
 
 // TODO: Add more things here lol
-public record CommandResult(string Message)
+public class CommandResult
 {
-    public static implicit operator CommandResult(string message) => new(message);
+    public string Message { get; init; }
+
+    public static implicit operator CommandResult(string message) => new() { Message = message };
 }

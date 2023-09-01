@@ -80,7 +80,7 @@ namespace Fumo.Database.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text[]")
-                        .HasDefaultValueSql("'{}'::text[]");
+                        .HasDefaultValueSql("'[\"default\"]'::text[]");
 
                     b.Property<List<Setting>>("Settings")
                         .IsRequired()

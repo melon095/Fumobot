@@ -13,5 +13,6 @@
         "Token": "",
         "ThreeLetterAPI": ""
     },
-    "GlobalPrefix": "buh"
+    "GlobalPrefix": "buh",
+    "DebugTMI": false
 }

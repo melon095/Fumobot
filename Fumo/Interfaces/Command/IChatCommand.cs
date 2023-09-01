@@ -11,7 +11,7 @@ public interface IChatCommand
     /// <returns>
     /// A string that is outputted in chat
     /// </returns>
-    public Task<CommandResult> Execute(CancellationToken ct);
+    public ValueTask<CommandResult> Execute(CancellationToken ct);
 
     /// <summary>
     /// Optional function that can generate extra data on the website
@@ -23,5 +23,5 @@ public interface IChatCommand
     /// <returns>
     /// A list of data.
     /// </returns>
-    public Task<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
+    public ValueTask<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
 }

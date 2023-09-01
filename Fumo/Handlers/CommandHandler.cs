@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Autofac;
 using Fumo.Exceptions;
 using Fumo.Database.DTO;
+using System.Threading;
 
 namespace Fumo.Handlers;
 
@@ -45,65 +46,26 @@ public class CommandHandler : ICommandHandler
         this.Application.OnMessage += this.OnMessage;
     }
 
+    // On messages that begin with the channel/global prefix are executed.
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
     {
-
         var prefix = GetPrefixForChannel(message.Channel);
         var (commandName, input) = ParseMessage(message.Input, prefix);
         if (commandName is null) return;
 
-        if (!input.ElementAt(0).StartsWith(prefix)) return;
+        if (!message.Input.ElementAt(0).StartsWith(prefix)) return;
+
+        // FIXME: This is very ugly, so figure out how to replace the input list without changing ChatMessage from a record.
+        message.Input.Clear();
+        message.Input.AddRange(input);
+
+        var result = await this.TryExecute(message, commandName, cancellationToken);
+
+        if (result is null) return;
 
         var replyId = message.Privmsg.Reply.HasContent ? message.Privmsg.Reply.ParentMessageId : null;
 
-        using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
-
-        try
-        {
-            if (commandScope is null) return;
-            var command = commandScope.Resolve<ChatCommand>();
-
-
-            bool isMod = message.Privmsg.Author.IsMod;
-            bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
-
-            bool allowedToRun = (
-                command.Permissions.All(message.User.Permissions.Contains) &&
-                isMod == command.ModeratorOnly &&
-                isBroadcaster == command.BroadcasterOnly
-            );
-
-            if (!allowedToRun) return;
-
-            bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
-            if (onCooldown) return;
-
-            // FIXME: Add arguments thing here.
-
-            /*
-                FIXME: This should be changed. 
-            */
-            command.Channel = message.Channel;
-            command.User = message.User;
-            command.Input = message.Input;
-            command.Privmsg = message.Privmsg;
-
-            var result = await command.Execute(cancellationToken);
-
-            await this.CooldownHandler.SetCooldownAsync(message, command);
-
-            this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, replyId);
-        }
-        catch (InvalidInputException ex)
-        {
-            this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, ex.Message, replyId);
-            return;
-        }
-        catch (Exception ex)
-        {
-            this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
-            return;
-        }
+        this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, replyId);
     }
 
     private string GetPrefixForChannel(ChannelDTO channel)
@@ -121,8 +83,60 @@ public class CommandHandler : ICommandHandler
     private static (string? commandName, string[] input) ParseMessage(List<string> message, string prefix)
         => (message.Count > 0 ? message[0].Replace(prefix, "") : null, message.Skip(1).ToArray());
 
-    public Task<CommandResult> TryExecute(ChatMessage message, string commandName)
+    public async Task<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
+
+        try
+        {
+            if (commandScope is null) return null;
+            var command = commandScope.Resolve<ChatCommand>();
+
+
+            bool isMod = message.Privmsg.Author.IsMod;
+            bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
+
+            // Fixme: Make cleaner
+            if (!command.Permissions.All(message.User.Permissions.Contains))
+            {
+                return null;
+            }
+            else if (isMod && command.ModeratorOnly)
+            {
+                return null;
+            }
+            else if (isBroadcaster && command.BroadcasterOnly)
+            {
+                return null;
+            }
+
+            bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
+            if (onCooldown) return null;
+
+            // FIXME: Add arguments thing here.
+
+            /*
+                FIXME: This should be changed. 
+            */
+            command.Channel = message.Channel;
+            command.User = message.User;
+            command.Input = message.Input;
+            command.Privmsg = message.Privmsg;
+
+            var result = await command.Execute(cancellationToken);
+
+            await this.CooldownHandler.SetCooldownAsync(message, command);
+
+            return result;
+        }
+        catch (InvalidInputException ex)
+        {
+            return ex.Message;
+        }
+        catch (Exception ex)
+        {
+            this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
+            return "A fatal error occured while executing the command.";
+        }
     }
 }
