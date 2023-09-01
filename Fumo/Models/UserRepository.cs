@@ -27,9 +27,9 @@ public class UserRepository : IUserRepository
         ThreeLetterAPI = threeLetterAPI;
     }
 
-    private async Task<UserDTO?> SearchWithThreeLetterAPI(object variable, CancellationToken cancellationToken)
+    private async Task<UserDTO?> SearchWithThreeLetterAPI(string? id = null, string? login = null, CancellationToken cancellationToken = default)
     {
-        var tlaUser = await this.ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(), variable, cancellationToken);
+        var tlaUser = await this.ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
 
         if (tlaUser is null)
         {
@@ -62,7 +62,7 @@ public class UserRepository : IUserRepository
             return dbUser;
         }
 
-        return await this.SearchWithThreeLetterAPI(new { id }, cancellationToken) switch
+        return await this.SearchWithThreeLetterAPI(id, cancellationToken: cancellationToken) switch
         {
             null => throw new UserNotFoundException($"The user with the id {id} does not exist"),
             var user => user,
@@ -83,7 +83,7 @@ public class UserRepository : IUserRepository
             return dbUser;
         }
 
-        return await this.SearchWithThreeLetterAPI(new { login = cleanedUsername }, cancellationToken) switch
+        return await this.SearchWithThreeLetterAPI(login: cleanedUsername, cancellationToken: cancellationToken) switch
         {
             null => throw new UserNotFoundException($"The user with the name {cleanedUsername} does not exist"),
             var user => user,

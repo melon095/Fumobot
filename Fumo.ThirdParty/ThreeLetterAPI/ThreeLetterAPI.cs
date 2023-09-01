@@ -42,9 +42,9 @@ public class ThreeLetterAPI : IThreeLetterAPI, IDisposable
         disposed = true;
     }
 
-    public async Task<TResponse> SendAsync<TResponse>(IThreeLetterAPIInstruction instructions, object? variables = null, CancellationToken cancellationToken = default)
+    public async Task<TResponse> SendAsync<TResponse>(IThreeLetterAPIInstruction instructions, CancellationToken cancellationToken = default)
     {
-        var request = instructions.Create(variables ?? new ExpandoObject());
+        var request = instructions.Create();
 
         var serialized = JsonSerializer.Serialize(request);
 
@@ -67,5 +67,28 @@ public class ThreeLetterAPI : IThreeLetterAPI, IDisposable
         }
 
         return json.Data;
+    }
+
+    public async Task<List<TResponse>> PaginatedQueryAsync<TResponse>(Func<TResponse?, IThreeLetterAPIInstruction?> prepare, CancellationToken cancellationToken = default)
+    {
+        List<TResponse> responses = new();
+
+        /*
+            This could be fixed by passing in a seperate instruction as a first parameter, but this should work. 
+        */
+        var instruction = prepare(default!);
+
+        ArgumentNullException.ThrowIfNull(instruction, nameof(instruction));
+
+        do
+        {
+            // TODO: Add exponential backoff maybe
+
+            var response = await this.SendAsync<TResponse>(instruction, cancellationToken);
+            responses.Add(response);
+            instruction = prepare(response);
+        } while (instruction is not null);
+
+        return responses;
     }
 }

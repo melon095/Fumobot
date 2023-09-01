@@ -74,7 +74,6 @@ public class Application
         Logger.Information("Connected to TMI");
 
         await IrcClient.JoinChannels(Channels.Select(x => x.Key), CancellationTokenSource.Token);
-        await IrcClient.JoinChannel("melon095");
     }
 
     private async ValueTask IrcClient_OnReconnect()
@@ -121,5 +120,10 @@ public class Application
             Database.Entry(user).State = EntityState.Modified;
             await Database.SaveChangesAsync(CancellationTokenSource.Token);
         }
+    }
+
+    public void AddChannel(ChannelDTO channel)
+    {
+        this.Channels.Add(channel.TwitchName, channel);
     }
 }

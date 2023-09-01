@@ -132,10 +132,10 @@ public class CommandHandler : ICommandHandler
     public async Task<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
         using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
+        if (commandScope is null) return null;
 
         try
         {
-            if (commandScope is null) return null;
             var command = commandScope.Resolve<ChatCommand>();
 
 
@@ -169,11 +169,18 @@ public class CommandHandler : ICommandHandler
             command.Input = message.Input;
             command.Privmsg = message.Privmsg;
 
+            this.Logger.Debug("Executing command {CommandName}", command.NameMatcher);
+
             var result = await command.Execute(cancellationToken);
 
             await this.CooldownHandler.SetCooldownAsync(message, command);
 
             // FIXME: add some result logging
+
+            if (string.IsNullOrEmpty(result.Message))
+            {
+                return null;
+            }
 
             var (pajbotBanned, pajbotReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
             if (pajbotBanned)

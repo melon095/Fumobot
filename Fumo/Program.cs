@@ -53,7 +53,7 @@ internal class Program
 
             if (botChannel is null)
             {
-                var response = await tlp.SendAsync<BasicUserResponse>(new BasicUserInstruction(), new { id = config["Twitch:UserID"] }, ctoken);
+                var response = await tlp.SendAsync<BasicUserResponse>(new BasicUserInstruction(id: config["Twitch:UserID"]), ctoken);
 
                 UserDTO user = new()
                 {

@@ -2,5 +2,5 @@
 
 public interface IThreeLetterAPIInstruction
 {
-    public ThreeLetterAPIRequest Create(object variables);
+    public ThreeLetterAPIRequest Create();
 }

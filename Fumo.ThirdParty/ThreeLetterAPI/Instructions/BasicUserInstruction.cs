@@ -7,7 +7,16 @@
 /// </summary>
 public class BasicUserInstruction : IThreeLetterAPIInstruction
 {
-    public ThreeLetterAPIRequest Create(object variables)
+    public string? Id { get; }
+    public string? Login { get; }
+
+    public BasicUserInstruction(string? id = null, string? login = null)
+    {
+        Id = id;
+        Login = login;
+    }
+
+    public ThreeLetterAPIRequest Create()
     {
         return new()
         {
@@ -17,7 +26,11 @@ public class BasicUserInstruction : IThreeLetterAPIInstruction
                     login
                 }
             }",
-            Variables = variables
+            Variables = new
+            {
+                id = Id,
+                login = Login
+            }
         };
     }
 }
