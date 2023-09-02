@@ -22,7 +22,7 @@ internal class JoinCommand : ChatCommand
     public DatabaseContext Database { get; }
 
     public IrcClient Irc { get; }
-    public Application Application { get; }
+    public IApplication Application { get; }
     public IThreeLetterAPI ThreeLetterAPI { get; }
     public IUserRepository UserRepository { get; }
     public ILifetimeScope LifetimeScope { get; }
@@ -41,7 +41,7 @@ internal class JoinCommand : ChatCommand
         DatabaseContext database,
         IConfiguration config,
         IrcClient irc,
-        Application application,
+        IApplication application,
         IThreeLetterAPI threeLetterAPI,
         IUserRepository userRepository,
         ILifetimeScope lifetimeScope) : this()
@@ -162,7 +162,7 @@ internal class JoinCommand : ChatCommand
             // Yes this is required i think
             ChannelDTO channel = await this.Database.Channels.Where(x => x.TwitchID == userToJoin.TwitchID).FirstAsync(ct);
 
-            this.Application.AddChannel(channel);
+            this.Application.Channels[channel.TwitchName] = channel;
 
             return response;
         }

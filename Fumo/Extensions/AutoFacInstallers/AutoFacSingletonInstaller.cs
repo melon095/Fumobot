@@ -40,7 +40,7 @@ public static class AutoFacSingletonInstaller
 
         builder
             .RegisterType<Application>()
-                .AsSelf()
+                .As<IApplication>()
                 .SingleInstance();
 
         builder

@@ -8,7 +8,7 @@ namespace Fumo.Commands;
 internal class PingCommand : ChatCommand
 {
     public ILogger Logger { get; }
-    public Application Application { get; }
+    public IApplication Application { get; }
 
     public PingCommand()
     {
@@ -16,7 +16,7 @@ internal class PingCommand : ChatCommand
         SetFlags(ChatCommandFlags.Reply);
     }
 
-    public PingCommand(ILogger logger, Application application) : this()
+    public PingCommand(ILogger logger, IApplication application) : this()
     {
         Logger = logger.ForContext<PingCommand>();
         Application = application;
@@ -24,9 +24,6 @@ internal class PingCommand : ChatCommand
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        // FIXME remove lol
-        this.Logger.Debug("Ran Ping comamnd");
-
         var uptime = DateTime.Now - this.Application.StartTime;
 
         string time = new SecondsFormatter().SecondsFmt(uptime.TotalSeconds);

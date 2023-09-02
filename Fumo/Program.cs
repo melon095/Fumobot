@@ -85,7 +85,7 @@ internal class Program
             _ = scope.Resolve<ICooldownHandler>();
             _ = scope.Resolve<IMessageSenderHandler>();
 
-            await scope.Resolve<Application>().StartAsync();
+            await scope.Resolve<IApplication>().StartAsync();
         }
 
         Console.ReadLine();

@@ -11,11 +11,11 @@ using Serilog;
 
 namespace Fumo;
 
-public class Application
+public class Application : IApplication
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
 
-    public Dictionary<string, ChannelDTO> Channels = new();
+    public Dictionary<string, ChannelDTO> Channels { get; set; } = new();
 
     public DateTime StartTime { get; } = DateTime.Now;
 
@@ -118,10 +118,5 @@ public class Application
             Database.Entry(user).State = EntityState.Modified;
             await Database.SaveChangesAsync(CancellationTokenSource.Token);
         }
-    }
-
-    public void AddChannel(ChannelDTO channel)
-    {
-        this.Channels.Add(channel.TwitchName, channel);
     }
 }

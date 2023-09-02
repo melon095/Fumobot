@@ -13,11 +13,11 @@ using Serilog;
 
 namespace Fumo.Handlers;
 
-public class CommandHandler : ICommandHandler
+internal class CommandHandler : ICommandHandler
 {
     public ILifetimeScope LifetimeScope { get; }
 
-    private Application Application { get; }
+    private IApplication Application { get; }
 
     private ILogger Logger { get; }
 
@@ -33,7 +33,7 @@ public class CommandHandler : ICommandHandler
 
     public CommandHandler(
         ILifetimeScope lifetimeScope,
-        Application application,
+        IApplication application,
         ILogger logger,
         ICooldownHandler cooldownHandler,
         IConfiguration configuration,
@@ -146,11 +146,11 @@ public class CommandHandler : ICommandHandler
             {
                 return null;
             }
-            else if (isMod && command.ModeratorOnly)
+            else if (!isMod && command.ModeratorOnly)
             {
                 return null;
             }
-            else if (isBroadcaster && command.BroadcasterOnly)
+            else if (!isBroadcaster && command.BroadcasterOnly)
             {
                 return null;
             }
