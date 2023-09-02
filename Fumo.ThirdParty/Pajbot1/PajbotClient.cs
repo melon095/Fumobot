@@ -19,7 +19,9 @@ public class PajbotClient
     /// <exception cref="Exception"></exception>
     public async Task<PajbotResponse> Check(string message, string baseURL, CancellationToken cancellationToken)
     {
-        var url = $"{Endpoint}/{baseURL}";
+        if (!baseURL.StartsWith("https://")) baseURL = $"https://{baseURL}";
+
+        var url = $"{baseURL}/{Endpoint}";
 
         PajbotRequest request = new(message);
 
@@ -27,7 +29,11 @@ public class PajbotClient
 
         if (result.IsSuccessStatusCode)
         {
-            return await result!.Content!.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken)!;
+            var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
+
+            return response is null
+                ? throw new Exception("Pajbot returned null")
+                : response;
         }
         else
         {

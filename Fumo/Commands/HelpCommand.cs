@@ -1,6 +1,7 @@
 ﻿using Fumo.Enums;
 using Fumo.Exceptions;
 using Fumo.Models;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands;
 

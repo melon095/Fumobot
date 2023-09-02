@@ -3,7 +3,6 @@ using Fumo.Enums;
 using Fumo.Interfaces.Command;
 using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;

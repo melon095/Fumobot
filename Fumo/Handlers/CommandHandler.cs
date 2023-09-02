@@ -6,11 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Autofac;
 using Fumo.Exceptions;
 using Fumo.Database.DTO;
-using System.Threading;
 using Fumo.ThirdParty.Pajbot1;
-using System.Runtime.CompilerServices;
 using Fumo.Enums;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Handlers;
 

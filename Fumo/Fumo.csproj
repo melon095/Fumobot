@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
+    <ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
     <ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
   </ItemGroup>
 

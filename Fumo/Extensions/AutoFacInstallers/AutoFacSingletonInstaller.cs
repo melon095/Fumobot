@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Fumo.Handlers;
 using Fumo.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;

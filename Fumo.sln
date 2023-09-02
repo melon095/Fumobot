@@ -12,7 +12,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.ThirdParty", "Fumo.ThirdParty\Fumo.ThirdParty.csproj", "{0967E4CE-60E5-494F-AE50-A50B42FD5648}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fumo.Database", "Fumo.Database\Fumo.Database.csproj", "{38A6F42D-AF04-4303-BBD2-6595B966D577}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.Database", "Fumo.Database\Fumo.Database.csproj", "{38A6F42D-AF04-4303-BBD2-6595B966D577}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fumo.Shared", "Fumo.Shared\Fumo.Shared.csproj", "{96503430-33FE-4250-818A-D0960F037F51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{38A6F42D-AF04-4303-BBD2-6595B966D577}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38A6F42D-AF04-4303-BBD2-6595B966D577}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38A6F42D-AF04-4303-BBD2-6595B966D577}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96503430-33FE-4250-818A-D0960F037F51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96503430-33FE-4250-818A-D0960F037F51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96503430-33FE-4250-818A-D0960F037F51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96503430-33FE-4250-818A-D0960F037F51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

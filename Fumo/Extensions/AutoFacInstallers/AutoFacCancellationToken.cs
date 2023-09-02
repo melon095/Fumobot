@@ -7,9 +7,9 @@ namespace Fumo.Extensions.AutoFacInstallers;
 
 public static class AutoFacCancellationToken
 {
-    public static ContainerBuilder InstallGlobalCancellationToken(this ContainerBuilder builder, IConfiguration config)
+    public static ContainerBuilder InstallGlobalCancellationToken(this ContainerBuilder builder, IConfiguration _)
     {
-        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        CancellationTokenSource tokenSource = new();
 
         var AllCleanup = () =>
         {

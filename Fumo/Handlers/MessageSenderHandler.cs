@@ -17,7 +17,7 @@ using MessageQueue = ConcurrentQueue<(string Channel, string Message, string? Re
 /*
     Made with help by foretack ;P
 */
-public class MessageSenderHandler : IMessageSenderHandler
+public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 {
     public static readonly long MessageInterval = 1250;
 
@@ -43,6 +43,13 @@ public class MessageSenderHandler : IMessageSenderHandler
         CancellationToken = cancellationTokenSource.Token;
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        this.MessageTask.Dispose();
     }
 
     private Task SendTask() => Task.Run(async () =>

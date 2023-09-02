@@ -4,6 +4,8 @@ using Fumo.Database.DTO;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
+using Fumo.Shared.Regexes;
+using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
@@ -11,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using Serilog;
-using System.Linq.Expressions;
 
 namespace Fumo.Commands;
 
@@ -24,7 +25,7 @@ internal class JoinCommand : ChatCommand
     public IrcClient Irc { get; }
     public Application Application { get; }
     public IThreeLetterAPI ThreeLetterAPI { get; }
-    public IUserRepository _UserRepository { get; }
+    public IUserRepository UserRepository { get; }
     public ILifetimeScope LifetimeScope { get; }
 
     private readonly string BotID;
@@ -51,7 +52,7 @@ internal class JoinCommand : ChatCommand
         Irc = irc;
         Application = application;
         ThreeLetterAPI = threeLetterAPI;
-        _UserRepository = userRepository;
+        UserRepository = userRepository;
         LifetimeScope = lifetimeScope;
         BotID = config["Twitch:UserID"] ?? throw new ArgumentException("missing Twitch:UserID config");
     }
@@ -94,7 +95,7 @@ internal class JoinCommand : ChatCommand
 
         if (otherUser is not null)
         {
-            var username = UserRepository.CleanUsername(otherUser);
+            var username = UsernameCleanerRegex.CleanUsername(otherUser);
 
             var isMod = await this.IsMod(User, username, ct);
 
@@ -105,7 +106,7 @@ internal class JoinCommand : ChatCommand
 
             try
             {
-                userToJoin = await this._UserRepository.SearchNameAsync(username, ct);
+                userToJoin = await this.UserRepository.SearchNameAsync(username, ct);
                 other = true;
             }
             catch (UserNotFoundException ex)
