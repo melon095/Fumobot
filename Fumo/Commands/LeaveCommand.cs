@@ -14,7 +14,7 @@ internal class LeaveCommand : ChatCommand
     public LeaveCommand()
     {
         SetName("leave|part");
-        //SetFlags(ChatCommandFlags.BroadcasterOnly);
+        SetFlags(ChatCommandFlags.BroadcasterOnly);
     }
 
     public ILogger Logger { get; }
@@ -27,7 +27,7 @@ internal class LeaveCommand : ChatCommand
 
     public LeaveCommand(ILogger logger, ILifetimeScope lifetimeScope, IApplication application, IrcClient ircClient) : this()
     {
-        Logger = logger;
+        Logger = logger.ForContext<LeaveCommand>();
         LifetimeScope = lifetimeScope;
         Application = application;
         IrcClient = ircClient;
