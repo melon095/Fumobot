@@ -5,6 +5,7 @@ using Fumo.Enums;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
+using Fumo.Shared.Regexes;
 using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;

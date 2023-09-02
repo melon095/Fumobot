@@ -1,9 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 
-namespace Fumo;
+namespace Fumo.Shared.Regexes;
 
-internal static partial class BanphraseRegex
+public static partial class BanphraseRegex
 {
     public static readonly ReadOnlyCollection<Func<string, bool>> GlobalRegex = new(new List<Func<string, bool>>
     {
