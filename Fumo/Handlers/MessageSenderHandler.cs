@@ -17,8 +17,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     private ConcurrentDictionary<string, MessageQueue> Queues { get; } = new();
 
-    private ILogger Logger { get; }
-
     private IrcClient IrcClient { get; }
 
     private CancellationToken CancellationToken { get; }
@@ -28,11 +26,9 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private Task MessageTask { get; }
 
     public MessageSenderHandler(
-        ILogger logger,
         IrcClient ircClient,
         CancellationTokenSource cancellationTokenSource)
     {
-        Logger = logger;
         IrcClient = ircClient;
         CancellationToken = cancellationTokenSource.Token;
 
@@ -94,8 +90,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     /// <inheritdoc/>
     public ValueTask SendMessage(string channel, string message, string? replyID = null)
     {
-        this.Logger.Debug("Sending message to {Channel}: {Message}", channel, message);
-
         this.SendHistory[channel] = Unix();
 
         return replyID is null

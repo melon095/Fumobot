@@ -73,6 +73,7 @@ public class CommandRepository
         return null;
     }
 
+    // FIXME: This class is ugly fix it
     // FIXME: Yes this would create a memory leak if the one that runs the command doesn't call Dispose. I have no idea how else i should structure this.
     public ILifetimeScope? CreateCommandScope(string identifier)
     {

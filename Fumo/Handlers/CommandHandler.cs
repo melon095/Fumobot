@@ -167,6 +167,7 @@ internal class CommandHandler : ICommandHandler
             command.User = message.User;
             command.Input = message.Input;
             command.Privmsg = message.Privmsg;
+            command.CommandInvocationName = commandName;
 
             this.Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 

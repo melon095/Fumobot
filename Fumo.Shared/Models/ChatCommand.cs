@@ -15,6 +15,11 @@ public abstract class ChatCommand : IChatCommand
     public Privmsg Privmsg { get; set; }
 
     /// <summary>
+    /// The command invocation is the part of the message that matches the command name
+    /// </summary>
+    public string CommandInvocationName { get; set; }
+
+    /// <summary>
     /// Regex that matches the command
     /// </summary>
     public Regex NameMatcher { get; protected set; }

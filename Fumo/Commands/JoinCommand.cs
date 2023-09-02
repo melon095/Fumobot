@@ -31,7 +31,7 @@ internal class JoinCommand : ChatCommand
 
     public JoinCommand()
     {
-        SetName("join");
+        SetName("(re)?join");
         SetDescription("Allow the bot to join you or a channel you mod");
         SetCooldown(TimeSpan.FromMinutes(1));
     }
@@ -90,12 +90,12 @@ internal class JoinCommand : ChatCommand
 
         var other = false;
         var userToJoin = User;
-        var otherUser = Input.ElementAtOrDefault(0);
+        var otherUser = Input.ElementAtOrDefault(0) ?? "";
+        var username = UsernameCleanerRegex.CleanUsername(otherUser);
 
-        if (otherUser is not null)
+
+        if (!string.IsNullOrEmpty(otherUser) && User.TwitchName != username)
         {
-            var username = UsernameCleanerRegex.CleanUsername(otherUser);
-
             var isMod = await this.IsMod(User, username, ct);
 
             if (!isMod)
@@ -120,11 +120,30 @@ internal class JoinCommand : ChatCommand
             }
         }
 
-        if (await this.Database.Channels.AnyAsync(x => x.TwitchID == userToJoin.TwitchID, ct))
-        {
-            var p = other ? "their" : "your";
+        var existingChannel = await this.Database.Channels
+            .Where(x => x.TwitchID == userToJoin.TwitchID)
+            .SingleOrDefaultAsync(ct);
 
-            return $"I am already in {p} channel.";
+        if (existingChannel is ChannelDTO channel)
+        {
+            var possesivePronoun = other ? "their" : "your";
+
+            if (CommandInvocationName == "rejoin")
+            {
+                if (channel.SetForDeletion)
+                {
+                    return "That channel was recently removed, please wait an hour or so before trying to 'join' again";
+                }
+
+                await this.Irc.PartChannel(username, ct);
+                await this.Irc.JoinChannel(username, ct);
+
+                return $"I tried to rejoin {possesivePronoun} channel.";
+            }
+            else
+            {
+                return $"I am already in {possesivePronoun} channel.";
+            }
         }
 
         var pronoun = other ? $"{userToJoin.TwitchName}'s" : "your";
@@ -160,9 +179,8 @@ internal class JoinCommand : ChatCommand
             }
 
             // Yes this is required i think
-            ChannelDTO channel = await this.Database.Channels.Where(x => x.TwitchID == userToJoin.TwitchID).FirstAsync(ct);
-
-            this.Application.Channels[channel.TwitchName] = channel;
+            ChannelDTO a = await this.Database.Channels.Where(x => x.TwitchID == userToJoin.TwitchID).FirstAsync(ct);
+            this.Application.Channels[a.TwitchName] = a;
 
             return response;
         }
