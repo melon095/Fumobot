@@ -2,7 +2,6 @@
 using Fumo.Models;
 using Fumo.Utils;
 using Serilog;
-using System.Collections.ObjectModel;
 
 namespace Fumo.Commands;
 

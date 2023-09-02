@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Fumo.ThirdParty.Exceptions;
+﻿namespace Fumo.ThirdParty.Exceptions;
 
 public class ThreeLetterAPIException : Exception
 {

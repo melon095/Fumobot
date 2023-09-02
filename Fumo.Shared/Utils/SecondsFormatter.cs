@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace Fumo.Utils;
+﻿namespace Fumo.Utils;
 
 // Made by brian6932 :P
 public class SecondsFormatter
@@ -50,8 +47,8 @@ public class SecondsFormatter
             (h > 0) ? $"{h}h" : null,
             (m > 0) ? $"{m}m" : null,
             (s > 0) ? $"{s}s" : null,
-        };
 #pragma warning restore CS8601 // Dereference of a possibly null reference.
+        };
 
         return string.Join(join, parts.Where(part => part != null).Skip(1).Take(limit));
     }

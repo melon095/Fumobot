@@ -1,12 +1,6 @@
 ﻿using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 

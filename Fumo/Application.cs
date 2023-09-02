@@ -5,11 +5,9 @@ using Fumo.Interfaces;
 using Fumo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MiniTwitch.Common.Extensions;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Serilog;
-using System.Runtime.InteropServices;
 
 namespace Fumo;
 

@@ -1,4 +1,7 @@
-﻿[*.{cs,vb}]
+﻿[*]
+end_of_line = lf
+
+[*.{cs,vb}]
 
 # CS8618: Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 dotnet_diagnostic.CS8618.severity = none
@@ -52,3 +55,4 @@ dotnet_naming_style.pascal_case.required_prefix =
 dotnet_naming_style.pascal_case.required_suffix = 
 dotnet_naming_style.pascal_case.word_separator = 
 dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_style_prefer_inferred_tuple_names = true:suggestion

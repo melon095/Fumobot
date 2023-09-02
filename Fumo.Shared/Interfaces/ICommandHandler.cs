@@ -1,5 +1,4 @@
-﻿using Fumo.Database;
-using Fumo.Models;
+﻿using Fumo.Models;
 
 namespace Fumo.Interfaces;
 

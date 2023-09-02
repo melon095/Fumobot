@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Fumo.Exceptions;
+﻿namespace Fumo.Exceptions;
 
 public class UserNotFoundException : Exception
 {

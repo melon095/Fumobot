@@ -1,13 +1,7 @@
-﻿using Fumo.Database;
-using Fumo.Interfaces;
-using Fumo.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Fumo.Interfaces;
 using MiniTwitch.Irc;
 using Serilog;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
-using System.Threading.Channels;
 
 namespace Fumo.Handlers;
 

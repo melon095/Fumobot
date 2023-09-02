@@ -1,14 +1,14 @@
-﻿using Fumo.Database;
+﻿using Autofac;
+using Fumo.Database;
+using Fumo.Database.DTO;
+using Fumo.Enums;
+using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
-using Serilog;
-using Microsoft.Extensions.Configuration;
-using Autofac;
-using Fumo.Exceptions;
-using Fumo.Database.DTO;
-using Fumo.ThirdParty.Pajbot1;
-using Fumo.Enums;
 using Fumo.Shared.Repositories;
+using Fumo.ThirdParty.Pajbot1;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 
 namespace Fumo.Handlers;
 
