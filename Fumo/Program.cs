@@ -34,7 +34,7 @@ internal class Program
             .InstallDatabase(configuration)
             .InstallSingletons(configuration)
             .InstallScoped(configuration)
-            //.InstallQuartz(configuration)
+            .InstallQuartz(configuration)
             .Build();
 
         Log.Logger.Information("Starting up");
@@ -53,7 +53,7 @@ internal class Program
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);
 
-            //var scheduler = scope.Resolve<IScheduler>();
+            var scheduler = scope.Resolve<IScheduler>();
 
             var botChannel = await db.Channels
                 .Where(x => x.UserTwitchID.Equals(config["Twitch:UserID"]))
@@ -85,21 +85,21 @@ internal class Program
             }
 
             Log.Information("Registering Quartz jobs");
-            //await JobRegister.RegisterJobs(scheduler, ctoken);
+            await JobRegister.RegisterJobs(scheduler, ctoken);
 
             // Start up some singletons
             _ = scope.Resolve<ICommandHandler>();
             _ = scope.Resolve<ICooldownHandler>();
             _ = scope.Resolve<IMessageSenderHandler>();
 
-            //await scheduler.Start(ctoken);
+            await scheduler.Start(ctoken);
 
             await scope.Resolve<IApplication>().StartAsync();
         }
 
         Console.ReadLine();
 
-        //await container.Resolve<IScheduler>().Shutdown();
+        await container.Resolve<IScheduler>().Shutdown();
         await container.DisposeAsync();
     }
 }
