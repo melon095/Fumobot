@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Fumo.BackgroundJobs;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
@@ -9,6 +10,7 @@ using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Quartz;
 using Serilog;
 
 namespace Fumo;
@@ -32,6 +34,7 @@ internal class Program
             .InstallDatabase(configuration)
             .InstallSingletons(configuration)
             .InstallScoped(configuration)
+            //.InstallQuartz(configuration)
             .Build();
 
         Log.Logger.Information("Starting up");
@@ -46,6 +49,11 @@ internal class Program
             var tlp = scope.Resolve<IThreeLetterAPI>();
             var db = scope.Resolve<DatabaseContext>();
             var ctoken = scope.Resolve<CancellationTokenSource>().Token;
+
+            Log.Information("Checking for Pending migrations");
+            await db.Database.MigrateAsync(ctoken);
+
+            //var scheduler = scope.Resolve<IScheduler>();
 
             var botChannel = await db.Channels
                 .Where(x => x.UserTwitchID.Equals(config["Twitch:UserID"]))
@@ -76,18 +84,22 @@ internal class Program
                 await db.SaveChangesAsync();
             }
 
-
-            Log.Information("Checking for Pending migrations");
-            await db.Database.MigrateAsync(ctoken);
+            Log.Information("Registering Quartz jobs");
+            //await JobRegister.RegisterJobs(scheduler, ctoken);
 
             // Start up some singletons
             _ = scope.Resolve<ICommandHandler>();
             _ = scope.Resolve<ICooldownHandler>();
             _ = scope.Resolve<IMessageSenderHandler>();
 
+            //await scheduler.Start(ctoken);
+
             await scope.Resolve<IApplication>().StartAsync();
         }
 
         Console.ReadLine();
+
+        //await container.Resolve<IScheduler>().Shutdown();
+        await container.DisposeAsync();
     }
 }
