@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Fumo.Handlers;
 using Fumo.Interfaces;
-using Fumo.Shared.Repositories;
+using Fumo.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
@@ -57,6 +57,11 @@ public static class AutoFacSingletonInstaller
             .RegisterType<CommandRepository>()
                 .AsSelf()
                 .SingleInstance();
+
+        builder
+            .RegisterType<ChannelRepository>()
+            .As<IChannelRepository>()
+            .SingleInstance();
 
         return builder;
     }

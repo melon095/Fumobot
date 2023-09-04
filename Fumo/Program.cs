@@ -3,7 +3,7 @@ using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
 using Fumo.Interfaces;
-using Fumo.Shared.Repositories;
+using Fumo.Repository;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;

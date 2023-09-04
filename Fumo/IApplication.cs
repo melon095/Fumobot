@@ -9,7 +9,5 @@ internal interface IApplication
 
     DateTime StartTime { get; }
 
-    Dictionary<string, ChannelDTO> Channels { get; set; }
-
     Task StartAsync();
 }

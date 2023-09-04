@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Fumo.Shared.Repositories;
+namespace Fumo.Repository;
 
 public class CommandRepository
 {

@@ -5,8 +5,8 @@ using Fumo.Enums;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
+using Fumo.Repository;
 using Fumo.Shared.Regexes;
-using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -42,7 +42,7 @@ internal class CommandHandler : ICommandHandler
     {
         LifetimeScope = lifetimeScope;
         Application = application;
-        Logger = logger;
+        Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
         Configuration = configuration;
         CommandRepository = commandRepository;

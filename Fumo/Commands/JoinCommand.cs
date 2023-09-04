@@ -4,6 +4,7 @@ using Fumo.Database.DTO;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
+using Fumo.Repository;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
@@ -12,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using Serilog;
+using System.Runtime.InteropServices;
 
 namespace Fumo.Commands;
 
@@ -22,10 +24,12 @@ internal class JoinCommand : ChatCommand
     public DatabaseContext Database { get; }
 
     public IrcClient Irc { get; }
-    public IApplication Application { get; }
+
+    public IChannelRepository ChannelRepository { get; }
+
     public IThreeLetterAPI ThreeLetterAPI { get; }
+
     public IUserRepository UserRepository { get; }
-    public ILifetimeScope LifetimeScope { get; }
 
     private readonly string BotID;
 
@@ -41,18 +45,16 @@ internal class JoinCommand : ChatCommand
         DatabaseContext database,
         IConfiguration config,
         IrcClient irc,
-        IApplication application,
+        IChannelRepository channelRepository,
         IThreeLetterAPI threeLetterAPI,
-        IUserRepository userRepository,
-        ILifetimeScope lifetimeScope) : this()
+        IUserRepository userRepository) : this()
     {
         Logger = logger.ForContext<JoinCommand>();
         Database = database;
         Irc = irc;
-        Application = application;
+        ChannelRepository = channelRepository;
         ThreeLetterAPI = threeLetterAPI;
         UserRepository = userRepository;
-        LifetimeScope = lifetimeScope;
         BotID = config["Twitch:UserID"] ?? throw new ArgumentException("missing Twitch:UserID config");
     }
 
@@ -158,29 +160,17 @@ internal class JoinCommand : ChatCommand
 
         try
         {
-            using var scope = this.LifetimeScope.BeginLifetimeScope();
-            using var context = scope.Resolve<DatabaseContext>();
-            using (var transaction = await context.Database.BeginTransactionAsync(ct))
+            ChannelDTO newChannel = new()
             {
-                ChannelDTO newChannel = new()
-                {
-                    TwitchID = userToJoin.TwitchID,
-                    TwitchName = userToJoin.TwitchName,
-                    UserTwitchID = userToJoin.TwitchID,
-                };
+                TwitchID = userToJoin.TwitchID,
+                TwitchName = userToJoin.TwitchName,
+                UserTwitchID = userToJoin.TwitchID,
+            };
 
-                await this.Irc.JoinChannel(newChannel.TwitchName, ct);
-                await this.Irc.SendMessage(newChannel.TwitchName, newChatReply, cancellationToken: ct);
+            await ChannelRepository.Create(newChannel, ct);
 
-                await this.Database.Channels.AddAsync(newChannel, ct);
-                await this.Database.SaveChangesAsync(ct);
-
-                await transaction.CommitAsync(ct);
-            }
-
-            // Yes this is required i think
-            ChannelDTO a = await this.Database.Channels.Where(x => x.TwitchID == userToJoin.TwitchID).FirstAsync(ct);
-            this.Application.Channels[a.TwitchName] = a;
+            await this.Irc.JoinChannel(newChannel.TwitchName, ct);
+            await this.Irc.SendMessage(newChannel.TwitchName, newChatReply, cancellationToken: ct);
 
             return response;
         }

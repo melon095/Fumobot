@@ -68,6 +68,10 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                     await this.SendMessage(message.Channel, message.Message, message.ReplyID);
                 }
             }
+
+            // This super duper incredibly important line of code stops the garbage collector from going insane.
+            // Without it the garbage collector would run level 1 collector every few milliseconds for a few seconds.
+            await Task.Delay(100);
         }
     });
 

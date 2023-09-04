@@ -3,11 +3,13 @@ using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Interfaces;
 using Fumo.Models;
+using Fumo.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Serilog;
+using System.Runtime.CompilerServices;
 
 namespace Fumo;
 
@@ -15,12 +17,12 @@ public class Application : IApplication
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
 
-    public Dictionary<string, ChannelDTO> Channels { get; set; } = new();
-
     public DateTime StartTime { get; } = DateTime.Now;
 
     private ILogger Logger { get; }
-    public IConfiguration Configuration { get; }
+
+    private IConfiguration Configuration { get; }
+
     private DatabaseContext Database { get; }
 
     private IUserRepository UserRepository { get; }
@@ -29,13 +31,16 @@ public class Application : IApplication
 
     private IrcClient IrcClient { get; }
 
+    private IChannelRepository ChannelRepository { get; }
+
     public Application(
         ILogger logger,
         IConfiguration configuration,
         DatabaseContext database,
         IUserRepository userRepository,
         CancellationTokenSource cancellationTokenSource,
-        IrcClient ircClient)
+        IrcClient ircClient,
+        IChannelRepository channelRepository)
     {
         Logger = logger.ForContext<Application>();
         Configuration = configuration;
@@ -43,6 +48,7 @@ public class Application : IApplication
         UserRepository = userRepository;
         CancellationTokenSource = cancellationTokenSource;
         IrcClient = ircClient;
+        ChannelRepository = channelRepository;
 
         IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
@@ -50,9 +56,6 @@ public class Application : IApplication
 
     public async Task StartAsync()
     {
-        var channels = await this.Database.Channels.Where(x => !x.SetForDeletion).ToListAsync(CancellationTokenSource.Token);
-
-        this.Channels = channels.ToDictionary(x => x.TwitchName);
 
         Logger.Information("Connecting to TMI");
 
@@ -71,7 +74,11 @@ public class Application : IApplication
 
         Logger.Information("Connected to TMI");
 
-        await IrcClient.JoinChannels(Channels.Select(x => x.Key), CancellationTokenSource.Token);
+
+        await foreach (var channel in ChannelRepository.GetAll(CancellationTokenSource.Token))
+        {
+            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
+        }
     }
 
     private async ValueTask IrcClient_OnReconnect()
@@ -90,7 +97,7 @@ public class Application : IApplication
         {
             this.Logger.Information(privmsg.Content);
 
-            var channel = this.Channels[privmsg.Channel.Name];
+            var channel = await ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
             var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);
 
