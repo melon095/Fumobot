@@ -15,6 +15,8 @@ internal static class AutoFacSerilogInstaller
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Is(config.GetValue<LogEventLevel>("Logging:LogLevel"))
+            // Really fucking annoying during debugging. Ado debug logs are not pleasent to look at.
+            .MinimumLevel.Override("Quartz", LogEventLevel.Information)
             .WriteTo.Console(LoggingFormat)
             .WriteTo.File(LoggingFormat, config.GetValue<string>("Logging:OutputFolder") + LoggingFileFormat, rollingInterval: RollingInterval.Day)
             .CreateLogger();
