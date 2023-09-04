@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Fumo.BackgroundJobs;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
@@ -9,6 +10,7 @@ using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Quartz;
 using Serilog;
 
 namespace Fumo;

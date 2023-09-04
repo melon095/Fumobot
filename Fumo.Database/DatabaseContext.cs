@@ -1,4 +1,6 @@
-﻿using Fumo.Database.DTO;
+﻿using AppAny.Quartz.EntityFrameworkCore.Migrations;
+using AppAny.Quartz.EntityFrameworkCore.Migrations.PostgreSQL;
+using Fumo.Database.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fumo.Database;
@@ -57,6 +59,8 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.Permissions)
             .HasDefaultValueSql("'{\"default\"}'::text[]");
+
+        modelBuilder.AddQuartz(x => x.UsePostgreSql());
 
         base.OnModelCreating(modelBuilder);
     }
