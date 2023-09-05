@@ -1,6 +1,4 @@
 ﻿using Fumo.Shared.Exceptions;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Text;
 
 namespace Fumo.Shared.Models;
@@ -59,10 +57,10 @@ public class ChatCommandParser
                     }
                     break;
 
-                case "Number":
+                case "Int32":
                     {
                         var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, $"is missing a number (--{param.Name} 42)");
-                        if (int.TryParse(input[idx], out var number))
+                        if (int.TryParse(value, out var number))
                         {
                             parsedParameters[param.Name] = number;
 

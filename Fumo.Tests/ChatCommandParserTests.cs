@@ -41,6 +41,22 @@ public class ChatCommandParserTests : ChatCommandParser
     }
 
     [Fact]
+    public void CommandParser_CanParseNumber()
+    {
+        // Arrange
+        this.AddParameter(new(typeof(int), "foo"));
+        var input = new List<string> { "--foo", "42" };
+        var expectedInput = Array.Empty<string>();
+
+        // Act
+        this.ParseArguments(input);
+
+        // Assert
+        Assert.Equal(42, this.GetArgument<int>("foo"));
+        Assert.Equal(expectedInput, input);
+    }
+
+    [Fact]
     public void CommandParser_CanParsMultipleArguments()
     {
         // Arrange
