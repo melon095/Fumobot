@@ -100,5 +100,4 @@ internal class ChannelRepository : IChannelRepository
         Database.Channels.Update(channelDTO);
         await Database.SaveChangesAsync(cancellationToken);
     }
-
 }

@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Database.DTO;
+using Fumo.Database.Extensions;
 using Fumo.Enums;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
@@ -29,6 +30,8 @@ internal class CommandHandler : ICommandHandler
 
     private IMessageSenderHandler MessageSenderHandler { get; }
 
+    private DatabaseContext DatabaseContext { get; }
+
     private PajbotClient Pajbot { get; } = new();
 
     public CommandHandler(
@@ -38,7 +41,8 @@ internal class CommandHandler : ICommandHandler
         ICooldownHandler cooldownHandler,
         IConfiguration configuration,
         CommandRepository commandRepository,
-        IMessageSenderHandler messageSenderHandler)
+        IMessageSenderHandler messageSenderHandler,
+        DatabaseContext databaseContext)
     {
         LifetimeScope = lifetimeScope;
         Application = application;
@@ -47,6 +51,7 @@ internal class CommandHandler : ICommandHandler
         Configuration = configuration;
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
+        DatabaseContext = databaseContext;
 
         this.Application.OnMessage += this.OnMessage;
     }
@@ -132,12 +137,20 @@ internal class CommandHandler : ICommandHandler
     {
         using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
         if (commandScope is null) return null;
+        var command = commandScope.Resolve<ChatCommand>();
+
+        CommandExecutionLogsDTO commandExecutionLogs = new()
+        {
+            Id = Guid.NewGuid(),
+            CommandName = command.NameMatcher.ToString(),
+            ChannelId = message.Channel.TwitchID,
+            UserId = message.User.TwitchID,
+            Success = false,
+            Input = message.Input,
+        };
 
         try
         {
-            var command = commandScope.Resolve<ChatCommand>();
-
-
             bool isMod = message.Privmsg.Author.IsMod;
             bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
 
@@ -158,7 +171,7 @@ internal class CommandHandler : ICommandHandler
             bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
             if (onCooldown) return null;
 
-            // FIXME: Add arguments thing here.
+            command.ParseArguments(message.Input);
 
             /*
                 FIXME: This should be changed. 
@@ -173,14 +186,12 @@ internal class CommandHandler : ICommandHandler
 
             var result = await command.Execute(cancellationToken);
 
+            commandExecutionLogs.Success = true;
+            commandExecutionLogs.Result = result.Message.Length > 0
+                ? result.Message
+                : "(No Response)";
+
             await this.CooldownHandler.SetCooldownAsync(message, command);
-
-            // FIXME: add some result logging
-
-            if (string.IsNullOrEmpty(result.Message))
-            {
-                return null;
-            }
 
             var (pajbotBanned, pajbotReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
             if (pajbotBanned)
@@ -197,12 +208,32 @@ internal class CommandHandler : ICommandHandler
         }
         catch (InvalidInputException ex)
         {
+            commandExecutionLogs.Success = false;
+
             return ex.Message;
         }
         catch (Exception ex)
         {
+            commandExecutionLogs.Success = false;
             this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
-            return "A fatal error occured while executing the command.";
+
+            if (message.User.IsAdmin())
+            {
+                return $"FeelsDankMan -> {ex.Message[..50]}";
+            }
+            else
+            {
+                return "FeelsDankMan something broke!";
+            }
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(commandExecutionLogs.Result))
+            {
+                await this.DatabaseContext.CommandExecutionLogs.AddAsync(commandExecutionLogs, cancellationToken);
+
+                await this.DatabaseContext.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

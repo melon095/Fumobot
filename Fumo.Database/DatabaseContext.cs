@@ -11,6 +11,8 @@ public class DatabaseContext : DbContext
 
     public DbSet<UserDTO> Users { get; set; }
 
+    public DbSet<CommandExecutionLogsDTO> CommandExecutionLogs { get; set; }
+
     // For migrations
     public DatabaseContext()
     { }
@@ -59,6 +61,10 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.Permissions)
             .HasDefaultValueSql("'{\"default\"}'::text[]");
+
+        modelBuilder.Entity<CommandExecutionLogsDTO>()
+            .Property(x => x.Date)
+            .HasDefaultValueSql("now()");
 
         modelBuilder.AddQuartz(x => x.UsePostgreSql());
 

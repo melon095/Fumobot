@@ -1,13 +1,14 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Enums;
 using Fumo.Interfaces.Command;
+using Fumo.Shared.Models;
 using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
 
-public abstract class ChatCommand : IChatCommand
+public abstract class ChatCommand : ChatCommandParser, IChatCommand
 {
     public ChannelDTO Channel { get; set; }
     public UserDTO User { get; set; }
