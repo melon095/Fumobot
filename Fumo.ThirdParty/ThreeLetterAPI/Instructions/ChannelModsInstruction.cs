@@ -1,6 +1,8 @@
-﻿namespace Fumo.ThirdParty.ThreeLetterAPI.Instructions;
+﻿using Fumo.ThirdParty.GraphQL;
 
-public class ChannelModsInstruction : IThreeLetterAPIInstruction
+namespace Fumo.ThirdParty.ThreeLetterAPI.Instructions;
+
+public class ChannelModsInstruction : IGraphQLInstruction
 {
     public string? Id { get; }
     public string? Login { get; }
@@ -12,28 +14,11 @@ public class ChannelModsInstruction : IThreeLetterAPIInstruction
         Login = login;
         Cursor = cursor;
     }
-    public ThreeLetterAPIRequest Create()
+    public GraphQLRequest Create()
     {
         return new()
         {
-            Query = @"query($id: ID, $login: String, $cursor: Cursor) {
-                user(id: $id, login: $login, lookupType: ALL) {
-                    mods(first: 100, after: $cursor) {
-                        edges {
-                         cursor
-                         grantedAt
-                         isActive
-                         node {
-                             id
-                             login
-                         }   
-                        }
-                        pageInfo {
-                            hasNextPage
-                        }
-                    }
-                }
-            }",
+            Query = @"query($id: ID, $login: String, $cursor: Cursor) {user(id: $id, login: $login, lookupType: ALL) {mods(first: 100, after: $cursor) {edges {cursor grantedAt isActive node {id login}}pageInfo {hasNextPage}}}}",
             Variables = new
             {
                 id = Id,

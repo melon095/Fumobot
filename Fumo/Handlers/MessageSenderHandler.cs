@@ -96,6 +96,11 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     {
         this.SendHistory[channel] = Unix();
 
+        message = message
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty)
+            .Trim();
+
         return replyID is null
             ? this.IrcClient.SendMessage(channel, message, cancellationToken: this.CancellationToken)
             : this.IrcClient.ReplyTo(replyID, channel, message, cancellationToken: this.CancellationToken);

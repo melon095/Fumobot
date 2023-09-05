@@ -1,22 +1,22 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.ThreeLetterAPI;
+namespace Fumo.ThirdParty.GraphQL;
 
-public class ThreeLetterAPIRequest
+public record GraphQLRequest
 {
     [JsonPropertyName("operationName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? OperationName { get; set; }
+    public string? OperationName { get; init; }
 
     [JsonPropertyName("extensions")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Extension? Extensions { get; set; }
+    public GraphQLExtension? Extensions { get; init; }
 
     [JsonPropertyName("query")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Query { get; set; }
+    public string? Query { get; init; }
 
     [JsonPropertyName("variables")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Variables { get; set; }
+    public object? Variables { get; init; }
 }

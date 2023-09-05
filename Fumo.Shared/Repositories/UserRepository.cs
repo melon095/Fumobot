@@ -29,7 +29,7 @@ public class UserRepository : IUserRepository
     {
         var tlaUser = await ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
 
-        if (tlaUser is null)
+        if (tlaUser is null || tlaUser.User is null)
         {
             return null;
 

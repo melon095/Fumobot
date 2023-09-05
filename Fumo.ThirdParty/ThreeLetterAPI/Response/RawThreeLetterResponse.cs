@@ -3,18 +3,18 @@
 namespace Fumo.ThirdParty.ThreeLetterAPI.Response;
 
 public record Error(
-    [property: JsonPropertyName("message")] string Message
+    [property: JsonPropertyName("message")] string Message,
+    [property: JsonPropertyName("locations")] IReadOnlyList<Location> Locations
 );
 
-public record Extensions(
-    [property: JsonPropertyName("durationMilliseconds")] int DurationMilliseconds,
-    [property: JsonPropertyName("requestID")] string RequestID
+public record Location(
+    [property: JsonPropertyName("line")] int Line,
+    [property: JsonPropertyName("column")] int Column
 );
 
 public record RawThreeLetterResponse<TResponse>(
     [property: JsonPropertyName("data")] TResponse Data,
-    [property: JsonPropertyName("errors")] IReadOnlyList<Error> Errors,
-    [property: JsonPropertyName("extensions")] Extensions Extensions
+    [property: JsonPropertyName("errors")] IReadOnlyList<Error> Errors
 );
 
 

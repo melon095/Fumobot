@@ -1,4 +1,5 @@
-﻿using Quartz;
+﻿using Fumo.BackgroundJobs.SevenTV;
+using Quartz;
 using System.Collections.ObjectModel;
 
 namespace Fumo.BackgroundJobs;
@@ -8,6 +9,7 @@ internal class JobRegister
     private static readonly ReadOnlyCollection<Func<(IJobDetail, List<ITrigger>)>> _jobFactories = new(new Func<(IJobDetail, List<ITrigger>)>[]
     {
         CreateChannelRemover,
+        CreateSevenTVRoles,
     });
 
     public static async Task RegisterJobs(IScheduler scheduler, CancellationToken cancellationToken)
@@ -28,6 +30,22 @@ internal class JobRegister
 
         var trigger = TriggerBuilder.Create()
             .WithIdentity(nameof(ChannelRemoverJob))
+            .StartNow()
+            .WithSchedule(SimpleScheduleBuilder.RepeatHourlyForever())
+            .Build();
+
+        return (job, new() { trigger });
+    }
+
+    private static (IJobDetail, List<ITrigger>) CreateSevenTVRoles()
+    {
+        var job = JobBuilder
+            .Create<FetchRolesJob>()
+            .WithIdentity(nameof(FetchRolesJob))
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity(nameof(FetchRolesJob))
             .StartNow()
             .WithSchedule(SimpleScheduleBuilder.RepeatHourlyForever())
             .Build();

@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
+  </ItemGroup>
+
 </Project>

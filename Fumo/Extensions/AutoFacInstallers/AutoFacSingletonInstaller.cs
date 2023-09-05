@@ -31,7 +31,7 @@ public static class AutoFacSingletonInstaller
         builder.RegisterInstance(ConnectionMultiplexer.Connect(config["Connections:Redis"]!)).SingleInstance();
 
         // Register redis IDatabase with key prefix
-        builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot"));
+        builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot:"));
 
         builder
             .RegisterType<CommandHandler>()

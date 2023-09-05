@@ -13,6 +13,9 @@
         "Token": "",
         "ThreeLetterAPI": ""
     },
+    "SevenTV": {
+        "Bearer": ""
+    },
     "GlobalPrefix": "buh",
     "DebugTMI": false
 }
