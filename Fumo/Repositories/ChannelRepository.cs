@@ -100,7 +100,7 @@ internal class ChannelRepository : IChannelRepository
         await FIllIfNeeded(cancellationToken);
 
         // Very ugly xd
-        // Issue is that EF Core can't update the key yeah? So just gotta do it this way.
+        // Issue is that EF Core can't update the key so just gotta do it this way.
         if (!Channels.ContainsKey(channelDTO.TwitchName))
         {
             var channel = Channels.Values.FirstOrDefault(x => x.TwitchID == channelDTO.TwitchID);
@@ -114,7 +114,6 @@ internal class ChannelRepository : IChannelRepository
             Channels[channelDTO.TwitchName] = channelDTO;
         }
 
-        // TODO: Fix this EF tracking shit omg
         Database.Channels.Update(channelDTO);
         await Database.SaveChangesAsync(cancellationToken);
     }
