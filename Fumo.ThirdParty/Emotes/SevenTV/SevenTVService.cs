@@ -40,4 +40,34 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         return (await SendAsync<OuterSevenTVUser>(request, ct)).UserByConnection;
     }
+
+    public async Task<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"query GetUserByConnection($platform: ConnectionPlatform!, $id: String!) {userByConnection(platform: $platform, id: $id){id username connections{id platform emote_set_id}editor_of{id user{username connections{id platform emote_set_id}}}}}",
+            Variables = new
+            {
+                platform = "TWITCH",
+                id = twitchID
+            }
+        };
+
+        return (await SendAsync<SevenTVEditorEmoteSetsRoot>(request, ct)).UserByConnection;
+    }
+
+    public async Task<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"query GetUserByConnection($platform: ConnectionPlatform!, $id: String!) {userByConnection(platform: $platform, id: $id) {id username editors{id user{username connections{platform id emote_set_id}}}}}",
+            Variables = new
+            {
+                platform = "TWITCH",
+                id = twitchID
+            }
+        };
+
+        return (await SendAsync<SevenTVEditorsRoot>(request, ct)).UserByConnection;
+    }
 }

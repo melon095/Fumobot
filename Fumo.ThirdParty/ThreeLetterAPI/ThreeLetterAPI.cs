@@ -42,4 +42,17 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
 
         return responses;
     }
+
+    // TODO Fix complexity limit. Max 35 instructions per request on some queries
+    public async Task<TResponse> SendMultipleAsync<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default)
+    {
+        List<GraphQLRequest> requestList = new();
+
+        foreach (var instruction in instructions)
+        {
+            requestList.Add(instruction.Create());
+        }
+
+        return await SendAsync<TResponse>(requestList, cancellationToken);
+    }
 }

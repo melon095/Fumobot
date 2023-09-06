@@ -13,7 +13,7 @@ internal class JobRegister
 
         CreateSevenTVRoles,
         CreateSevenTVEmoteSet,
-
+        CreateSevenTVEditors,
     });
 
     public static async Task RegisterJobs(IScheduler scheduler, CancellationToken cancellationToken)
@@ -83,6 +83,21 @@ internal class JobRegister
         var trigger = TriggerBuilder.Create()
             .WithIdentity(nameof(FetchEmoteSetsJob))
             .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(2))
+            .Build();
+
+        return (job, new() { trigger });
+    }
+
+    private static (IJobDetail, List<ITrigger>) CreateSevenTVEditors()
+    {
+        var job = JobBuilder
+            .Create<FetchChannelEditorsJob>()
+            .WithIdentity(nameof(FetchChannelEditorsJob))
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity(nameof(FetchChannelEditorsJob))
+            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(5))
             .Build();
 
         return (job, new() { trigger });

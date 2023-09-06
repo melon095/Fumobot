@@ -38,7 +38,8 @@ public abstract class AbstractGraphQLClient : IDisposable
     protected Task<TResponse> SendAsync<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
         => SendAsync<TResponse>(instructions.Create(), ct);
 
-    protected async Task<TResponse> SendAsync<TResponse>(GraphQLRequest request, CancellationToken cancellationToken)
+    // FIXME: Maybe change that "object" constraint to something better
+    protected async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken)
     {
         var response = await HttpClient.PostAsJsonAsync(string.Empty, request, cancellationToken);
 

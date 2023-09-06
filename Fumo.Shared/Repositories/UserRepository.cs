@@ -7,6 +7,7 @@ using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.InteropServices;
 
 namespace Fumo.Shared.Repositories;
 
@@ -86,5 +87,40 @@ public class UserRepository : IUserRepository
             null => throw new UserNotFoundException($"The user with the name {cleanedUsername} does not exist"),
             var user => user,
         };
+    }
+
+    public async Task<List<UserDTO>> SearchMultipleByIDAsync(IEnumerable<string> ids, CancellationToken cancellation = default)
+    {
+        var dbUsers = await Database.Users
+            .Where(x => ids.Contains(x.TwitchID))
+            .ToListAsync(cancellation);
+
+        var missing = ids.Except(dbUsers.Select(x => x.TwitchID)).ToArray();
+
+        if (missing.Length <= 0)
+        {
+            return dbUsers;
+        }
+
+        BasicBatchUserInstruction request = new(missing);
+
+        var response = await ThreeLetterAPI.SendAsync<BasicBatchUserResponse>(request, cancellation);
+
+        // create dto objects from every object in response
+        foreach (var twitchUser in response.Users)
+        {
+            UserDTO user = new()
+            {
+                TwitchID = twitchUser.ID,
+                TwitchName = twitchUser.Login
+            };
+
+            await Database.Users.AddAsync(user, cancellation);
+            dbUsers.Add(user);
+        }
+
+        await Database.SaveChangesAsync(cancellation);
+
+        return dbUsers;
     }
 }

@@ -2,12 +2,6 @@
 
 namespace Fumo.ThirdParty.Emotes.SevenTV;
 
-public record SevenTVConnection(
-[property: JsonPropertyName("id")] string Id,
-[property: JsonPropertyName("platform")] string Platform,
-[property: JsonPropertyName("emote_set_id")] string EmoteSetId
-);
-
 public record OuterSevenTVUser(
 [property: JsonPropertyName("userByConnection")] SevenTVUser UserByConnection
 );
@@ -32,11 +26,11 @@ public record SevenTVUser(
 [property: JsonPropertyName("emote_sets")] IReadOnlyList<SevenTVUserEmoteSet> EmoteSets
 )
 {
-    public SevenTVUserEmoteSet DefaultEmoteSet()
+    public SevenTVUserEmoteSet? DefaultEmoteSet()
     {
         var id = Connections.First(x => x.Platform == "TWITCH").EmoteSetId;
 
-        return EmoteSets.First(x => x.Id == id);
+        return EmoteSets.FirstOrDefault(x => x.Id == id);
     }
 
     public bool TryDefaultEmoteSet(out SevenTVUserEmoteSet result)

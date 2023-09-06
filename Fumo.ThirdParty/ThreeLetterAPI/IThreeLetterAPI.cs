@@ -15,6 +15,8 @@ public interface IThreeLetterAPI
     /// </exception>
     Task<TResponse> SendAsync<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default);
 
+    Task<TResponse> SendMultipleAsync<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default);
+
     Task<List<TResponse>> PaginatedQueryAsync<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default);
 
 }
