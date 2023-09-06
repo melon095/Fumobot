@@ -74,7 +74,7 @@ internal class FetchChannelEditorsJob : IJob
                     .Select(x => x.TwitchID)
                     .ToArray();
 
-                var key = $"seventv:{twitchConnection.Id}:editors";
+                var key = $"channel:{twitchConnection.Id}:seventv:editors";
                 RedisValue[] items = Array.ConvertAll(mappedUsers, value => new RedisValue(value));
 
                 await Redis.KeyDeleteAsync(key);

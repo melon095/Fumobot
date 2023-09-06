@@ -23,5 +23,5 @@ public interface IChatCommand
     /// <returns>
     /// A list of data.
     /// </returns>
-    public ValueTask<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct);
+    public ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct);
 }

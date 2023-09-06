@@ -78,8 +78,8 @@ public abstract class ChatCommand : ChatCommandParser, IChatCommand
     public virtual ValueTask<CommandResult> Execute(CancellationToken ct)
         => throw new NotImplementedException();
 
-    public virtual ValueTask<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct)
-        => null;
+    public virtual ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => default!;
 
     protected void SetName([StringSyntax(StringSyntaxAttribute.Regex)] string regex)
         => this.NameMatcher = new($"^{regex}", RegexOptions.Compiled);

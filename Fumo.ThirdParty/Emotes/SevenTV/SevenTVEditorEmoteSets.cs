@@ -18,7 +18,3 @@ public record SevenTVEditorEmoteSets(
     [property: JsonPropertyName("connections")] IReadOnlyList<SevenTVConnection> Connections,
     [property: JsonPropertyName("editor_of")] IReadOnlyList<SevenTVEditorEditorOf> EditorOf
 );
-
-public record SevenTVEditorEmoteSetsRoot(
-    [property: JsonPropertyName("userByConnection")] SevenTVEditorEmoteSets UserByConnection
-);

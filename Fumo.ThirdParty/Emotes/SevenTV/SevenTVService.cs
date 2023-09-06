@@ -1,5 +1,7 @@
 ﻿using Fumo.ThirdParty.GraphQL;
 using Microsoft.Extensions.Configuration;
+using System.Data.Common;
+using System.Text.Json.Serialization;
 
 namespace Fumo.ThirdParty.Emotes.SevenTV;
 
@@ -70,4 +72,52 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         return (await SendAsync<SevenTVEditorsRoot>(request, ct)).UserByConnection;
     }
+
+    public async Task<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"query SearchEmote($id: ObjectID!){emote(id: $id){id name}}",
+            Variables = new
+            {
+                id = Id
+            }
+        };
+
+        return (await SendAsync<EmoteRoot>(request, ct)).Emote;
+    }
+
+    public async Task<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"query SearchEmotes($query: String! $page: Int $limit: Int $filter: EmoteSearchFilter) {emotes(query: $query page: $page limit: $limit filter: $filter){items{id name owner{username id}}}}",
+            Variables = new
+            {
+                query = name,
+                page = 1,
+                limit = 100,
+                filter = new
+                {
+                    exact_match = exact
+                }
+            }
+        };
+
+        return (await SendAsync<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
+    }
 }
+
+file record EmoteRoot([property: JsonPropertyName("emote")] SevenTVBasicEmote Emote);
+
+file record SevenTVEditorsRoot(
+    [property: JsonPropertyName("userByConnection")] SevenTVEditors UserByConnection
+);
+
+file record SevenTVEditorEmoteSetsRoot(
+    [property: JsonPropertyName("userByConnection")] SevenTVEditorEmoteSets UserByConnection
+);
+
+file record SevenTVEmoteByNameRoot(
+    [property: JsonPropertyName("emotes")] SevenTVEmoteByName Emotes
+);

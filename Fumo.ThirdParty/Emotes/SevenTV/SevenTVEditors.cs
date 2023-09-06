@@ -7,10 +7,6 @@ public record SevenTVEditorsEditor(
     [property: JsonPropertyName("user")] SevenTVEditorsUser User
 );
 
-public record SevenTVEditorsRoot(
-    [property: JsonPropertyName("userByConnection")] SevenTVEditors UserByConnection
-);
-
 public record SevenTVEditorsUser(
     [property: JsonPropertyName("username")] string Username,
     [property: JsonPropertyName("connections")] IReadOnlyList<SevenTVConnection> Connections
