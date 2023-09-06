@@ -24,7 +24,10 @@ internal class ChannelRepository : IChannelRepository
         {
             Channels = new();
 
-            var channels = await this.Database.Channels.Where(x => !x.SetForDeletion).ToListAsync(cancellationToken);
+            var channels = await this.Database.Channels
+                .Where(x => !x.SetForDeletion)
+                .Include(x => x.User)
+                .ToListAsync(cancellationToken);
 
             foreach (var channel in channels)
             {
@@ -95,6 +98,21 @@ internal class ChannelRepository : IChannelRepository
     public async Task Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
         await FIllIfNeeded(cancellationToken);
+
+        // Very ugly xd
+        // Issue is that EF Core can't update the key yeah? So just gotta do it this way.
+        if (!Channels.ContainsKey(channelDTO.TwitchName))
+        {
+            var channel = Channels.Values.FirstOrDefault(x => x.TwitchID == channelDTO.TwitchID);
+            if (channel is null)
+            {
+                // TODO: Make this cleaner
+                throw new DataException("Channel not found");
+            }
+
+            Channels.TryRemove(channel.TwitchName, out _);
+            Channels[channelDTO.TwitchName] = channelDTO;
+        }
 
         // TODO: Fix this EF tracking shit omg
         Database.Channels.Update(channelDTO);

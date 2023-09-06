@@ -10,7 +10,8 @@ public class UserDTO
 
     public required string TwitchName { get; set; }
 
-    public string[] UsernameHistory { get; set; }
+    [Column(TypeName = "jsonb")]
+    public List<UsernameHistory> UsernameHistory { get; set; } = new();
 
     public DateTime DateSeen { get; set; }
 
@@ -19,3 +20,5 @@ public class UserDTO
 
     public List<string> Permissions { get; set; }
 }
+
+public record UsernameHistory(string Username, DateTime DateChanged);

@@ -38,5 +38,25 @@ public record SevenTVUser(
 
         return EmoteSets.First(x => x.Id == id);
     }
+
+    public bool TryDefaultEmoteSet(out SevenTVUserEmoteSet result)
+    {
+        var id = Connections.FirstOrDefault(x => x.Platform == "TWITCH")?.EmoteSetId;
+        if (id is null)
+        {
+            result = null!;
+            return false;
+        }
+
+        var emoteSet = EmoteSets.FirstOrDefault(x => x.Id == id);
+        if (emoteSet is null)
+        {
+            result = null!;
+            return false;
+        }
+
+        result = emoteSet;
+        return true;
+    }
 }
 

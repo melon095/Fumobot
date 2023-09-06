@@ -4,6 +4,7 @@ using Fumo.Interfaces.Command;
 using Fumo.Shared.Models;
 using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
@@ -80,7 +81,7 @@ public abstract class ChatCommand : ChatCommandParser, IChatCommand
     public virtual ValueTask<ReadOnlyCollection<string>>? GenerateWebsiteDescription(CancellationToken ct)
         => null;
 
-    protected void SetName(string regex)
+    protected void SetName([StringSyntax(StringSyntaxAttribute.Regex)] string regex)
         => this.NameMatcher = new($"^{regex}", RegexOptions.Compiled);
 
     protected void SetCooldown(TimeSpan cd)

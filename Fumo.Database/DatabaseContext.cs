@@ -56,7 +56,7 @@ public class DatabaseContext : DbContext
 
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.UsernameHistory)
-            .HasDefaultValueSql("'{}'::text[]");
+            .HasDefaultValueSql("'[]'::jsonb");
 
         modelBuilder.Entity<UserDTO>()
             .Property(x => x.Permissions)

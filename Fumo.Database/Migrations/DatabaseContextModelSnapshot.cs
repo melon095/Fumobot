@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Fumo.Database;
+using Fumo.Database.DTO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -22,6 +23,8 @@ namespace Fumo.Database.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            #region Quartz
 
             modelBuilder.Entity("AppAny.Quartz.EntityFrameworkCore.Migrations.QuartzBlobTrigger", b =>
                 {
@@ -466,6 +469,8 @@ namespace Fumo.Database.Migrations
                     b.ToTable("qrtz_triggers", "quartz");
                 });
 
+            #endregion Quartz
+
             modelBuilder.Entity("Fumo.Database.DTO.ChannelDTO", b =>
                 {
                     b.Property<string>("TwitchID")
@@ -575,11 +580,11 @@ namespace Fumo.Database.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string[]>("UsernameHistory")
+                    b.Property<List<UsernameHistory>>("UsernameHistory")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text[]")
-                        .HasDefaultValueSql("'{}'::text[]");
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
 
                     b.HasKey("TwitchID");
 

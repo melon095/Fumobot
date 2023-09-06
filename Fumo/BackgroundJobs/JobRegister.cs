@@ -9,7 +9,11 @@ internal class JobRegister
     private static readonly ReadOnlyCollection<Func<(IJobDetail, List<ITrigger>)>> _jobFactories = new(new Func<(IJobDetail, List<ITrigger>)>[]
     {
         CreateChannelRemover,
+        CreateChannelRename,
+
         CreateSevenTVRoles,
+        CreateSevenTVEmoteSet,
+
     });
 
     public static async Task RegisterJobs(IScheduler scheduler, CancellationToken cancellationToken)
@@ -37,6 +41,21 @@ internal class JobRegister
         return (job, new() { trigger });
     }
 
+    private static (IJobDetail, List<ITrigger>) CreateChannelRename()
+    {
+        var job = JobBuilder
+            .Create<ChannelRenameJob>()
+            .WithIdentity(nameof(ChannelRenameJob))
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity(nameof(ChannelRenameJob))
+            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(30))
+            .Build();
+
+        return (job, new() { trigger });
+    }
+
     private static (IJobDetail, List<ITrigger>) CreateSevenTVRoles()
     {
         var job = JobBuilder
@@ -52,4 +71,21 @@ internal class JobRegister
 
         return (job, new() { trigger });
     }
+
+
+    private static (IJobDetail, List<ITrigger>) CreateSevenTVEmoteSet()
+    {
+        var job = JobBuilder
+            .Create<FetchEmoteSetsJob>()
+            .WithIdentity(nameof(FetchEmoteSetsJob))
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity(nameof(FetchEmoteSetsJob))
+            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(2))
+            .Build();
+
+        return (job, new() { trigger });
+    }
+
 }

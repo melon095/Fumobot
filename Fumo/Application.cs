@@ -121,6 +121,7 @@ public class Application : IApplication
         if (!user.TwitchName.Equals(tmiUser.Name))
         {
             user.TwitchName = tmiUser.Name;
+            user.UsernameHistory.Add(new(user.TwitchName, DateTime.Now));
 
             Database.Entry(user).State = EntityState.Modified;
             await Database.SaveChangesAsync(CancellationTokenSource.Token);

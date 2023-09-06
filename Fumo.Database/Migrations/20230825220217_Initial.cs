@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Fumo.Database.DTO;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -16,7 +17,7 @@ namespace Fumo.Database.Migrations
                 {
                     TwitchID = table.Column<string>(type: "text", nullable: false),
                     TwitchName = table.Column<string>(type: "text", nullable: false),
-                    UsernameHistory = table.Column<string[]>(type: "text[]", nullable: false, defaultValueSql: "'{}'::text[]"),
+                    UsernameHistory = table.Column<List<UsernameHistory>>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb"),
                     DateSeen = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     Settings = table.Column<Setting[]>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb")
                 },
