@@ -5,9 +5,6 @@ namespace Fumo.Database.Extensions;
 
 public static class UserDTOExtensions
 {
-    public static bool IsAdmin(this UserDTO user)
-        => user.MatchesPermission("admin(\\.)?.*");
-
     public static bool MatchesPermission(this UserDTO user, string input)
     {
         if (user == null)
@@ -22,7 +19,7 @@ public static class UserDTOExtensions
 
         foreach (var permission in user.Permissions)
         {
-            if (Regex.IsMatch(input, permission))
+            if (Regex.IsMatch(input, permission, RegexOptions.Compiled))
             {
                 return true;
             }

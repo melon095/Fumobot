@@ -154,18 +154,18 @@ internal class CommandHandler : ICommandHandler
             bool isMod = message.Privmsg.Author.IsMod;
             bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
 
-            // Fixme: Make cleaner
-            if (!command.Permissions.All(message.User.Permissions.Contains))
+            if (!message.User.MatchesPermission("admin.execute"))
             {
-                return null;
+                if (!command.Permissions.All(message.User.Permissions.Contains) ||
+                    (!isMod && command.ModeratorOnly) ||
+                    (!isBroadcaster && command.BroadcasterOnly))
+                {
+                    return null;
+                }
             }
-            else if (!isMod && command.ModeratorOnly)
+            else
             {
-                return null;
-            }
-            else if (!isBroadcaster && command.BroadcasterOnly)
-            {
-                return null;
+                Logger.Debug("Bypass permission");
             }
 
             bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
@@ -217,7 +217,7 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Success = false;
             this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
 
-            if (message.User.IsAdmin())
+            if (message.User.MatchesPermission("user.chat_error"))
             {
                 return $"FeelsDankMan -> {ex.Message[..50]}";
             }

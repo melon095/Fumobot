@@ -1,12 +1,9 @@
-﻿using Fumo.Enums;
-using Fumo.Exceptions;
+﻿using Fumo.Exceptions;
 using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
-using Quartz.Impl.Triggers;
-using System.Collections.ObjectModel;
 using System.Text;
 
 namespace Fumo.Commands.SevenTV;
@@ -20,7 +17,7 @@ internal class SevenTVSearchCommand : ChatCommand
 
     public SevenTVSearchCommand()
     {
-        SetName("7tv|search");
+        SetName("7tv$|search");
         SetDescription("Search 7TV emotes");
 
         AddParameter(new(typeof(string), "uploader"));
@@ -126,11 +123,11 @@ internal class SevenTVSearchCommand : ChatCommand
             $"**Example**: {prefix}7tv Apu",
             "",
             "-e, --exact",
-            "&emsp;Search for an exact match",
+            "%TAB%Search for an exact match",
             "",
             "-u, --uploader <name>",
-            "&emsp;Search for emotes by a specific uploader",
-            "&emsp;Requires their current Twitch username",
+            "%TAB%Search for emotes by a specific uploader",
+            "%TAB%Requires their current Twitch username",
         };
 
         return ValueTask.FromResult(description);
