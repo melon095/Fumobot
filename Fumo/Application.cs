@@ -95,8 +95,6 @@ public class Application : IApplication
     {
         try
         {
-            this.Logger.Information(privmsg.Content);
-
             var channel = await ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
             var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);

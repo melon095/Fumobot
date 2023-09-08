@@ -9,9 +9,11 @@ using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Quartz;
 using Serilog;
+using System.Runtime.InteropServices;
 
 namespace Fumo;
 
@@ -97,7 +99,13 @@ internal class Program
             await scope.Resolve<IApplication>().StartAsync();
         }
 
-        Console.ReadLine();
+        var token = container.Resolve<CancellationTokenSource>();
+
+        while (!token.IsCancellationRequested)
+        {
+            // Idk, Console.ReadLine doesn't work as a systemctl service
+            await Task.Delay(100);
+        }
 
         await container.Resolve<IScheduler>().Shutdown();
         await container.DisposeAsync();
