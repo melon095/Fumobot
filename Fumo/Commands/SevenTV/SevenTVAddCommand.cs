@@ -23,7 +23,7 @@ internal class SevenTVAddCommand : ChatCommand
 
     public SevenTVAddCommand()
     {
-        SetName("7tvadd|add");
+        SetName("(7tv)?add");
         SetDescription("Adds a 7TV emote to the channel.");
 
         AddParameter(new(typeof(string), "alias"));

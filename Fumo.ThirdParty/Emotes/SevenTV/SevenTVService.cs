@@ -1,6 +1,8 @@
-﻿using Fumo.ThirdParty.GraphQL;
+﻿using Fumo.ThirdParty.Exceptions;
+using Fumo.ThirdParty.GraphQL;
 using Microsoft.Extensions.Configuration;
 using System.Data.Common;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Fumo.ThirdParty.Emotes.SevenTV;
@@ -119,7 +121,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         GraphQLRequest request = new()
         {
-            Query = "mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID! $name: String) {emoteSet(id: $id){id emotes(id: $emote_id action: $action name: $name){id name}}}",
+            Query = @"mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID! $name: String) {emoteSet(id: $id){id emotes(id: $emote_id action: $action name: $name){id name}}}",
             Variables = new
             {
                 id = emoteSet,
@@ -131,10 +133,27 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         var response = await SendAsync<SevenTVModifyEmoteSetRoot>(request, ct);
 
-        var newEmote = response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()
-            ?? throw new Exception($"Something bad happened oh no! It didn't mutate the emote set {emoteSet} ({emoteID})");
+        return response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()?.Name ?? default;
+    }
 
-        return newEmote.Name;
+    public async Task<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"query GetEmoteSet($id: ObjectID!){emoteSet(id: $id){id name emotes{id name data{name}}}}",
+            Variables = new
+            {
+                id = emoteSet
+            }
+        };
+
+        var response = await SendAsync<JsonDocument>(request, ct);
+
+        return response
+            .RootElement
+            .GetProperty("emoteSet")
+            .GetProperty("emotes")
+            .Deserialize<List<SevenTVEnabledEmote>>() ?? new();
     }
 }
 

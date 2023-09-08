@@ -219,7 +219,7 @@ internal class CommandHandler : ICommandHandler
 
             if (message.User.MatchesPermission("user.chat_error"))
             {
-                return $"FeelsDankMan -> {ex.Message[..50]}";
+                return $"FeelsDankMan -> {ex.Message}";
             }
             else
             {
