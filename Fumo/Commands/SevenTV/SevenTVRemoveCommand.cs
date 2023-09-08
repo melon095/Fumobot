@@ -85,16 +85,9 @@ internal class SevenTVRemoveCommand : ChatCommand
             }
         }
 
-        if (emotesToRemove.Count == 1)
-        {
-            output.Append($"Removed the emote {emotesToRemove[0].Name}");
-        }
-
         if (failedToRemove.Count > 0)
         {
-            if (output.Length > 0) output.Append("\u2022 ");
-
-            output.Append($"Failed to remove the following emotes:");
+            output.Append($"\u2022 Failed to remove the following emotes:");
 
             failedToRemove.ForEach(x => output.Append(x));
         }
