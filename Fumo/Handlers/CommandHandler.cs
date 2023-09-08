@@ -8,6 +8,7 @@ using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.Repository;
 using Fumo.Shared.Regexes;
+using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -206,7 +207,9 @@ internal class CommandHandler : ICommandHandler
 
             return result;
         }
-        catch (InvalidInputException ex)
+        catch (Exception ex) when (ex is InvalidInputException ||
+                                   ex is UserNotFoundException ||
+                                   ex is GraphQLException)
         {
             commandExecutionLogs.Success = false;
 

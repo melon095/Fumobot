@@ -43,6 +43,7 @@ internal class FetchEmoteSetsJob : IJob
                 if (currentEmoteSetId == emoteSet.Id) continue;
 
                 channel.SetSetting(ChannelSettingKey.SevenTV_EmoteSet, emoteSet.Id);
+                channel.SetSetting(ChannelSettingKey.SevenTV_UserID, sevenTvUser.Id);
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 

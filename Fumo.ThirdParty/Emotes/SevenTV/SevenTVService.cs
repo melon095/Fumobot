@@ -155,6 +155,25 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             .GetProperty("emotes")
             .Deserialize<List<SevenTVEnabledEmote>>() ?? new();
     }
+
+    public async Task ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)
+    {
+        GraphQLRequest request = new()
+        {
+            Query = @"mutation UpdateUserEditors($id: ObjectID! $editor_id: ObjectID! $d: UserEditorUpdate!){user(id: $id){editors(editor_id: $editor_id data: $d){id}}}",
+            Variables = new
+            {
+                id = channelId,
+                editor_id = userId,
+                d = new
+                {
+                    permissions
+                }
+            }
+        };
+
+        await SendAsync<JsonDocument>(request, ct);
+    }
 }
 
 file record EmoteRoot([property: JsonPropertyName("emote")] SevenTVBasicEmote Emote);

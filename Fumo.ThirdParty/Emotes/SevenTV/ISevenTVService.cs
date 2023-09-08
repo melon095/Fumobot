@@ -17,4 +17,6 @@ public interface ISevenTVService
     Task<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default!);
 
     Task<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default!);
+
+    Task ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default!);
 }
