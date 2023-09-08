@@ -30,15 +30,20 @@ internal static class SevenTVEnsurePermissionsExtensions
             return (currentEmoteSet, sevenTVId);
         }
 
-        RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
-        var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
+        var botIsMember = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), botID);
+        var invokerIsMember = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), invoker.TwitchID);
 
-        if (contains.ElementAt(0) == false)
+        // StackExchange.Redis.RedisServerException: ERR unknown command `SMISMEMBER`
+
+        //RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
+        //var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
+
+        if (botIsMember == false)
         {
             throw new InvalidInputException("I am not an editor in this channel");
         }
 
-        if (contains.ElementAt(1) == false)
+        if (invokerIsMember == false)
         {
             throw new InvalidInputException("You're not an editor in this channel");
         }
