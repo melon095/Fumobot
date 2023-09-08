@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Fumo.Models;
 
-public abstract class ChatCommand : ChatCommandParser, IChatCommand
+public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 {
     public ChannelDTO Channel { get; set; }
     public UserDTO User { get; set; }

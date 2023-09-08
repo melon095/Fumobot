@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Fumo.Shared.Models;
 
-public class ChatCommandParser
+public class ChatCommandArguments
 {
     private readonly List<Parameter> parameters = new();
     private readonly Dictionary<string, object> parsedParameters = new();

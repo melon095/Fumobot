@@ -106,6 +106,36 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         return (await SendAsync<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
     }
+
+    public async Task<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)
+    {
+        var stringAction = action switch
+        {
+            ListItemAction.Add => "ADD",
+            ListItemAction.Remove => "REMOVE",
+            ListItemAction.Update => "UPDATE",
+            _ => throw new NotImplementedException()
+        };
+
+        GraphQLRequest request = new()
+        {
+            Query = "mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID! $name: String) {emoteSet(id: $id){id emotes(id: $emote_id action: $action name: $name){id name}}}",
+            Variables = new
+            {
+                id = emoteSet,
+                action = stringAction,
+                emote_id = emoteID,
+                name,
+            }
+        };
+
+        var response = await SendAsync<SevenTVModifyEmoteSetRoot>(request, ct);
+
+        var newEmote = response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()
+            ?? throw new Exception($"Something bad happened oh no! It didn't mutate the emote set {emoteSet} ({emoteID})");
+
+        return newEmote.Name;
+    }
 }
 
 file record EmoteRoot([property: JsonPropertyName("emote")] SevenTVBasicEmote Emote);
@@ -121,3 +151,10 @@ file record SevenTVEditorEmoteSetsRoot(
 file record SevenTVEmoteByNameRoot(
     [property: JsonPropertyName("emotes")] SevenTVEmoteByName Emotes
 );
+
+file record SevenTVModifyEmoteSetRoot(
+    [property: JsonPropertyName("emoteSet")] SevenTVModifyEmoteSet EmoteSet);
+
+file record SevenTVModifyEmoteSet(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("emotes")] IReadOnlyList<SevenTVBasicEmote> Emote);

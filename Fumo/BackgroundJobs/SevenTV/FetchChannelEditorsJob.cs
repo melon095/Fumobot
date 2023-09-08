@@ -1,5 +1,6 @@
 ﻿using Fumo.Database;
 using Fumo.Database.DTO;
+using Fumo.Extensions;
 using Fumo.Interfaces;
 using Fumo.Repository;
 using Fumo.ThirdParty.Emotes.SevenTV;
@@ -74,7 +75,7 @@ internal class FetchChannelEditorsJob : IJob
                     .Select(x => x.TwitchID)
                     .ToArray();
 
-                var key = $"channel:{twitchConnection.Id}:seventv:editors";
+                var key = SevenTVService.EditorKey(twitchConnection.Id);
                 RedisValue[] items = Array.ConvertAll(mappedUsers, value => new RedisValue(value));
 
                 await Redis.KeyDeleteAsync(key);

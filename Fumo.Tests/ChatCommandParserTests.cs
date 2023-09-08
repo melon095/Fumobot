@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Fumo.Tests;
 
-public class ChatCommandParserTests : ChatCommandParser
+public class ChatCommandParserTests : ChatCommandArguments
 {
     [Fact]
     public void CommandParser_CanParseString()

@@ -48,8 +48,6 @@ public class CommandRepository
         Dictionary<Regex, Type> anotherList = new();
         foreach (var command in commands)
         {
-            Logger.Debug("Command loaded {Name}", command.Name);
-
             var instance = Activator.CreateInstance(command) as ChatCommand;
             if (instance is not null)
             {
@@ -58,6 +56,8 @@ public class CommandRepository
         }
 
         Commands = new(anotherList);
+
+        Logger.Debug("Commands loaded {Commands}", Commands.Select(x => x.Key).ToArray());
     }
 
     public ChatCommand? GetCommand(string identifier)
