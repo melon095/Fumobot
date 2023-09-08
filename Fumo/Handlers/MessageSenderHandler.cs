@@ -13,7 +13,7 @@ using MessageQueue = ConcurrentQueue<(string Channel, string Message, string? Re
 */
 public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 {
-    public static readonly long MessageInterval = 1250;
+    public static readonly int MessageInterval = 1250;
 
     private ConcurrentDictionary<string, MessageQueue> Queues { get; } = new();
 
@@ -59,7 +59,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                             continue;
                         }
 
-                        await Task.Delay((int)((now + MessageInterval) - lastSent));
+                        await Task.Delay(MessageInterval);
                         await this.SendMessage(message.Channel, message.Message, message.ReplyID);
                         continue;
                     }
