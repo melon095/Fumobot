@@ -40,7 +40,7 @@ internal class SevenTVEditorCommand : ChatCommand
         Redis = redis;
         SevenTVService = sevenTVService;
         UserRepository = userRepository;
-        BotID = configuration["Twitch:BotID"]!;
+        BotID = configuration["Twitch:UserID"]!;
     }
 
     private async Task<SevenTVUser> GetUser(CancellationToken ct)

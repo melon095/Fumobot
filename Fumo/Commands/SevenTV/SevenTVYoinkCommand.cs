@@ -44,7 +44,7 @@ internal class SevenTVYoinkCommand : ChatCommand
         MessageSender = messageSender;
         UserRepository = userRepository;
 
-        BotID = configuration["Twitch:BotID"]!;
+        BotID = configuration["Twitch:UserID"]!;
     }
 
     private async Task<string> ConvertToEmoteSet(string channel, CancellationToken ct)

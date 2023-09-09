@@ -32,7 +32,7 @@ internal class SevenTVRemoveCommand : ChatCommand
         SevenTVService = sevenTVService;
         Redis = redis;
         MessageSender = messageSender;
-        BotID = configuration["Twitch:BotID"]!;
+        BotID = configuration["Twitch:UserID"]!;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)

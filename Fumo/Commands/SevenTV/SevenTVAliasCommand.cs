@@ -28,7 +28,7 @@ internal class SevenTVAliasCommand : ChatCommand
     {
         SevenTVService = sevenTVService;
         Redis = redis;
-        BotID = configuration["Twitch:BotID"]!;
+        BotID = configuration["Twitch:UserID"]!;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
