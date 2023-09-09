@@ -99,7 +99,7 @@ internal class JoinCommand : ChatCommand
 
         if (!string.IsNullOrEmpty(otherUser) && User.TwitchName != username)
         {
-            var isMod = await this.IsMod(User, username, ct) || (User.HasPermission("admin"));
+            var isMod = await this.IsMod(User, username, ct) || (User.HasPermission("admin.*"));
 
             if (!isMod)
             {
