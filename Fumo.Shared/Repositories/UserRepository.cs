@@ -46,7 +46,7 @@ public class UserRepository : IUserRepository
 
         try
         {
-            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5));
+            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
 
             await Database.Users.AddAsync(user, cancellationToken);
             await Database.SaveChangesAsync(cancellationToken);
@@ -62,14 +62,23 @@ public class UserRepository : IUserRepository
     /// <inheritdoc/>
     public async Task<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
     {
-        var dbUser = await Database
-            .Users
-            .Where(x => x.TwitchID.Equals(id))
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (dbUser is not null)
+        try
         {
-            return dbUser;
+            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+
+            var dbUser = await Database
+                .Users
+                .Where(x => x.TwitchID.Equals(id))
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (dbUser is not null)
+            {
+                return dbUser;
+            }
+        }
+        finally
+        {
+            Semaphore.Release();
         }
 
         return await SearchWithThreeLetterAPI(id, cancellationToken: cancellationToken) switch
@@ -84,13 +93,22 @@ public class UserRepository : IUserRepository
     {
         var cleanedUsername = UsernameCleanerRegex.CleanUsername(username);
 
-        var dbUser = await Database.Users
+        try
+        {
+            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+
+            var dbUser = await Database.Users
             .Where(x => x.TwitchName.Equals(cleanedUsername))
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (dbUser is not null)
+            if (dbUser is not null)
+            {
+                return dbUser;
+            }
+        }
+        finally
         {
-            return dbUser;
+            Semaphore.Release();
         }
 
         return await SearchWithThreeLetterAPI(login: cleanedUsername, cancellationToken: cancellationToken) switch
