@@ -1,4 +1,5 @@
-﻿using Fumo.Database;
+﻿using Autofac.Core;
+using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
@@ -7,7 +8,6 @@ using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.InteropServices;
 
 namespace Fumo.Shared.Repositories;
 
@@ -19,6 +19,9 @@ public class UserRepository : IUserRepository
     // FIXME: In memory caching
 
     public IThreeLetterAPI ThreeLetterAPI { get; }
+
+    // FIXME: This is to prevent concurrently writing to the database, and no it's not a pretty way of doing it.
+    public SemaphoreSlim Semaphore { get; } = new(1, 1);
 
     public UserRepository(DatabaseContext database, IThreeLetterAPI threeLetterAPI)
     {
@@ -33,7 +36,6 @@ public class UserRepository : IUserRepository
         if (tlaUser is null || tlaUser.User is null)
         {
             return null;
-
         }
 
         UserDTO user = new()
@@ -42,8 +44,17 @@ public class UserRepository : IUserRepository
             TwitchName = tlaUser.User.Login,
         };
 
-        await Database.Users.AddAsync(user, cancellationToken);
-        await Database.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5));
+
+            await Database.Users.AddAsync(user, cancellationToken);
+            await Database.SaveChangesAsync(cancellationToken);
+        }
+        finally
+        {
+            Semaphore.Release();
+        }
 
         return user;
     }
