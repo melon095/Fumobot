@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Database.DTO;
+using Fumo.Database.Extensions;
 using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.Repository;
@@ -11,6 +12,7 @@ using MiniTwitch.Irc.Enums;
 using MiniTwitch.Irc.Models;
 using Serilog;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Fumo;
 
@@ -53,15 +55,6 @@ public class Application : IApplication
 
         IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
-        IrcClient.OnNotice += IrcClient_OnNotice;
-    }
-
-    private ValueTask IrcClient_OnNotice(Notice notice)
-    {
-        if (notice.Type == NoticeType.Msg_channel_suspended)
-        {
-
-        }
     }
 
     public async Task StartAsync()
