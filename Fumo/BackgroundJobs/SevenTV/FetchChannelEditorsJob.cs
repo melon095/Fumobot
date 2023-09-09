@@ -69,7 +69,11 @@ internal class FetchChannelEditorsJob : IJob
 
                 var current7TVEditors = await SevenTVService.GetEditors(twitchConnection.Id, context.CancellationToken);
 
-                var idsToMap = current7TVEditors.Editors.Select(x => x.User.Connections.GetTwitchConnection().Id).ToArray();
+                var idsToMap = current7TVEditors.Editors
+                    .Select(x => x.User.Connections.GetTwitchConnection())
+                    .Where(x => x is not null)
+                    .Select(x => x!.Id)
+                    .ToArray();
 
                 var mappedUsers = (await (UserRepository.SearchMultipleByIDAsync(idsToMap, context.CancellationToken)))
                     .Select(x => x.TwitchID)

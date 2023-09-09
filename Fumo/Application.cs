@@ -7,6 +7,7 @@ using Fumo.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
+using MiniTwitch.Irc.Enums;
 using MiniTwitch.Irc.Models;
 using Serilog;
 using System.Runtime.CompilerServices;
@@ -52,6 +53,15 @@ public class Application : IApplication
 
         IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
+        IrcClient.OnNotice += IrcClient_OnNotice;
+    }
+
+    private ValueTask IrcClient_OnNotice(Notice notice)
+    {
+        if (notice.Type == NoticeType.Msg_channel_suspended)
+        {
+
+        }
     }
 
     public async Task StartAsync()
