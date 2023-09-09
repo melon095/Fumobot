@@ -22,6 +22,12 @@ public static class AutoFacSingletonInstaller
                 x.Username = config["Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
                 x.OAuth = config["Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
                 x.Logger = new LoggerFactory().AddSerilog(Log.Logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
+
+                // https://dev.twitch.tv/docs/irc/#rate-limits
+                if (config.GetValue<bool>("Twitch:Verified"))
+                {
+                    x.JoinRateLimit = 2000;
+                }
             });
 
             return ircClient;

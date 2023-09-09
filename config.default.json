@@ -11,7 +11,8 @@
         "Username": "",
         "UserID": "",
         "Token": "",
-        "ThreeLetterAPI": ""
+        "ThreeLetterAPI": "",
+        "Verified": false
     },
     "SevenTV": {
         "Bearer": ""
