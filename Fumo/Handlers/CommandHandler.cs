@@ -155,7 +155,7 @@ internal class CommandHandler : ICommandHandler
             bool isMod = message.Privmsg.Author.IsMod;
             bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
 
-            if (!message.User.MatchesPermission("admin.execute"))
+            if (!message.User.HasPermission("admin.execute"))
             {
                 if (!command.Permissions.All(message.User.Permissions.Contains) ||
                     (!isMod && command.ModeratorOnly) ||
@@ -212,15 +212,18 @@ internal class CommandHandler : ICommandHandler
                                    ex is GraphQLException)
         {
             commandExecutionLogs.Success = false;
+            commandExecutionLogs.Result = ex.Message;
 
             return ex.Message;
         }
         catch (Exception ex)
         {
             commandExecutionLogs.Success = false;
+            commandExecutionLogs.Result = ex.Message;
+
             this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
 
-            if (message.User.MatchesPermission("user.chat_error"))
+            if (message.User.HasPermission("user.chat_error"))
             {
                 return $"FeelsDankMan -> {ex.Message}";
             }

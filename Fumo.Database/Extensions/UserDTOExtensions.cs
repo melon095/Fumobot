@@ -5,7 +5,7 @@ namespace Fumo.Database.Extensions;
 
 public static class UserDTOExtensions
 {
-    public static bool MatchesPermission(this UserDTO user, string input)
+    public static bool HasPermission(this UserDTO user, string input)
     {
         if (user == null)
         {
@@ -17,9 +17,20 @@ public static class UserDTOExtensions
             return false;
         }
 
+        var requiredParts = input.Split('.');
+
         foreach (var permission in user.Permissions)
         {
-            if (Regex.IsMatch(input, permission, RegexOptions.Compiled))
+            var userParts = permission.Split('.');
+
+            if (userParts.Length != requiredParts.Length)
+            {
+                continue;
+            }
+
+            // admin.foo -> admin.*
+            // admin.foo -> admin.foo
+            if (userParts[0] == requiredParts[0] && (userParts[1] == requiredParts[1] || userParts[1] == "*"))
             {
                 return true;
             }
