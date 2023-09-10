@@ -21,7 +21,7 @@ public class UserRepository : IUserRepository
     public IThreeLetterAPI ThreeLetterAPI { get; }
 
     // FIXME: This is to prevent concurrently writing to the database, and no it's not a pretty way of doing it.
-    public SemaphoreSlim Semaphore { get; } = new(1, 1);
+    public SemaphoreSlim Semaphore { get; } = new(0, 1);
 
     public UserRepository(DatabaseContext database, IThreeLetterAPI threeLetterAPI)
     {
