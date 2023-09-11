@@ -1,6 +1,5 @@
 ﻿using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
-using System.Collections.Concurrent;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -45,7 +44,7 @@ public abstract class AbstractGraphQLClient : IDisposable
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"GQL Server responded with status code ({response.StatusCode})");
+            throw new GraphQLException("Bad response statuscode", response.StatusCode);
         }
 
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);

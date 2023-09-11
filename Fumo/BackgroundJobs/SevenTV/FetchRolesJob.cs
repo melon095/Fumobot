@@ -1,4 +1,5 @@
 ﻿using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
 using StackExchange.Redis;
@@ -28,6 +29,10 @@ internal class FetchRolesJob : IJob
             var json = JsonSerializer.Serialize(roles);
 
             await Redis.StringSetAsync("seventv:roles", json);
+        }
+        catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            continue;
         }
         catch (Exception ex)
         {

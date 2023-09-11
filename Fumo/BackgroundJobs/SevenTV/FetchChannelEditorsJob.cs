@@ -4,6 +4,7 @@ using Fumo.Extensions;
 using Fumo.Interfaces;
 using Fumo.Repository;
 using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
@@ -84,6 +85,10 @@ internal class FetchChannelEditorsJob : IJob
 
                 await Redis.KeyDeleteAsync(key);
                 await Redis.SetAddAsync(key, items);
+            }
+            catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                continue;
             }
             catch (Exception ex)
             {
