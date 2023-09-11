@@ -32,7 +32,7 @@ internal class FetchRolesJob : IJob
         }
         catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
         {
-            continue;
+            return;
         }
         catch (Exception ex)
         {

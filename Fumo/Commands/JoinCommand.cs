@@ -1,6 +1,4 @@
-﻿using Autofac;
-using Fumo.Database;
-using Fumo.Database.DTO;
+﻿using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Exceptions;
 using Fumo.Interfaces;
@@ -10,19 +8,15 @@ using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using Serilog;
-using System.Runtime.InteropServices;
 
 namespace Fumo.Commands;
 
 internal class JoinCommand : ChatCommand
 {
     public ILogger Logger { get; }
-
-    public DatabaseContext Database { get; }
 
     public IrcClient Irc { get; }
 
@@ -43,7 +37,6 @@ internal class JoinCommand : ChatCommand
 
     public JoinCommand(
         ILogger logger,
-        DatabaseContext database,
         IConfiguration config,
         IrcClient irc,
         IChannelRepository channelRepository,
@@ -51,7 +44,6 @@ internal class JoinCommand : ChatCommand
         IUserRepository userRepository) : this()
     {
         Logger = logger.ForContext<JoinCommand>();
-        Database = database;
         Irc = irc;
         ChannelRepository = channelRepository;
         ThreeLetterAPI = threeLetterAPI;
