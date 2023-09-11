@@ -4,12 +4,11 @@ using Fumo.Database.Extensions;
 using Fumo.Exceptions;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using StackExchange.Redis;
-using System.Threading.Channels;
 
 namespace Fumo.Extensions;
 
 // TODO: Im not entirely sure if this is the best way of doing this, just thinking of that the Fumo.ThirdParty library shouldn't know of redis and whatnot...
-internal static class SevenTVEnsurePermissionsExtensions
+internal static class SevenTVServiceExtensions
 {
     public static string EditorKey(this ISevenTVService _, string channelID) => $"channel:{channelID}:seventv:editors";
 

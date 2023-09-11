@@ -123,30 +123,20 @@ internal class JoinCommand : ChatCommand
             }
         }
 
-        var existingChannel = await this.Database.Channels
-            .Where(x => x.TwitchID == userToJoin.TwitchID)
-            .SingleOrDefaultAsync(ct);
 
-        if (existingChannel is ChannelDTO channel)
+        if (await ChannelRepository.GetByID(userToJoin.TwitchID, ct) is ChannelDTO channel)
         {
             var possesivePronoun = other ? "their" : "your";
 
-            if (CommandInvocationName == "rejoin")
+            if (channel.SetForDeletion)
             {
-                if (channel.SetForDeletion)
-                {
-                    return "That channel was recently removed, please wait an hour or so before trying to 'join' again";
-                }
-
-                await this.Irc.PartChannel(username, ct);
-                await this.Irc.JoinChannel(username, ct);
-
-                return $"I tried to rejoin {possesivePronoun} channel.";
+                return "That channel was recently removed, please wait an hour or so before trying to 'join' again";
             }
-            else
-            {
-                return $"I am already in {possesivePronoun} channel.";
-            }
+
+            await this.Irc.PartChannel(username, ct);
+            await this.Irc.JoinChannel(username, ct);
+
+            return $"I tried to rejoin {possesivePronoun} channel.";
         }
 
         var pronoun = other ? $"{userToJoin.TwitchName}'s" : "your";
