@@ -2,6 +2,7 @@
 using Fumo.Database.Extensions;
 using Fumo.Repository;
 using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
 using System.Runtime.InteropServices;
@@ -48,6 +49,10 @@ internal class FetchEmoteSetsJob : IJob
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
                 Logger.Information("Channel {ChannelName} Emote Set update {EmoteSet}", channel.TwitchName, emoteSet.Id);
+            }
+            catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                continue;
             }
             catch (Exception ex)
             {
