@@ -89,7 +89,7 @@ internal class SevenTVRemoveCommand : ChatCommand
         {
             output.Append($"\u2022 Failed to remove the following emotes:");
 
-            failedToRemove.ForEach(x => output.Append(x));
+            failedToRemove.ForEach(x => output.Append($" {x}"));
         }
         else
         {
