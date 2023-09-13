@@ -12,6 +12,7 @@ using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using System.Diagnostics;
 
 namespace Fumo.Handlers;
 
@@ -140,6 +141,7 @@ internal class CommandHandler : ICommandHandler
         if (commandScope is null) return null;
         var command = commandScope.Resolve<ChatCommand>();
 
+        var stopwatch = Stopwatch.StartNew();
         CommandExecutionLogsDTO commandExecutionLogs = new()
         {
             Id = Guid.NewGuid(),
@@ -234,6 +236,10 @@ internal class CommandHandler : ICommandHandler
         }
         finally
         {
+            stopwatch.Stop();
+
+            commandExecutionLogs.Duration = stopwatch.ElapsedMilliseconds;
+
             if (!string.IsNullOrEmpty(commandExecutionLogs.Result))
             {
                 await this.DatabaseContext.CommandExecutionLogs.AddAsync(commandExecutionLogs, cancellationToken);
@@ -243,4 +249,3 @@ internal class CommandHandler : ICommandHandler
         }
     }
 }
-

@@ -22,6 +22,8 @@ public class CommandExecutionLogsDTO
 
     public DateTime Date { get; set; }
 
+    public long Duration { get; set; }
+
     public ChannelDTO Channel { get; set; }
 
     public UserDTO User { get; set; }

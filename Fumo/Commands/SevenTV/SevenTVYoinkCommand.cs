@@ -10,6 +10,7 @@ using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -78,7 +79,7 @@ internal class SevenTVYoinkCommand : ChatCommand
                 return emote;
             })
             .Where(x => x != null)
-            .ToList();
+            .ToImmutableHashSet();
 
         string writeChannel, readChannel;
 
