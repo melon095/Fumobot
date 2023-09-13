@@ -130,33 +130,27 @@ internal class SevenTVYoinkCommand : ChatCommand
             ? ""
             : $" (in #{UnpingUser.Unping(writeChannel)})";
 
-        ConcurrentQueue<string> output = new();
-
-        await Parallel.ForEachAsync(toAdd, ct, async (emote, pct) =>
-            {
-                try
-                {
-                    var aliasName = keepAlias ? emote.Name : null;
-
-                    var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.Id, aliasName, pct) ?? throw new Exception("Idk what happened");
-
-                    output.Enqueue($"👍 Added {name} {writeChannelPrompt}");
-                }
-                catch (Exception ex)
-                {
-                    var e = emote.Name;
-                    if (emote.HasAlias)
-                    {
-                        e += $" (alias of {emote.Name})";
-                    }
-
-                    output.Enqueue($"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}");
-                }
-            });
-
-        foreach (var message in output)
+        // Would have used Parallel.ForEachAsync but that's very slow for few items it seems like.
+        foreach (var emote in toAdd)
         {
-            MessageSender.ScheduleMessage(Channel.TwitchName, message);
+            try
+            {
+                var aliasName = keepAlias ? emote.Name : null;
+
+                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.Id, aliasName, ct) ?? throw new Exception("Idk what happened");
+
+                MessageSender.ScheduleMessage(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}");
+            }
+            catch (Exception ex)
+            {
+                var e = emote.Name;
+                if (emote.HasAlias)
+                {
+                    e += $" (alias of {emote.Name})";
+                }
+
+                MessageSender.ScheduleMessage(Channel.TwitchName, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}");
+            }
         }
 
         return string.Empty;
