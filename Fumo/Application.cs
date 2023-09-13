@@ -77,11 +77,12 @@ public class Application : IApplication
 
         Logger.Information("Connected to TMI");
 
+        var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
 
-        await foreach (var channel in ChannelRepository.GetAll(CancellationTokenSource.Token))
+        await Parallel.ForEachAsync(channels, CancellationTokenSource.Token, async (channel, ct) =>
         {
-            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
-        }
+            await IrcClient.JoinChannel(channel.TwitchName, ct);
+        });
     }
 
     private async ValueTask IrcClient_OnReconnect()
