@@ -13,8 +13,8 @@ internal class SevenTVSearchCommand : ChatCommand
 {
     private readonly int MaxEmoteOutput = 5;
 
-    public readonly ISevenTVService SevenTV;
-    public readonly IUserRepository UserRepository;
+    private readonly ISevenTVService SevenTV;
+    private readonly IUserRepository UserRepository;
 
     public SevenTVSearchCommand()
     {

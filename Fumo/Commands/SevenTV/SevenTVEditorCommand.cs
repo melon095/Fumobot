@@ -14,10 +14,10 @@ namespace Fumo.Commands.SevenTV;
 
 internal class SevenTVEditorCommand : ChatCommand
 {
-    public readonly IDatabase Redis;
-    public readonly ISevenTVService SevenTVService;
-    public readonly IUserRepository UserRepository;
-    private string BotID { get; }
+    private readonly IDatabase Redis;
+    private readonly ISevenTVService SevenTVService;
+    private readonly IUserRepository UserRepository;
+    private readonly string BotID;
 
     public SevenTVEditorCommand()
     {

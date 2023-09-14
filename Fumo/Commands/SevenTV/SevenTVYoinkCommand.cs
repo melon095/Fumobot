@@ -8,7 +8,6 @@ using Fumo.Shared.Utils;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Fumo.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.ThirdParty.Emotes.SevenTV.Models;
@@ -19,10 +18,10 @@ internal class SevenTVYoinkCommand : ChatCommand
 {
     private static readonly char[] ChannelPrefixes = new[] { '@', '#' };
 
-    public readonly ISevenTVService SevenTVService;
-    public readonly IDatabase Redis;
-    public readonly IMessageSenderHandler MessageSender;
-    public readonly IUserRepository UserRepository;
+    private readonly ISevenTVService SevenTVService;
+    private readonly IDatabase Redis;
+    private readonly IMessageSenderHandler MessageSender;
+    private readonly IUserRepository UserRepository;
 
     private string BotID { get; }
 

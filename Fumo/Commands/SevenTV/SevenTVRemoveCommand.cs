@@ -15,10 +15,10 @@ namespace Fumo.Commands.SevenTV;
 
 internal class SevenTVRemoveCommand : ChatCommand
 {
-    public readonly ILogger Logger;
+    private readonly ILogger Logger;
     private readonly ISevenTVService SevenTVService;
     private readonly IDatabase Redis;
-    public readonly IMessageSenderHandler MessageSender;
+    private readonly IMessageSenderHandler MessageSender;
     private string BotID { get; }
 
     public SevenTVRemoveCommand()

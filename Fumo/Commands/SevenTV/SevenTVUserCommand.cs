@@ -15,9 +15,9 @@ internal class SevenTVUserCommand : ChatCommand
 {
     private readonly static Regex MaxSlotsRegex = new("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Compiled | RegexOptions.Multiline);
 
-    public readonly IUserRepository UserRepository;
-    public readonly ISevenTVService SevenTV;
-    public readonly IDatabase Redis;
+    private readonly IUserRepository UserRepository;
+    private readonly ISevenTVService SevenTV;
+    private readonly IDatabase Redis;
 
     public SevenTVUserCommand()
     {

@@ -15,11 +15,11 @@ namespace Fumo.Commands;
 
 internal class JoinCommand : ChatCommand
 {
-    public readonly ILogger Logger;
-    public readonly IrcClient Irc;
-    public readonly IChannelRepository ChannelRepository;
-    public readonly IThreeLetterAPI ThreeLetterAPI;
-    public readonly IUserRepository UserRepository;
+    private readonly ILogger Logger;
+    private readonly IrcClient Irc;
+    private readonly IChannelRepository ChannelRepository;
+    private readonly IThreeLetterAPI ThreeLetterAPI;
+    private readonly IUserRepository UserRepository;
     private readonly string BotID;
 
     public JoinCommand()

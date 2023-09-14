@@ -5,9 +5,6 @@ using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
-using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
 using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.ThirdParty.Emotes.SevenTV.Models;
@@ -16,11 +13,9 @@ namespace Fumo.Commands.SevenTV;
 
 internal class SevenTVAddCommand : ChatCommand
 {
-    private ISevenTVService SevenTVService { get; }
-
-    private IDatabase Redis { get; }
-
-    private string BotID { get; }
+    private readonly ISevenTVService SevenTVService;
+    private readonly IDatabase Redis;
+    private readonly string BotID;
 
     public SevenTVAddCommand()
     {
