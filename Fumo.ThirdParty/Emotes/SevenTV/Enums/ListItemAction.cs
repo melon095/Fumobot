@@ -1,4 +1,4 @@
-﻿namespace Fumo.ThirdParty;
+﻿namespace Fumo.ThirdParty.Emotes.SevenTV.Enums;
 
 public enum ListItemAction
 {

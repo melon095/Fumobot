@@ -1,8 +1,6 @@
-﻿
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.Emotes.SevenTV;
+namespace Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 public record SevenTVEmoteByName(
     [property: JsonPropertyName("items")] List<SevenTVEmoteByNameItem> Items
@@ -14,7 +12,7 @@ public record SevenTVEmoteByNameItem(
     [property: JsonPropertyName("owner")] SevenTVEmoteByNameOwner Owner
 )
 {
-    public SevenTVBasicEmote AsBasicEmote() => new(this.Id, this.Name);
+    public SevenTVBasicEmote AsBasicEmote() => new(Id, Name);
 }
 
 public record SevenTVEmoteByNameOwner(

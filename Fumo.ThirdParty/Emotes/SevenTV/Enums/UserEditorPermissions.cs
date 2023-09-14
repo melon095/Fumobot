@@ -1,4 +1,4 @@
-﻿namespace Fumo.ThirdParty.Emotes.SevenTV;
+﻿namespace Fumo.ThirdParty.Emotes.SevenTV.Enums;
 
 public enum UserEditorPermissions
 {

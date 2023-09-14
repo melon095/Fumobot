@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.Emotes.SevenTV;
+namespace Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 /// <param name="Name">
 /// If the HasAlias method is true, Name will be the alias

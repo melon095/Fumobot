@@ -5,12 +5,13 @@ using Fumo.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using Fumo.Shared.Utils;
-using Fumo.ThirdParty;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 

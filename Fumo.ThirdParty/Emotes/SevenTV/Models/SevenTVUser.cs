@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.Emotes.SevenTV;
+namespace Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 public record OuterSevenTVUser(
 [property: JsonPropertyName("userByConnection")] SevenTVUser UserByConnection

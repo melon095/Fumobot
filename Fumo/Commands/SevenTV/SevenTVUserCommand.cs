@@ -7,6 +7,7 @@ using Fumo.Utils;
 using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 

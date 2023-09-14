@@ -1,4 +1,7 @@
-﻿namespace Fumo.ThirdParty.Emotes.SevenTV;
+﻿using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
+
+namespace Fumo.ThirdParty.Emotes.SevenTV;
 
 public interface ISevenTVService
 {

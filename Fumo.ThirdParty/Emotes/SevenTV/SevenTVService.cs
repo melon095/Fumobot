@@ -1,7 +1,7 @@
-﻿using Fumo.ThirdParty.Exceptions;
+﻿using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.ThirdParty.GraphQL;
 using Microsoft.Extensions.Configuration;
-using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

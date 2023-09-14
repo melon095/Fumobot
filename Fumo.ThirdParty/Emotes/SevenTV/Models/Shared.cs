@@ -1,7 +1,6 @@
-﻿using Fumo.ThirdParty.Emotes.SevenTV;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.Emotes.SevenTV;
+namespace Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 public record SevenTVConnection(
 [property: JsonPropertyName("id")] string Id,

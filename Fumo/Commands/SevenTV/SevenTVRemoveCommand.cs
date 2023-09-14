@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using StackExchange.Redis;
 using System.Text;
+using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -84,7 +86,7 @@ internal class SevenTVRemoveCommand : ChatCommand
         {
             try
             {
-                await SevenTVService.ModifyEmoteSet(aaaa.EmoteSet, ThirdParty.ListItemAction.Remove, emote.Id, ct: ct);
+                await SevenTVService.ModifyEmoteSet(aaaa.EmoteSet, ListItemAction.Remove, emote.Id, ct: ct);
             }
             catch (GraphQLException ex)
             {

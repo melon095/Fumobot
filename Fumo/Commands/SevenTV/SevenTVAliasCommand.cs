@@ -6,6 +6,7 @@ using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
+using Fumo.ThirdParty.Emotes.SevenTV.Enums;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -48,7 +49,7 @@ internal class SevenTVAliasCommand : ChatCommand
 
         var dstEmoteName = Input.ElementAtOrDefault(1);
 
-        var newEmoteName = await SevenTVService.ModifyEmoteSet(EmoteSet, ThirdParty.ListItemAction.Update, srcEmote.Id, dstEmoteName, ct);
+        var newEmoteName = await SevenTVService.ModifyEmoteSet(EmoteSet, ListItemAction.Update, srcEmote.Id, dstEmoteName, ct);
 
         if (dstEmoteName is null)
         {

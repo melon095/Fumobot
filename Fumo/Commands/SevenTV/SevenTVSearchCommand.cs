@@ -5,6 +5,7 @@ using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using System.Text;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 

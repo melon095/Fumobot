@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Fumo.ThirdParty.Emotes.SevenTV;
+namespace Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 public record SevenTVEditorEditorOf(
     [property: JsonPropertyName("id")] string Id,

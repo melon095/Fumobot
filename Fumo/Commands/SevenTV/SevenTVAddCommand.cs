@@ -2,7 +2,6 @@
 using Fumo.Extensions;
 using Fumo.Models;
 using Fumo.Shared.Regexes;
-using Fumo.ThirdParty;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
@@ -10,6 +9,8 @@ using System.Runtime.InteropServices;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Xml.Linq;
 using Fumo.ThirdParty.Exceptions;
+using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
