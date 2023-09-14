@@ -67,6 +67,11 @@ internal class SevenTVRemoveCommand : ChatCommand
             MessageSender.ScheduleMessage(Channel.TwitchName, output.ToString());
 
             output.Clear();
+
+            if (emotesToRemove.Count <= 0)
+            {
+                return string.Empty;
+            }
         }
 
         List<string> failedToRemove = new();
