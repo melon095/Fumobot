@@ -24,7 +24,7 @@ internal class CommandHandler : ICommandHandler
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
-    private readonly PajbotClient Pajbot;
+    private readonly PajbotClient Pajbot = new();
 
     public CommandHandler(
         IApplication application,
