@@ -1,6 +1,4 @@
-﻿using Fumo.Exceptions;
-
-namespace Fumo.Shared.Exceptions;
+﻿namespace Fumo.Shared.Exceptions;
 
 // Yummy long exception names
 public class InvalidCommandArgumentException : InvalidInputException

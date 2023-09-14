@@ -1,36 +1,23 @@
-﻿using Fumo.Database;
-using Fumo.Database.DTO;
-using Fumo.Extensions;
-using Fumo.Interfaces;
-using Fumo.Repository;
+﻿using Fumo.Extensions;
+using Fumo.Shared.Interfaces;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.ThreeLetterAPI;
-using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
-using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.Extensions.Configuration;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.Mapping;
 using Quartz;
 using Serilog;
 using StackExchange.Redis;
-using System.Runtime.InteropServices;
 
 namespace Fumo.BackgroundJobs.SevenTV;
 
 internal class FetchChannelEditorsJob : IJob
 {
-    public ILogger Logger { get; }
-
-    public IDatabase Redis { get; }
-
-    public ISevenTVService SevenTVService { get; }
-
-    public IChannelRepository ChannelRepository { get; }
-
-    public IThreeLetterAPI ThreeLetterAPI { get; }
-
-    public IUserRepository UserRepository { get; }
-
+    public readonly ILogger Logger;
+    public readonly IDatabase Redis;
+    public readonly ISevenTVService SevenTVService;
+    public readonly IChannelRepository ChannelRepository;
+    public readonly IThreeLetterAPI ThreeLetterAPI;
+    public readonly IUserRepository UserRepository;
     private readonly string BotID;
 
     public FetchChannelEditorsJob(

@@ -3,10 +3,10 @@ using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Enums;
-using Fumo.Exceptions;
-using Fumo.Interfaces;
+using Fumo.Shared.Exceptions;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
-using Fumo.Repository;
+using Fumo.Shared.Repositories;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.Pajbot1;
@@ -18,26 +18,15 @@ namespace Fumo.Handlers;
 
 internal class CommandHandler : ICommandHandler
 {
-    public ILifetimeScope LifetimeScope { get; }
-
-    private IApplication Application { get; }
-
-    private ILogger Logger { get; }
-
-    private ICooldownHandler CooldownHandler { get; }
-
-    private IConfiguration Configuration { get; }
-
-    private CommandRepository CommandRepository { get; }
-
-    private IMessageSenderHandler MessageSenderHandler { get; }
-
-    private DatabaseContext DatabaseContext { get; }
-
-    private PajbotClient Pajbot { get; } = new();
+    private readonly ILogger Logger;
+    private readonly ICooldownHandler CooldownHandler;
+    private readonly IConfiguration Configuration;
+    private readonly CommandRepository CommandRepository;
+    private readonly IMessageSenderHandler MessageSenderHandler;
+    private readonly DatabaseContext DatabaseContext;
+    private readonly PajbotClient Pajbot;
 
     public CommandHandler(
-        ILifetimeScope lifetimeScope,
         IApplication application,
         ILogger logger,
         ICooldownHandler cooldownHandler,
@@ -46,8 +35,6 @@ internal class CommandHandler : ICommandHandler
         IMessageSenderHandler messageSenderHandler,
         DatabaseContext databaseContext)
     {
-        LifetimeScope = lifetimeScope;
-        Application = application;
         Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
         Configuration = configuration;
@@ -55,7 +42,7 @@ internal class CommandHandler : ICommandHandler
         MessageSenderHandler = messageSenderHandler;
         DatabaseContext = databaseContext;
 
-        this.Application.OnMessage += this.OnMessage;
+        application.OnMessage += this.OnMessage;
     }
 
     // On messages that begin with the channel/global prefix are executed.
@@ -165,10 +152,6 @@ internal class CommandHandler : ICommandHandler
                 {
                     return null;
                 }
-            }
-            else
-            {
-                Logger.Debug("Bypass permission");
             }
 
             bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);

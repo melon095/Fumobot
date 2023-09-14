@@ -1,23 +1,20 @@
-﻿using Fumo.Database.DTO;
-using Fumo.Enums;
-using Fumo.Exceptions;
+﻿using Fumo.Enums;
+using Fumo.Shared.Exceptions;
 using Fumo.Extensions;
-using Fumo.Interfaces;
 using Fumo.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
-using Serilog;
 using StackExchange.Redis;
+using Fumo.Shared.Interfaces;
 
 namespace Fumo.Commands.SevenTV;
 
 internal class SevenTVEditorCommand : ChatCommand
 {
-    private ILogger Logger { get; }
-    public IDatabase Redis { get; }
-    public ISevenTVService SevenTVService { get; }
-    public IUserRepository UserRepository { get; }
+    public readonly IDatabase Redis;
+    public readonly ISevenTVService SevenTVService;
+    public readonly IUserRepository UserRepository;
     private string BotID { get; }
 
     public SevenTVEditorCommand()
@@ -30,13 +27,11 @@ internal class SevenTVEditorCommand : ChatCommand
     }
 
     public SevenTVEditorCommand(
-        ILogger logger,
         IConfiguration configuration,
         IDatabase redis,
         ISevenTVService sevenTVService,
         IUserRepository userRepository) : this()
     {
-        Logger = logger.ForContext<SevenTVEditorCommand>();
         Redis = redis;
         SevenTVService = sevenTVService;
         UserRepository = userRepository;

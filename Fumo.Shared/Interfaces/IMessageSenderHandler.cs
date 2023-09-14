@@ -1,4 +1,4 @@
-﻿namespace Fumo.Interfaces;
+﻿namespace Fumo.Shared.Interfaces;
 
 public interface IMessageSenderHandler
 {

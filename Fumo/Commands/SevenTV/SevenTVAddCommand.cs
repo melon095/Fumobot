@@ -1,4 +1,4 @@
-﻿using Fumo.Exceptions;
+﻿using Fumo.Shared.Exceptions;
 using Fumo.Extensions;
 using Fumo.Models;
 using Fumo.Shared.Regexes;

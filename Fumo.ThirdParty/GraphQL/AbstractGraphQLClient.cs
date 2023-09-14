@@ -8,7 +8,8 @@ namespace Fumo.ThirdParty.GraphQL;
 public abstract class AbstractGraphQLClient : IDisposable
 {
     private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0";
-
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    
     protected HttpClient HttpClient { get; set; }
 
     private bool disposed = false;
@@ -18,6 +19,7 @@ public abstract class AbstractGraphQLClient : IDisposable
         HttpClient = httpClient ?? new HttpClient();
 
         this.HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
+        this.HttpClient.Timeout = Timeout;
 
         this.HttpClient.BaseAddress = new(gqlAddress);
     }

@@ -1,8 +1,7 @@
-﻿using Autofac.Core;
-using Fumo.Database;
+﻿using Fumo.Database;
 using Fumo.Database.DTO;
-using Fumo.Exceptions;
-using Fumo.Interfaces;
+using Fumo.Shared.Exceptions;
+using Fumo.Shared.Interfaces;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
@@ -14,14 +13,11 @@ namespace Fumo.Shared.Repositories;
 public class UserRepository : IUserRepository
 {
 
-    public DatabaseContext Database { get; }
+    public readonly DatabaseContext Database;
 
     // FIXME: In memory caching
 
-    public IThreeLetterAPI ThreeLetterAPI { get; }
-
-    // FIXME: This is to prevent concurrently writing to the database, and no it's not a pretty way of doing it.
-    public SemaphoreSlim Semaphore { get; } = new(1);
+    public readonly IThreeLetterAPI ThreeLetterAPI;
 
     public UserRepository(DatabaseContext database, IThreeLetterAPI threeLetterAPI)
     {
@@ -44,17 +40,8 @@ public class UserRepository : IUserRepository
             TwitchName = tlaUser.User.Login,
         };
 
-        try
-        {
-            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
-
-            await Database.Users.AddAsync(user, cancellationToken);
-            await Database.SaveChangesAsync(cancellationToken);
-        }
-        finally
-        {
-            Semaphore.Release();
-        }
+        await Database.Users.AddAsync(user, cancellationToken);
+        await Database.SaveChangesAsync(cancellationToken);
 
         return user;
     }
@@ -62,23 +49,14 @@ public class UserRepository : IUserRepository
     /// <inheritdoc/>
     public async Task<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+        var dbUser = await Database
+            .Users
+            .Where(x => x.TwitchID.Equals(id))
+            .SingleOrDefaultAsync(cancellationToken);
 
-            var dbUser = await Database
-                .Users
-                .Where(x => x.TwitchID.Equals(id))
-                .SingleOrDefaultAsync(cancellationToken);
-
-            if (dbUser is not null)
-            {
-                return dbUser;
-            }
-        }
-        finally
+        if (dbUser is not null)
         {
-            Semaphore.Release();
+            return dbUser;
         }
 
         return await SearchWithThreeLetterAPI(id, cancellationToken: cancellationToken) switch
@@ -93,22 +71,13 @@ public class UserRepository : IUserRepository
     {
         var cleanedUsername = UsernameCleanerRegex.CleanUsername(username);
 
-        try
-        {
-            await Semaphore.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+        var dbUser = await Database.Users
+        .Where(x => x.TwitchName.Equals(cleanedUsername))
+        .SingleOrDefaultAsync(cancellationToken);
 
-            var dbUser = await Database.Users
-            .Where(x => x.TwitchName.Equals(cleanedUsername))
-            .SingleOrDefaultAsync(cancellationToken);
-
-            if (dbUser is not null)
-            {
-                return dbUser;
-            }
-        }
-        finally
+        if (dbUser is not null)
         {
-            Semaphore.Release();
+            return dbUser;
         }
 
         return await SearchWithThreeLetterAPI(login: cleanedUsername, cancellationToken: cancellationToken) switch
@@ -151,5 +120,10 @@ public class UserRepository : IUserRepository
         await Database.SaveChangesAsync(cancellation);
 
         return dbUsers;
+    }
+
+    public Task SaveChanges(CancellationToken cancellationToken = default)
+    {
+        return Database.SaveChangesAsync(cancellationToken);
     }
 }

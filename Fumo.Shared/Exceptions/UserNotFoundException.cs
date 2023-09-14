@@ -1,4 +1,4 @@
-﻿namespace Fumo.Exceptions;
+﻿namespace Fumo.Shared.Exceptions;
 
 public class UserNotFoundException : Exception
 {

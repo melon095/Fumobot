@@ -1,5 +1,5 @@
 ﻿using Fumo.Database;
-using Fumo.Repository;
+using Fumo.Shared.Interfaces;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
@@ -7,22 +7,23 @@ using Microsoft.EntityFrameworkCore;
 using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
-using System.Runtime.InteropServices;
 
 namespace Fumo.BackgroundJobs;
 
 internal class ChannelRenameJob : IJob
 {
-    public ILogger Logger { get; }
+    public readonly ILogger Logger;
+    public readonly IChannelRepository ChannelRepository;
+    public readonly IThreeLetterAPI ThreeLetterAPI;
+    public readonly IrcClient IrcClient;
+    public readonly DatabaseContext DatabaseContext;
 
-    public IChannelRepository ChannelRepository { get; }
-
-    public IThreeLetterAPI ThreeLetterAPI { get; }
-
-    public IrcClient IrcClient { get; }
-    public DatabaseContext DatabaseContext { get; }
-
-    public ChannelRenameJob(ILogger logger, IChannelRepository channelRepository, IThreeLetterAPI threeLetterAPI, IrcClient ircClient, DatabaseContext databaseContext)
+    public ChannelRenameJob(
+        ILogger logger,
+        IChannelRepository channelRepository,
+        IThreeLetterAPI threeLetterAPI,
+        IrcClient ircClient,
+        DatabaseContext databaseContext)
     {
         Logger = logger.ForContext<ChannelRenameJob>();
         ChannelRepository = channelRepository;
@@ -57,6 +58,7 @@ internal class ChannelRenameJob : IJob
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
+                // TODO: This might not be needed
                 DatabaseContext.Entry(channel.User).State = EntityState.Modified;
                 await DatabaseContext.SaveChangesAsync(context.CancellationToken);
 

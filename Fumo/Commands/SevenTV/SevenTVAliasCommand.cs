@@ -1,5 +1,5 @@
 ﻿using Fumo.Enums;
-using Fumo.Exceptions;
+using Fumo.Shared.Exceptions;
 using Fumo.Extensions;
 using Fumo.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;

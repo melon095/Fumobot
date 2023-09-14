@@ -1,17 +1,18 @@
 ﻿using Fumo.Database;
 using Fumo.Database.DTO;
+using Fumo.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Runtime.CompilerServices;
 
-namespace Fumo.Repository;
+namespace Fumo.Shared.Repositories;
 
-internal class ChannelRepository : IChannelRepository
+public class ChannelRepository : IChannelRepository
 {
-    private DatabaseContext Database { get; set; }
+    private readonly DatabaseContext Database;
 
-    private ConcurrentDictionary<string, ChannelDTO> Channels { get; set; }
+    private static ConcurrentDictionary<string, ChannelDTO> Channels { get; set; }
 
     public ChannelRepository(DatabaseContext database)
     {
@@ -31,7 +32,7 @@ internal class ChannelRepository : IChannelRepository
 
             foreach (var channel in channels)
             {
-                this.Channels[channel.TwitchName] = channel;
+                Channels[channel.TwitchName] = channel;
             }
         }
     }
@@ -40,7 +41,7 @@ internal class ChannelRepository : IChannelRepository
     {
         await FIllIfNeeded(cancellationToken);
 
-        foreach (var channel in this.Channels)
+        foreach (var channel in Channels)
         {
             // TODO: Idk if this works
             if (cancellationToken.IsCancellationRequested)
@@ -54,7 +55,7 @@ internal class ChannelRepository : IChannelRepository
     {
         await FIllIfNeeded(cancellationToken);
 
-        return Channels.Values.FirstOrDefault(x => x.TwitchID == ID);
+        return Channels.Where(x => x.Value.TwitchID == ID).Select(x => x.Value).FirstOrDefault();
     }
 
     public async Task<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default)
@@ -103,12 +104,7 @@ internal class ChannelRepository : IChannelRepository
         // Issue is that EF Core can't update the key so just gotta do it this way.
         if (!Channels.ContainsKey(channelDTO.TwitchName))
         {
-            var channel = Channels.Values.FirstOrDefault(x => x.TwitchID == channelDTO.TwitchID);
-            if (channel is null)
-            {
-                // TODO: Make this cleaner
-                throw new DataException("Channel not found");
-            }
+            var channel = Channels.Values.FirstOrDefault(x => x.TwitchID == channelDTO.TwitchID) ?? throw new DataException("Channel not found");
 
             Channels.TryRemove(channel.TwitchName, out _);
             Channels[channelDTO.TwitchName] = channelDTO;

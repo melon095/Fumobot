@@ -3,17 +3,15 @@ using Fumo.BackgroundJobs;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
-using Fumo.Interfaces;
-using Fumo.Repository;
+using Fumo.Shared.Interfaces;
+using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Quartz;
 using Serilog;
-using System.Runtime.InteropServices;
 
 namespace Fumo;
 
@@ -39,7 +37,7 @@ internal class Program
             .InstallQuartz(configuration)
             .Build();
 
-        Log.Logger.Information("Starting up");
+        Log.Information("Starting up");
 
         using (var scope = container.BeginLifetimeScope())
         {

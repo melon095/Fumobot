@@ -1,6 +1,6 @@
 ﻿using Fumo.Models;
 
-namespace Fumo.Interfaces;
+namespace Fumo.Shared.Interfaces;
 
 public interface ICooldownHandler
 {

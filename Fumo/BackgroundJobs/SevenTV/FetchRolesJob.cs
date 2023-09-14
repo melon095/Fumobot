@@ -9,9 +9,9 @@ namespace Fumo.BackgroundJobs.SevenTV;
 
 internal class FetchRolesJob : IJob
 {
-    public IDatabase Redis { get; }
-    public ISevenTVService SevenTV { get; }
-    public ILogger Logger { get; }
+    public readonly IDatabase Redis;
+    public readonly ISevenTVService SevenTV;
+    public readonly ILogger Logger;
 
     public FetchRolesJob(IDatabase redis, ISevenTVService sevenTV, ILogger logger)
     {

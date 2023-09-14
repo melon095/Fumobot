@@ -1,12 +1,12 @@
 ﻿using Autofac;
-using Fumo.Interfaces.Command;
+using Fumo.Shared.Interfaces.Command;
 using Fumo.Models;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Fumo.Repository;
+namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {

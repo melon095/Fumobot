@@ -1,6 +1,6 @@
 ﻿using Fumo.Database.DTO;
 
-namespace Fumo.Repository;
+namespace Fumo.Shared.Interfaces;
 
 public interface IChannelRepository
 {

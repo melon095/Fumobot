@@ -1,4 +1,4 @@
-﻿using Fumo.Interfaces;
+﻿using Fumo.Shared.Interfaces;
 using MiniTwitch.Irc;
 using Serilog;
 using System.Collections.Concurrent;
@@ -15,15 +15,11 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 {
     public static readonly int MessageInterval = 1250;
 
-    private ConcurrentDictionary<string, MessageQueue> Queues { get; } = new();
-
-    private IrcClient IrcClient { get; }
-
-    private CancellationToken CancellationToken { get; }
-
+    private readonly ConcurrentDictionary<string, MessageQueue> Queues = new();
+    private readonly IrcClient IrcClient;
+    private readonly CancellationToken CancellationToken;
     private readonly ConcurrentDictionary<string, long> SendHistory = new();
-
-    private Task MessageTask { get; }
+    private readonly Task MessageTask;
 
     public MessageSenderHandler(
         IrcClient ircClient,

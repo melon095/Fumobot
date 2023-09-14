@@ -1,7 +1,7 @@
 ﻿using Fumo.Models;
 using System.Collections.ObjectModel;
 
-namespace Fumo.Interfaces.Command;
+namespace Fumo.Shared.Interfaces.Command;
 
 public interface IChatCommand
 {

@@ -1,6 +1,6 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Enums;
-using Fumo.Interfaces.Command;
+using Fumo.Shared.Interfaces.Command;
 using Fumo.Shared.Models;
 using MiniTwitch.Irc.Models;
 using System.Collections.ObjectModel;

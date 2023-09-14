@@ -1,21 +1,18 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
-using Fumo.Repository;
+using Fumo.Shared.Interfaces;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
-using System.Runtime.InteropServices;
 
 namespace Fumo.BackgroundJobs.SevenTV;
 
 internal class FetchEmoteSetsJob : IJob
 {
-    public ILogger Logger { get; }
-
-    public ISevenTVService SevenTVService { get; }
-
-    public IChannelRepository ChannelRepository { get; }
+    public readonly ILogger Logger;
+    public readonly ISevenTVService SevenTVService;
+    public readonly IChannelRepository ChannelRepository;
 
     public FetchEmoteSetsJob(ILogger logger, ISevenTVService sevenTVService, IChannelRepository channelRepository)
     {

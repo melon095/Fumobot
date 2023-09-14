@@ -1,6 +1,6 @@
-﻿using Fumo.Exceptions;
+﻿using Fumo.Shared.Exceptions;
 using Fumo.Extensions;
-using Fumo.Interfaces;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
@@ -13,11 +13,10 @@ namespace Fumo.Commands.SevenTV;
 
 internal class SevenTVRemoveCommand : ChatCommand
 {
-    public ILogger Logger { get; }
-    private ISevenTVService SevenTVService { get; }
-
-    private IDatabase Redis { get; }
-    public IMessageSenderHandler MessageSender { get; }
+    public readonly ILogger Logger;
+    private readonly ISevenTVService SevenTVService;
+    private readonly IDatabase Redis;
+    public readonly IMessageSenderHandler MessageSender;
     private string BotID { get; }
 
     public SevenTVRemoveCommand()
@@ -26,7 +25,12 @@ internal class SevenTVRemoveCommand : ChatCommand
         SetDescription("Remove 7TV emotes");
     }
 
-    public SevenTVRemoveCommand(ILogger logger, ISevenTVService sevenTVService, IDatabase redis, IConfiguration configuration, IMessageSenderHandler messageSender) : this()
+    public SevenTVRemoveCommand(
+        ILogger logger,
+        ISevenTVService sevenTVService,
+        IDatabase redis,
+        IConfiguration configuration,
+        IMessageSenderHandler messageSender) : this()
     {
         Logger = logger.ForContext<SevenTVRemoveCommand>();
         SevenTVService = sevenTVService;

@@ -1,13 +1,13 @@
 ﻿using Fumo.Enums;
-using Fumo.Exceptions;
+using Fumo.Shared.Exceptions;
 using Fumo.Models;
-using Fumo.Repository;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands;
 
 internal class HelpCommand : ChatCommand
 {
-    public CommandRepository CommandRepository { get; }
+    private readonly CommandRepository CommandRepository;
 
     public HelpCommand()
     {
@@ -32,7 +32,7 @@ internal class HelpCommand : ChatCommand
 
         var commandName = Input[0];
 
-        var command = this.CommandRepository.GetCommand(commandName);
+        var command = CommandRepository.GetCommand(commandName);
 
         if (command is null)
         {

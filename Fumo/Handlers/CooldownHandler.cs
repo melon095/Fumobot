@@ -1,5 +1,5 @@
 ﻿
-using Fumo.Interfaces;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using StackExchange.Redis;
 
@@ -7,7 +7,7 @@ namespace Fumo.Handlers;
 
 public class CooldownHandler : ICooldownHandler
 {
-    public IDatabase Redis { get; }
+    private readonly IDatabase Redis;
 
     public CooldownHandler(IDatabase redis)
     {

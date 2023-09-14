@@ -1,54 +1,36 @@
 ﻿using Autofac;
-using Fumo.Database;
-using Fumo.Database.DTO;
-using Fumo.Database.Extensions;
-using Fumo.Interfaces;
 using Fumo.Models;
-using Fumo.Repository;
-using Microsoft.EntityFrameworkCore;
+using Fumo.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
-using MiniTwitch.Irc.Enums;
 using MiniTwitch.Irc.Models;
 using Serilog;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Fumo;
 
 public class Application : IApplication
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
-
     public DateTime StartTime { get; } = DateTime.Now;
 
-    private ILogger Logger { get; }
-
-    private IConfiguration Configuration { get; }
-
-    private DatabaseContext Database { get; }
-
-    private IUserRepository UserRepository { get; }
-
-    private CancellationTokenSource CancellationTokenSource { get; }
-
-    private IrcClient IrcClient { get; }
-
-    private IChannelRepository ChannelRepository { get; }
+    private readonly ILogger Logger;
+    private readonly ILifetimeScope Scope;
+    private readonly IConfiguration Configuration;
+    private readonly CancellationTokenSource CancellationTokenSource;
+    private readonly IrcClient IrcClient;
+    private readonly IChannelRepository ChannelRepository;
 
     public Application(
         ILogger logger,
+        ILifetimeScope scope,
         IConfiguration configuration,
-        DatabaseContext database,
-        IUserRepository userRepository,
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient,
         IChannelRepository channelRepository)
     {
         Logger = logger.ForContext<Application>();
+        Scope = scope;
         Configuration = configuration;
-        Database = database;
-        UserRepository = userRepository;
         CancellationTokenSource = cancellationTokenSource;
         IrcClient = ircClient;
         ChannelRepository = channelRepository;
@@ -59,7 +41,6 @@ public class Application : IApplication
 
     public async Task StartAsync()
     {
-
         Logger.Information("Connecting to TMI");
 
         var debugTMI = this.Configuration.GetValue<bool>("DebugTMI");
@@ -79,54 +60,53 @@ public class Application : IApplication
 
         var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
 
-        await Parallel.ForEachAsync(channels, CancellationTokenSource.Token, async (channel, ct) =>
+        await foreach (var channel in channels)
         {
-            await IrcClient.JoinChannel(channel.TwitchName, ct);
-        });
+            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
+        }
     }
 
     private async ValueTask IrcClient_OnReconnect()
     {
-        var channels = Database.Channels
-            .Where(x => !x.SetForDeletion)
-            .ToList()
-            .Select(x => x.TwitchName);
+        var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
 
-        await IrcClient.JoinChannels(channels, CancellationTokenSource.Token);
+        await foreach (var channel in channels)
+        {
+            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
+        }
     }
 
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)
     {
         try
         {
-            var channel = await ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
-            if (channel is null) return;
-            var user = await UserRepository.SearchIDAsync(privmsg.Author.Id.ToString(), CancellationTokenSource.Token);
+            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
-            await CheckForRename(privmsg.Author, user);
+            using var scope = Scope.BeginLifetimeScope();
+            var channelRepo = scope.Resolve<IChannelRepository>();
+            var userRepo = scope.Resolve<IUserRepository>();
+
+            var channel = await channelRepo.GetByID(privmsg.Channel.Id.ToString(), token);
+            if (channel is null) return;
+            var user = await userRepo.SearchIDAsync(privmsg.Author.Id.ToString(), token);
+
+            if (!user.TwitchName.Equals(privmsg.Author.Name))
+            {
+                user.TwitchName = privmsg.Author.Name;
+                user.UsernameHistory.Add(new(user.TwitchName, DateTime.Now));
+
+                await userRepo.SaveChanges();
+            }
 
             var input = privmsg.Content.Split(' ').ToList();
 
             ChatMessage message = new(channel, user, input, privmsg);
-            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
             await (OnMessage?.Invoke(message, token) ?? ValueTask.CompletedTask);
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel.Name);
-        }
-    }
-
-    private async Task CheckForRename(MessageAuthor tmiUser, UserDTO user)
-    {
-        if (!user.TwitchName.Equals(tmiUser.Name))
-        {
-            user.TwitchName = tmiUser.Name;
-            user.UsernameHistory.Add(new(user.TwitchName, DateTime.Now));
-
-            Database.Entry(user).State = EntityState.Modified;
-            await Database.SaveChangesAsync(CancellationTokenSource.Token);
         }
     }
 }

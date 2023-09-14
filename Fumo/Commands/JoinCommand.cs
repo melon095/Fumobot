@@ -1,9 +1,8 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
-using Fumo.Exceptions;
-using Fumo.Interfaces;
+using Fumo.Shared.Exceptions;
 using Fumo.Models;
-using Fumo.Repository;
+using Fumo.Shared.Interfaces;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
@@ -16,16 +15,11 @@ namespace Fumo.Commands;
 
 internal class JoinCommand : ChatCommand
 {
-    public ILogger Logger { get; }
-
-    public IrcClient Irc { get; }
-
-    public IChannelRepository ChannelRepository { get; }
-
-    public IThreeLetterAPI ThreeLetterAPI { get; }
-
-    public IUserRepository UserRepository { get; }
-
+    public readonly ILogger Logger;
+    public readonly IrcClient Irc;
+    public readonly IChannelRepository ChannelRepository;
+    public readonly IThreeLetterAPI ThreeLetterAPI;
+    public readonly IUserRepository UserRepository;
     private readonly string BotID;
 
     public JoinCommand()

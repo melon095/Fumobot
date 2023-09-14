@@ -1,8 +1,8 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
-using Fumo.Exceptions;
+using Fumo.Shared.Exceptions;
 using Fumo.Extensions;
-using Fumo.Interfaces;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using Fumo.Shared.Utils;
 using Fumo.ThirdParty;
@@ -18,10 +18,10 @@ internal class SevenTVYoinkCommand : ChatCommand
 {
     private static readonly char[] ChannelPrefixes = new[] { '@', '#' };
 
-    public ISevenTVService SevenTVService { get; }
-    public IDatabase Redis { get; }
-    public IMessageSenderHandler MessageSender { get; }
-    public IUserRepository UserRepository { get; }
+    public readonly ISevenTVService SevenTVService;
+    public readonly IDatabase Redis;
+    public readonly IMessageSenderHandler MessageSender;
+    public readonly IUserRepository UserRepository;
 
     private string BotID { get; }
 

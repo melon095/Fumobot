@@ -1,5 +1,5 @@
-﻿using Fumo.Exceptions;
-using Fumo.Interfaces;
+﻿using Fumo.Shared.Exceptions;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
@@ -12,8 +12,8 @@ internal class SevenTVSearchCommand : ChatCommand
 {
     private readonly int MaxEmoteOutput = 5;
 
-    public ISevenTVService SevenTV { get; }
-    public IUserRepository UserRepository { get; }
+    public readonly ISevenTVService SevenTV;
+    public readonly IUserRepository UserRepository;
 
     public SevenTVSearchCommand()
     {

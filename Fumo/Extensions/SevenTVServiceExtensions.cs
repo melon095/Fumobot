@@ -1,7 +1,7 @@
 ﻿using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
-using Fumo.Exceptions;
+using Fumo.Shared.Exceptions;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using StackExchange.Redis;
 

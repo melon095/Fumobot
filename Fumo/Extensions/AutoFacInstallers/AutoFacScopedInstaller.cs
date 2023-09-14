@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Fumo.Interfaces;
+using Fumo.Shared.Interfaces;
 using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.ThreeLetterAPI;
@@ -13,15 +13,23 @@ public static class AutoFacScopedInstaller
     {
         builder
             .RegisterType<UserRepository>()
-            .As<IUserRepository>();
+            .As<IUserRepository>()
+            .InstancePerLifetimeScope();
+
+        builder
+            .RegisterType<ChannelRepository>()
+            .As<IChannelRepository>()
+            .InstancePerLifetimeScope();
 
         builder
             .RegisterType<ThreeLetterAPI>()
-            .As<IThreeLetterAPI>();
+            .As<IThreeLetterAPI>()
+            .InstancePerLifetimeScope();
 
         builder
             .RegisterType<SevenTVService>()
-            .As<ISevenTVService>();
+            .As<ISevenTVService>()
+            .InstancePerLifetimeScope();
 
 
         return builder;

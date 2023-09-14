@@ -1,13 +1,10 @@
 ﻿using Fumo.Enums;
-using Fumo.Exceptions;
-using Fumo.Interfaces;
+using Fumo.Shared.Interfaces;
 using Fumo.Models;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.ThirdParty.Exceptions;
 using Fumo.Utils;
 using StackExchange.Redis;
-using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -17,10 +14,9 @@ internal class SevenTVUserCommand : ChatCommand
 {
     private readonly static Regex MaxSlotsRegex = new("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Compiled | RegexOptions.Multiline);
 
-    public IUserRepository UserRepository { get; }
-    public ISevenTVService SevenTV { get; }
-    public IDatabase Redis { get; }
-
+    public readonly IUserRepository UserRepository;
+    public readonly ISevenTVService SevenTV;
+    public readonly IDatabase Redis;
 
     public SevenTVUserCommand()
     {
@@ -53,26 +49,11 @@ internal class SevenTVUserCommand : ChatCommand
 
         if (Input.Count > 0)
         {
-            try
-            {
-                var username = UsernameCleanerRegex.CleanUsername(Input[0].ToLower());
-                user = await UserRepository.SearchNameAsync(username, ct);
-            }
-            catch (UserNotFoundException ex)
-            {
-                return ex.Message;
-            }
+            var username = UsernameCleanerRegex.CleanUsername(Input[0].ToLower());
+            user = await UserRepository.SearchNameAsync(username, ct);
         }
 
-        SevenTVUser seventvUser;
-        try
-        {
-            seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
-        }
-        catch (GraphQLException ex)
-        {
-            return ex.Message;
-        }
+        SevenTVUser seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
         var roles = string.Join(", ", await GetRoles(seventvUser.Roles));
 

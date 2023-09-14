@@ -8,9 +8,8 @@ namespace Fumo.BackgroundJobs;
 
 internal class ChannelRemoverJob : IJob
 {
-    public ILogger Logger { get; }
-    public DatabaseContext Database { get; }
-
+    public readonly ILogger Logger;
+    public readonly DatabaseContext Database;
 
     public ChannelRemoverJob(ILogger logger, DatabaseContext database)
     {
@@ -33,6 +32,7 @@ internal class ChannelRemoverJob : IJob
                 Logger.Information("Removing channel {ChannelName} from the database", channel.TwitchName);
                 Database.Channels.Remove(channel);
             }
+
             await Database.SaveChangesAsync(context.CancellationToken);
 
             await transaction.CommitAsync(context.CancellationToken);
