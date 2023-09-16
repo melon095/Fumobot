@@ -102,7 +102,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             .Replace("\n", string.Empty)
             .Trim();
 
-        MetricsTracker.TotalMessagesSent.WithLabels(channel).Inc();
+        MetricsTracker.TotalMessagesSent.Inc();
 
         return replyID is null
             ? this.IrcClient.SendMessage(channel, message, cancellationToken: this.CancellationToken)
