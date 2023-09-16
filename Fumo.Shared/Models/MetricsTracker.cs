@@ -1,5 +1,4 @@
-﻿using Fumo.Shared.Interfaces;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Prometheus;
 using Serilog;
@@ -8,6 +7,8 @@ namespace Fumo.Shared.Models;
 
 public class MetricsTracker : IDisposable
 {
+    #region Fields
+
     private readonly ILogger Logger;
     private readonly IConfiguration Config;
     private readonly IDisposable unregisterChangeCallback;
@@ -15,6 +16,31 @@ public class MetricsTracker : IDisposable
 
     private MetricServer MetricServer;
     private bool isEnabled = false;
+
+    #endregion
+
+    #region Metrics
+
+    public readonly Counter CommandsExecuted = Metrics.CreateCounter("fumo_commands_executed", "Total number of commands executed", new CounterConfiguration
+    {
+        LabelNames = new[] { "channel", "command", "success" }
+    });
+
+    public readonly Counter TotalMessagesSent = Metrics.CreateCounter("fumo_messages_sent_total", "Total number of messages sent", new CounterConfiguration
+    {
+        LabelNames = new[] { "channel" }
+    });
+
+    public readonly Counter TotalMessagesRead = Metrics.CreateCounter("fumo_messages_read_total", "Total numberof messages read by Fumobot", new CounterConfiguration
+    {
+        LabelNames = new[] { "channel" }
+    });
+
+    public readonly Gauge ChannelsJoined = Metrics.CreateGauge("fumo_channels_joined", "Total number of channels joined");
+
+    #endregion
+
+    #region Constructor
 
     public MetricsTracker(IConfiguration config, ILogger logger)
     {
@@ -32,6 +58,11 @@ public class MetricsTracker : IDisposable
             () => Config.GetReloadToken(),
             OnConfigChange);
     }
+
+    #endregion
+
+    #region Methods
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -78,4 +109,6 @@ public class MetricsTracker : IDisposable
             Logger.Information("Metrics server is disabled");
         }
     }
+
+    #endregion
 }

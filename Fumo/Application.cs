@@ -1,8 +1,10 @@
 ﻿using Autofac;
 using Fumo.Models;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
+using MiniTwitch.Irc.Interfaces;
 using MiniTwitch.Irc.Models;
 using Serilog;
 
@@ -19,6 +21,7 @@ public class Application : IApplication
     private readonly CancellationTokenSource CancellationTokenSource;
     private readonly IrcClient IrcClient;
     private readonly IChannelRepository ChannelRepository;
+    private readonly MetricsTracker MetricsTracker;
 
     public Application(
         ILogger logger,
@@ -26,7 +29,8 @@ public class Application : IApplication
         IConfiguration configuration,
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient,
-        IChannelRepository channelRepository)
+        IChannelRepository channelRepository,
+        MetricsTracker metricsTracker)
     {
         Logger = logger.ForContext<Application>();
         Scope = scope;
@@ -34,9 +38,26 @@ public class Application : IApplication
         CancellationTokenSource = cancellationTokenSource;
         IrcClient = ircClient;
         ChannelRepository = channelRepository;
+        MetricsTracker = metricsTracker;
 
         IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
+        IrcClient.OnChannelJoin += IrcClient_OnChannelJoin;
+        IrcClient.OnChannelPart += IrcClient_OnChannelPart;
+    }
+
+    private ValueTask IrcClient_OnChannelPart(IPartedChannel arg)
+    {
+        MetricsTracker.ChannelsJoined.Dec();
+
+        return ValueTask.CompletedTask;
+    }
+
+    private ValueTask IrcClient_OnChannelJoin(IrcChannel channel)
+    {
+        MetricsTracker.ChannelsJoined.Inc();
+
+        return ValueTask.CompletedTask;
     }
 
     public async Task StartAsync()
@@ -89,6 +110,8 @@ public class Application : IApplication
             var channel = await channelRepo.GetByID(privmsg.Channel.Id.ToString(), token);
             if (channel is null) return;
             var user = await userRepo.SearchIDAsync(privmsg.Author.Id.ToString(), token);
+
+            MetricsTracker.TotalMessagesRead.WithLabels(channel.TwitchName).Inc();
 
             if (!user.TwitchName.Equals(privmsg.Author.Name))
             {

@@ -1,4 +1,5 @@
 ﻿using Fumo.Shared.Interfaces;
+using Fumo.Shared.Models;
 using MiniTwitch.Irc;
 using Serilog;
 using System.Collections.Concurrent;
@@ -20,12 +21,16 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private readonly CancellationToken CancellationToken;
     private readonly ConcurrentDictionary<string, long> SendHistory = new();
     private readonly Task MessageTask;
+    private readonly MetricsTracker MetricsTracker;
+
 
     public MessageSenderHandler(
         IrcClient ircClient,
-        CancellationTokenSource cancellationTokenSource)
+        CancellationTokenSource cancellationTokenSource,
+        MetricsTracker metricsTracker)
     {
         IrcClient = ircClient;
+        MetricsTracker = metricsTracker;
         CancellationToken = cancellationTokenSource.Token;
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
@@ -96,6 +101,8 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             .Replace("\r", string.Empty)
             .Replace("\n", string.Empty)
             .Trim();
+
+        MetricsTracker.TotalMessagesSent.WithLabels(channel).Inc();
 
         return replyID is null
             ? this.IrcClient.SendMessage(channel, message, cancellationToken: this.CancellationToken)

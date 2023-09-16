@@ -13,6 +13,8 @@ using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Diagnostics;
+using Fumo.Shared.Models;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Fumo.Handlers;
 
@@ -24,6 +26,7 @@ internal class CommandHandler : ICommandHandler
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
+    private readonly MetricsTracker MetricsTracker;
     private readonly PajbotClient Pajbot = new();
 
     public CommandHandler(
@@ -33,7 +36,8 @@ internal class CommandHandler : ICommandHandler
         IConfiguration configuration,
         CommandRepository commandRepository,
         IMessageSenderHandler messageSenderHandler,
-        DatabaseContext databaseContext)
+        DatabaseContext databaseContext,
+        MetricsTracker metricsTracker)
     {
         Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
@@ -41,7 +45,7 @@ internal class CommandHandler : ICommandHandler
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
         DatabaseContext = databaseContext;
-
+        MetricsTracker = metricsTracker;
         application.OnMessage += this.OnMessage;
     }
 
@@ -190,6 +194,12 @@ internal class CommandHandler : ICommandHandler
                 result.ReplyID = message.Privmsg.Id;
             }
 
+            MetricsTracker.CommandsExecuted.WithLabels(
+                message.Channel.TwitchName,
+                command.NameMatcher.ToString(),
+                "true"
+                ).Inc();
+
             return result;
         }
         catch (Exception ex) when (ex is InvalidInputException ||
@@ -199,6 +209,13 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Success = false;
             commandExecutionLogs.Result = ex.Message;
 
+            // idk, a gray area if this failed or not
+            MetricsTracker.CommandsExecuted.WithLabels(
+                message.Channel.TwitchName,
+                command.NameMatcher.ToString(),
+                "true"
+                ).Inc();
+
             return ex.Message;
         }
         catch (Exception ex)
@@ -207,6 +224,12 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Result = ex.Message;
 
             this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
+
+            MetricsTracker.CommandsExecuted.WithLabels(
+                message.Channel.TwitchName,
+                command.NameMatcher.ToString(),
+                "false"
+                ).Inc();
 
             if (message.User.HasPermission("user.chat_error"))
             {
