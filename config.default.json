@@ -17,6 +17,10 @@
     "SevenTV": {
         "Bearer": ""
     },
+    "Metrics": {
+        "Port": 42069,
+        "Enabled": false
+    },
     "GlobalPrefix": "buh",
     "DebugTMI": false
 }

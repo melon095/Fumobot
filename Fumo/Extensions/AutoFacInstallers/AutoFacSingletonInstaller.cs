@@ -1,10 +1,12 @@
 ﻿using Autofac;
 using Fumo.Handlers;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
+using Prometheus;
 using Serilog;
 using StackExchange.Redis;
 using StackExchange.Redis.KeyspaceIsolation;
@@ -63,6 +65,10 @@ public static class AutoFacSingletonInstaller
             .RegisterType<CommandRepository>()
                 .AsSelf()
                 .SingleInstance();
+
+        builder
+            .RegisterType<MetricsTracker>()
+            .SingleInstance();
 
         return builder;
     }

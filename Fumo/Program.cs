@@ -4,6 +4,7 @@ using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Extensions.AutoFacInstallers;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
@@ -91,6 +92,7 @@ internal class Program
             _ = scope.Resolve<ICommandHandler>();
             _ = scope.Resolve<ICooldownHandler>();
             _ = scope.Resolve<IMessageSenderHandler>();
+            scope.Resolve<MetricsTracker>().Start();
 
             await scheduler.Start(ctoken);
 
