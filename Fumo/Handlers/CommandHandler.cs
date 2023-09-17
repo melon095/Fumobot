@@ -187,7 +187,7 @@ internal class CommandHandler : ICommandHandler
             if (banphraseCheck)
             {
                 // Overwrite the output
-                result.Message = $"FeelsOkayMan 👉 {banphraseReason}";
+                result.Message = $"FeelsOkayMan blocked by 👉 {banphraseReason}";
             }
 
             if ((command.Flags & ChatCommandFlags.Reply) != 0)
