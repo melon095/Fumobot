@@ -183,10 +183,11 @@ internal class CommandHandler : ICommandHandler
 
             await this.CooldownHandler.SetCooldownAsync(message, command);
 
-            var (pajbotBanned, pajbotReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
-            if (pajbotBanned)
+            var (banphraseCheck, banphraseReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
+            if (banphraseCheck)
             {
-                result.Message = $"monkaS the response was blocked due to {pajbotReason}";
+                // Overwrite the output
+                result.Message = $"FeelsOkayMan 👉 {banphraseReason}";
             }
 
             if ((command.Flags & ChatCommandFlags.Reply) != 0)
