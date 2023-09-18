@@ -141,8 +141,8 @@ internal class CommandHandler : ICommandHandler
 
         try
         {
-            bool isMod = message.Privmsg.Author.IsMod;
             bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
+            bool isMod = message.Privmsg.Author.IsMod || isBroadcaster;
 
             if (!message.User.HasPermission("admin.execute"))
             {
