@@ -204,13 +204,6 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Success = false;
             commandExecutionLogs.Result = ex.Message;
 
-            // idk, a gray area if this failed or not
-            MetricsTracker.CommandsExecuted.WithLabels(
-                message.Channel.TwitchName,
-                command.NameMatcher.ToString(),
-                "true"
-                ).Inc();
-
             return ex.Message;
         }
         catch (Exception ex)
@@ -219,12 +212,6 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Result = ex.Message;
 
             this.Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
-
-            MetricsTracker.CommandsExecuted.WithLabels(
-                message.Channel.TwitchName,
-                command.NameMatcher.ToString(),
-                "false"
-                ).Inc();
 
             if (message.User.HasPermission("user.chat_error"))
             {

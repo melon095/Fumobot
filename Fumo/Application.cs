@@ -13,7 +13,6 @@ namespace Fumo;
 public class Application : IApplication
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
-    public DateTime StartTime { get; } = DateTime.Now;
 
     private readonly ILogger Logger;
     private readonly ILifetimeScope Scope;
