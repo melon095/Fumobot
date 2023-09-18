@@ -1,27 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="7.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
-		<PackageReference Include="MiniTwitch.Irc" Version="1.2.4" />
-		<PackageReference Include="prometheus-net" Version="8.0.1" />
-		<PackageReference Include="Serilog" Version="3.0.1" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
 		<PackageReference Include="Serilog.Expressions" Version="3.4.1" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Fumo.Commands\Fumo.Commands.csproj" />
 		<ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
+		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
 		<ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
 	</ItemGroup>
 

@@ -6,6 +6,7 @@ ExecStart=/usr/bin/dotnet /opt/fumobot/Fumo/bin/Release/net7.0/Fumo.dll /etc/fum
 WorkingDirectory=/opt/fumobot/
 SyslogIdentifier=FumoBot
 
+Environment=FUMO_PROG_TYPE=bot
 User=user
 
 RestartSec=5
