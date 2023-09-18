@@ -195,12 +195,6 @@ internal class CommandHandler : ICommandHandler
                 result.ReplyID = message.Privmsg.Id;
             }
 
-            MetricsTracker.CommandsExecuted.WithLabels(
-                message.Channel.TwitchName,
-                command.NameMatcher.ToString(),
-                "true"
-                ).Inc();
-
             return result;
         }
         catch (Exception ex) when (ex is InvalidInputException ||

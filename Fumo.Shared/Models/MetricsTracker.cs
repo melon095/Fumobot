@@ -21,11 +21,6 @@ public class MetricsTracker : IDisposable
 
     #region Metrics
 
-    public readonly Counter CommandsExecuted = Metrics.CreateCounter("fumo_commands_executed", "Total number of commands executed", new CounterConfiguration
-    {
-        LabelNames = new[] { "channel", "command", "success" }
-    });
-
     public readonly Counter TotalMessagesSent = Metrics.CreateCounter("fumo_messages_sent_total", "Total number of messages sent");
 
     public readonly Counter TotalMessagesRead = Metrics.CreateCounter("fumo_messages_read_total", "Total numberof messages read by Fumobot", new CounterConfiguration
