@@ -157,25 +157,20 @@ public class SevenTVYoinkCommand : ChatCommand
         return string.Empty;
     }
 
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
-            "Steal emotes from another channel",
-            "",
-            $"**Usage:**: {prefix} yoink #channel <emote names>",
-            $"**Example**: {prefix} yoink #pajlada WideDankCrouching",
-            $"**Example**: {prefix} yoink @forsen FloppaDank FloppaL",
-            $"**Example**: {prefix} yoink 30Dank @forsen",
-            $"**Example**: {prefix} yoink DankG",
-            "",
-            "The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel.",
-            "While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel.",
-            "",
-            "-a, --alias",
-            "%TAB%By default emotes have their aliases removed, -a will retain the alias",
-        };
-
-        return ValueTask.FromResult(strings);
-    }
+    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => ValueTask.FromResult($"""
+            "Steal emotes from another channel"
+            ""
+            $"**Usage:**: {prefix} yoink #channel <emote names>"
+            $"**Example**: {prefix} yoink #pajlada WideDankCrouching"
+            $"**Example**: {prefix} yoink @forsen FloppaDank FloppaL"
+            $"**Example**: {prefix} yoink 30Dank @forsen"
+            $"**Example**: {prefix} yoink DankG"
+            ""
+            "The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel."
+            "While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel."
+            ""
+            "-a, --alias"
+            "%TAB%By default emotes have their aliases removed, -a will retain the alias"
+            """);
 }

@@ -10,7 +10,7 @@ namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {
-    private ReadOnlyDictionary<Regex, Type> Commands;
+    public ReadOnlyDictionary<Regex, Type> Commands;
 
     public CommandRepository(ILogger logger, ILifetimeScope lifetimeScope)
     {

@@ -27,14 +27,12 @@ internal class Program
         var configuration = new ConfigurationBuilder()
             .SetBasePath(cwd)
             .AddJsonFile(configPath, optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables()
             .Build();
 
         var container = new ContainerBuilder()
             .InstallGlobalCancellationToken(configuration)
-            .InstallConfig(configuration)
-            .InstallSerilog(configuration)
-            .InstallDatabase(configuration)
-            .InstallSingletons(configuration)
+            .InstallShared(configuration)
             .InstallScoped(configuration)
             .InstallQuartz(configuration)
             .Build();

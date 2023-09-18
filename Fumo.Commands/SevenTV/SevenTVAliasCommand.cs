@@ -56,10 +56,8 @@ public class SevenTVAliasCommand : ChatCommand
         return $"I set the alias of {srcEmote.Name} to {dstEmoteName}";
     }
 
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
+    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => ValueTask.FromResult($"""
             "Set or Reset the alias of an emote",
             "",
             $"**Usage**: {prefix}alias <emote> [alias]",
@@ -69,8 +67,5 @@ public class SevenTVAliasCommand : ChatCommand
             "",
             "**Required 7TV Flags**",
             "Modify Emotes"
-        };
-
-        return ValueTask.FromResult(strings);
-    }
+            """);
 }

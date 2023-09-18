@@ -86,29 +86,24 @@ public class SevenTVAddCommand : ChatCommand
         }
     }
 
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
-            "Add a 7TV emote",
-            $"**Usage**: {prefix}add <emote>",
-            $"**Usage**: {prefix}add FloppaL",
-            "",
-            "You can also add emotes by ID or URL",
-            $"**Example**: {prefix}add 60aeab8df6a2c3b332d21139",
-            $"**Example**: {prefix}add https://7tv.app/emotes/60aeab8df6a2c3b332d21139",
-            "",
-            "-a, --alias <alias>",
-            "%TAB%Set an alias for the emote",
-            "",
-            "-e, --exact",
-            "%TAB%Search for an exact match",
-            "",
-            "",
-            "**Required 7TV Permissions**",
-            "Modify Emotes",
-        };
-
-        return ValueTask.FromResult(strings);
-    }
+    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => ValueTask.FromResult($"""
+            "Add a 7TV emote"
+            $"**Usage**: {prefix}add <emote>"
+            $"**Usage**: {prefix}add FloppaL"
+            ""
+            "You can also add emotes by ID or URL"
+            $"**Example**: {prefix}add 60aeab8df6a2c3b332d21139"
+            $"**Example**: {prefix}add https://7tv.app/emotes/60aeab8df6a2c3b332d21139"
+            ""
+            "-a, --alias <alias>"
+            "%TAB%Set an alias for the emote"
+            ""
+            "-e, --exact"
+            "%TAB%Search for an exact match"
+            ""
+            ""
+            "**Required 7TV Permissions**"
+            "Modify Emotes"
+            """);
 }

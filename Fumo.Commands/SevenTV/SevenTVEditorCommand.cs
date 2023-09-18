@@ -103,10 +103,8 @@ public class SevenTVEditorCommand : ChatCommand
         }
     }
 
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
+    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => ValueTask.FromResult($"""
             "This command allows the broadcaster to add and remove users as 7TV editors",
             "",
             $"**Usage**: {prefix}editor <username>",
@@ -115,8 +113,5 @@ public class SevenTVEditorCommand : ChatCommand
             "",
             "Required 7TV Flags",
             "Manage Editors",
-        };
-
-        return ValueTask.FromResult(strings);
-    }
+            """);
 }

@@ -17,11 +17,5 @@ public interface IChatCommand
     /// Optional function that can generate extra data on the website
     /// <br />
     /// Supports markdown
-    /// <br />
-    /// Every entry in the list is by itself a line and is automatically split by newlines
-    /// </summary>
-    /// <returns>
-    /// A list of data.
-    /// </returns>
-    public ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct);
+    public ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct);
 }

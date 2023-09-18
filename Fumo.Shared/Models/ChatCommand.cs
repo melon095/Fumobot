@@ -9,6 +9,8 @@ namespace Fumo.Shared.Models;
 
 public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 {
+    #region Properties
+
     public ChannelDTO Channel { get; set; }
     public UserDTO User { get; set; }
     public List<string> Input { get; set; }
@@ -66,6 +68,7 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
     /// </summary>
     public bool BroadcasterOnly => (Flags & ChatCommandFlags.BroadcasterOnly) != 0;
 
+
     private TimeSpan _cooldown = TimeSpan.FromSeconds(5);
     public TimeSpan Cooldown
     {
@@ -73,11 +76,15 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
         protected set => _cooldown = value;
     }
 
+    #endregion
+
     public virtual ValueTask<CommandResult> Execute(CancellationToken ct)
         => throw new NotImplementedException();
 
-    public virtual ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-        => default!;
+    public virtual ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
+        => ValueTask.FromResult("");
+
+    #region Setters
 
     protected void SetName([StringSyntax(StringSyntaxAttribute.Regex)] string regex)
         => this.NameMatcher = new($"^{regex}", RegexOptions.Compiled);
@@ -93,4 +100,6 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 
     protected void SetDescription(string description)
         => this.Description = description;
+
+    #endregion
 }
