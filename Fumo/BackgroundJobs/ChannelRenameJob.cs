@@ -16,20 +16,17 @@ internal class ChannelRenameJob : IJob
     public readonly IChannelRepository ChannelRepository;
     public readonly IThreeLetterAPI ThreeLetterAPI;
     public readonly IrcClient IrcClient;
-    public readonly DatabaseContext DatabaseContext;
 
     public ChannelRenameJob(
         ILogger logger,
         IChannelRepository channelRepository,
         IThreeLetterAPI threeLetterAPI,
-        IrcClient ircClient,
-        DatabaseContext databaseContext)
+        IrcClient ircClient)
     {
         Logger = logger.ForContext<ChannelRenameJob>();
         ChannelRepository = channelRepository;
         ThreeLetterAPI = threeLetterAPI;
         IrcClient = ircClient;
-        DatabaseContext = databaseContext;
     }
 
 
@@ -57,10 +54,6 @@ internal class ChannelRenameJob : IJob
                 channel.User.UsernameHistory.Add(new(oldName, DateTime.Now));
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
-
-                // TODO: This might not be needed
-                DatabaseContext.Entry(channel.User).State = EntityState.Modified;
-                await DatabaseContext.SaveChangesAsync(context.CancellationToken);
 
                 await IrcClient.PartChannel(oldName, context.CancellationToken);
                 await IrcClient.JoinChannel(channel.TwitchName, context.CancellationToken);
