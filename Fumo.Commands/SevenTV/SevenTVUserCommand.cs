@@ -1,9 +1,9 @@
-﻿using Fumo.Enums;
+﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.Utils;
+using Fumo.Shared.Utils;
 using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -11,7 +11,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVUserCommand : ChatCommand
+public class SevenTVUserCommand : ChatCommand
 {
     private readonly static Regex MaxSlotsRegex = new("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Compiled | RegexOptions.Multiline);
 

@@ -1,4 +1,4 @@
-﻿namespace Fumo.Models;
+﻿namespace Fumo.Shared.Models;
 
 // TODO: Add more things here lol
 public class CommandResult

@@ -1,4 +1,4 @@
-﻿namespace Fumo.Utils;
+﻿namespace Fumo.Shared.Utils;
 
 // Made by brian6932 :P
 public class SecondsFormatter

@@ -1,6 +1,6 @@
 ﻿
 using Fumo.Shared.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using StackExchange.Redis;
 
 namespace Fumo.Handlers;

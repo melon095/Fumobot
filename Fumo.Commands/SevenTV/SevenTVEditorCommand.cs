@@ -1,7 +1,7 @@
-﻿using Fumo.Enums;
+﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Extensions;
-using Fumo.Models;
+using Fumo.Shared.Extensions;
+using Fumo.Shared.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +12,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVEditorCommand : ChatCommand
+public class SevenTVEditorCommand : ChatCommand
 {
     private readonly IDatabase Redis;
     private readonly ISevenTVService SevenTVService;
@@ -49,7 +49,7 @@ internal class SevenTVEditorCommand : ChatCommand
         return await SevenTVService.GetUserInfo(user.TwitchID, ct);
     }
 
-    private string HumanizeError(GraphQLException ex)
+    private static string HumanizeError(GraphQLException ex)
     {
         if (ex.Message.StartsWith("70403")) return "I don't have permission to do this";
 

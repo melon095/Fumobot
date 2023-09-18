@@ -1,4 +1,4 @@
-﻿using Fumo.Models;
+﻿using Fumo.Shared.Models;
 
 namespace Fumo.Shared.Interfaces;
 

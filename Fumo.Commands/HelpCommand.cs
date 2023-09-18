@@ -1,11 +1,11 @@
-﻿using Fumo.Enums;
+﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands;
 
-internal class HelpCommand : ChatCommand
+public class HelpCommand : ChatCommand
 {
     private readonly CommandRepository CommandRepository;
 

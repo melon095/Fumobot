@@ -1,4 +1,4 @@
-﻿using Fumo.Utils;
+﻿using Fumo.Shared.Utils;
 
 namespace Fumo.Tests;
 

@@ -1,12 +1,12 @@
-﻿using Fumo.Enums;
-using Fumo.Models;
+﻿using Fumo.Shared.Enums;
+using Fumo.Shared.Models;
 using Fumo.Shared.Interfaces;
 using MiniTwitch.Irc;
 using Serilog;
 
 namespace Fumo.Commands;
 
-internal class LeaveCommand : ChatCommand
+public class LeaveCommand : ChatCommand
 {
     private readonly ILogger Logger;
     private readonly IChannelRepository ChannelRepository;

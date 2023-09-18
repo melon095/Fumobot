@@ -1,7 +1,7 @@
 ﻿using Fumo.Database.DTO;
 using MiniTwitch.Irc.Models;
 
-namespace Fumo.Models;
+namespace Fumo.Shared.Models;
 
 // TODO: Remove the Privmsg dependency
 public record ChatMessage(

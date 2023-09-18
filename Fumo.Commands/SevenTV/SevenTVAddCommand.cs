@@ -1,6 +1,6 @@
 ﻿using Fumo.Shared.Exceptions;
-using Fumo.Extensions;
-using Fumo.Models;
+using Fumo.Shared.Extensions;
+using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +11,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVAddCommand : ChatCommand
+public class SevenTVAddCommand : ChatCommand
 {
     private readonly ISevenTVService SevenTVService;
     private readonly IDatabase Redis;

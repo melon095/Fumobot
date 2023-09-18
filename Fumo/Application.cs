@@ -1,7 +1,6 @@
 ﻿using Autofac;
-using Fumo.Models;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
+using Fumo.Shared.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Interfaces;

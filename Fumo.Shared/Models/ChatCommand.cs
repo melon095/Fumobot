@@ -1,13 +1,11 @@
 ﻿using Fumo.Database.DTO;
-using Fumo.Enums;
+using Fumo.Shared.Enums;
 using Fumo.Shared.Interfaces.Command;
-using Fumo.Shared.Models;
 using MiniTwitch.Irc.Models;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
-namespace Fumo.Models;
+namespace Fumo.Shared.Models;
 
 public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 {

@@ -1,9 +1,9 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Exceptions;
-using Fumo.Extensions;
+using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.Shared.Utils;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +14,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVYoinkCommand : ChatCommand
+public class SevenTVYoinkCommand : ChatCommand
 {
     private static readonly char[] ChannelPrefixes = new[] { '@', '#' };
 

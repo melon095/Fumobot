@@ -1,4 +1,4 @@
-﻿namespace Fumo.Enums;
+﻿namespace Fumo.Shared.Enums;
 
 [Flags]
 public enum ChatCommandFlags : long

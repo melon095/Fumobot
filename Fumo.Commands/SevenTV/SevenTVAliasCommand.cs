@@ -1,7 +1,7 @@
-﻿using Fumo.Enums;
+﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Extensions;
-using Fumo.Models;
+using Fumo.Shared.Extensions;
+using Fumo.Shared.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
@@ -9,7 +9,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Enums;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVAliasCommand : ChatCommand
+public class SevenTVAliasCommand : ChatCommand
 {
     private readonly ISevenTVService SevenTVService;
     private readonly IDatabase Redis;

@@ -1,6 +1,6 @@
 ﻿using Autofac;
 using Fumo.Shared.Interfaces.Command;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -25,25 +25,10 @@ public class CommandRepository
     {
         Logger.Information("Loading commands");
 
-        Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-        List<Type> commands = new();
-
-        foreach (var assembly in assemblies)
-        {
-            var types = assembly.GetTypes()
-                .Where(type =>
-                    type.IsClass &&
-                    !type.IsAbstract &&
-                    type.GetInterfaces().Contains(typeof(IChatCommand)) &&
-                    type.IsSubclassOf(typeof(ChatCommand))
-                    );
-
-            if (types is not null)
-            {
-                commands.AddRange(types);
-            }
-        }
+        List<Type> commands = Assembly.Load("Fumo.Commands")
+            .GetTypes()
+            .Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Contains(typeof(IChatCommand)) && x.IsSubclassOf(typeof(ChatCommand)))
+            .ToList();
 
         Dictionary<Regex, Type> anotherList = new();
         foreach (var command in commands)

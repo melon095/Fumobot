@@ -1,4 +1,4 @@
-﻿using Fumo.Models;
+﻿using Fumo.Shared.Models;
 using System.Collections.ObjectModel;
 
 namespace Fumo.Shared.Interfaces.Command;

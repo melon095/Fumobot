@@ -1,7 +1,7 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Exceptions;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.ThreeLetterAPI;
@@ -13,7 +13,7 @@ using Serilog;
 
 namespace Fumo.Commands;
 
-internal class JoinCommand : ChatCommand
+public class JoinCommand : ChatCommand
 {
     private readonly ILogger Logger;
     private readonly IrcClient Irc;

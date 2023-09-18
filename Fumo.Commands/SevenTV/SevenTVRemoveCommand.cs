@@ -1,7 +1,7 @@
 ﻿using Fumo.Shared.Exceptions;
-using Fumo.Extensions;
+using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +13,7 @@ using Fumo.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
-internal class SevenTVRemoveCommand : ChatCommand
+public class SevenTVRemoveCommand : ChatCommand
 {
     private readonly ILogger Logger;
     private readonly ISevenTVService SevenTVService;

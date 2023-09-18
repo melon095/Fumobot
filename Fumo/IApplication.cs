@@ -1,5 +1,5 @@
 ﻿using Fumo.Database.DTO;
-using Fumo.Models;
+using Fumo.Shared.Models;
 
 namespace Fumo;
 

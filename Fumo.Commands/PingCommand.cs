@@ -1,10 +1,10 @@
-﻿using Fumo.Enums;
-using Fumo.Models;
-using Fumo.Utils;
+﻿using Fumo.Shared.Enums;
+using Fumo.Shared.Models;
+using Fumo.Shared.Utils;
 
 namespace Fumo.Commands;
 
-internal class PingCommand : ChatCommand
+public class PingCommand : ChatCommand
 {
     private static DateTime Start;
 

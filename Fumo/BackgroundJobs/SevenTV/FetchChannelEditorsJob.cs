@@ -1,4 +1,4 @@
-﻿using Fumo.Extensions;
+﻿using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Emotes.SevenTV.Models;

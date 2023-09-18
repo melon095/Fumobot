@@ -2,10 +2,10 @@
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
-using Fumo.Enums;
+using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
-using Fumo.Models;
+using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Exceptions;
@@ -13,8 +13,6 @@ using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Diagnostics;
-using Fumo.Shared.Models;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Fumo.Handlers;
 
@@ -26,7 +24,6 @@ internal class CommandHandler : ICommandHandler
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
-    private readonly MetricsTracker MetricsTracker;
     private readonly PajbotClient Pajbot = new();
 
     public CommandHandler(
@@ -36,8 +33,7 @@ internal class CommandHandler : ICommandHandler
         IConfiguration configuration,
         CommandRepository commandRepository,
         IMessageSenderHandler messageSenderHandler,
-        DatabaseContext databaseContext,
-        MetricsTracker metricsTracker)
+        DatabaseContext databaseContext)
     {
         Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
@@ -45,7 +41,7 @@ internal class CommandHandler : ICommandHandler
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
         DatabaseContext = databaseContext;
-        MetricsTracker = metricsTracker;
+
         application.OnMessage += this.OnMessage;
     }
 
