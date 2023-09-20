@@ -38,7 +38,6 @@ public class Application : IApplication
         ChannelRepository = channelRepository;
         MetricsTracker = metricsTracker;
 
-        IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
         IrcClient.OnChannelJoin += IrcClient_OnChannelJoin;
         IrcClient.OnChannelPart += IrcClient_OnChannelPart;
@@ -77,16 +76,6 @@ public class Application : IApplication
 
         Logger.Information("Connected to TMI");
 
-        var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
-
-        await foreach (var channel in channels)
-        {
-            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
-        }
-    }
-
-    private async ValueTask IrcClient_OnReconnect()
-    {
         var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
 
         await foreach (var channel in channels)
