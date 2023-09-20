@@ -11,6 +11,7 @@ public class HelpCommand : ChatCommand
 
     public HelpCommand()
     {
+        SetGUID("edb41ac3-6a0e-4be3-98eb-1a8e3f8ec505");
         SetName("help");
         SetFlags(ChatCommandFlags.Reply);
         SetCooldown(TimeSpan.FromSeconds(10));

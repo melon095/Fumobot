@@ -15,6 +15,7 @@ public class PingCommand : ChatCommand
             Start = DateTime.Now;
         }
 
+        SetGUID("d7456d3b-e819-4e57-9d4e-2050799b19f1");
         SetName("[Pp]ing");
         SetFlags(ChatCommandFlags.Reply);
     }

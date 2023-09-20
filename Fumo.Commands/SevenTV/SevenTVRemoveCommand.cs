@@ -23,6 +23,7 @@ public class SevenTVRemoveCommand : ChatCommand
 
     public SevenTVRemoveCommand()
     {
+        SetGUID("172698b3-50b7-4baf-8943-6712df480955");
         SetName("(7tv)?remove");
         SetDescription("Remove 7TV emotes");
     }
@@ -109,13 +110,4 @@ public class SevenTVRemoveCommand : ChatCommand
 
         return output.ToString();
     }
-
-    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-        => ValueTask.FromResult($"""
-            "Removes 7TV emotes from your emote set",
-            $"Usage: {prefix}remove <emote names>",
-            "",
-            "**Required 7TV Permissions**",
-            "Manage Emotes",
-            """);
 }

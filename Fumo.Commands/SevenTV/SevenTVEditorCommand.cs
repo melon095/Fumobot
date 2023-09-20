@@ -21,6 +21,7 @@ public class SevenTVEditorCommand : ChatCommand
 
     public SevenTVEditorCommand()
     {
+        SetGUID("80c14b78-b66c-446c-899a-07fc54c40e90");
         // Surely this works
         SetName("(7tv)?(?(1)e|editor)");
         SetDescription("Add and Remove 7TV editors from the channel");
@@ -102,16 +103,4 @@ public class SevenTVEditorCommand : ChatCommand
             return $"{userToMutate.Username} is now an editor";
         }
     }
-
-    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-        => ValueTask.FromResult($"""
-            "This command allows the broadcaster to add and remove users as 7TV editors",
-            "",
-            $"**Usage**: {prefix}editor <username>",
-            $"**Example**: {prefix}editor forsen",
-            "",
-            "",
-            "Required 7TV Flags",
-            "Manage Editors",
-            """);
 }

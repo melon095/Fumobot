@@ -2,6 +2,7 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.WebService.Mapper;
 using Fumo.WebService.Models;
+using Fumo.WebService.Service;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fumo.WebService.Controllers;
@@ -13,15 +14,17 @@ public class CommandsController : ControllerBase
     private readonly CommandMapper Mapper;
     private readonly CommandRepository CommandRepository;
     private readonly IConfiguration Config;
+    private readonly DescriptionService DescriptionService;
 
-    public CommandsController(CommandMapper mapper, CommandRepository commandRepository, IConfiguration config)
+    public CommandsController(CommandMapper mapper, CommandRepository commandRepository, IConfiguration config, DescriptionService descriptionService)
     {
         Mapper = mapper;
         CommandRepository = commandRepository;
         Config = config;
+        DescriptionService = descriptionService;
 
         // TODO: Move this somewhere else maybe
-        if (CommandRepository.Commands is null)
+        if (CommandRepository.Commands is { Count: 0 })
         {
             CommandRepository.LoadAssemblyCommands();
         }
@@ -43,37 +46,40 @@ public class CommandsController : ControllerBase
         return commands;
     }
 
-    [HttpGet("{name}")]
-    public async Task<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
+    [HttpGet("{id}")]
+    public ActionResult<IndepthCommandDTO> GetByName(Guid id)
     {
         var prefix = Config["GlobalPrefix"] ?? "!";
 
-        //// No there's not much i can do here. Maybe having a UUID for every command would be possible.
-        var command = CommandRepository.Commands.Where(x => x.Key.ToString() == name).FirstOrDefault().Value;
+        var command = CommandRepository.GetCommand(id);
 
         if (command is null)
         {
             return NotFound();
         }
 
-        var instance = (Activator.CreateInstance(command) as ChatCommand)!;
+        var description = DescriptionService.CreateDescription(command);
 
-        var description = await instance.GenerateWebsiteDescription(prefix, ct);
-
-        BasicCommandDTO dto = Mapper.CommandToBasic(instance);
+        BasicCommandDTO dto = Mapper.CommandToBasic(command);
 
         // TODO: Can mapperly do this for me.
         IndepthCommandDTO indepth = new()
         {
             NameMatcher = dto.NameMatcher,
             Permissions = dto.Permissions,
-            DetailedDescription = CleanDescription(description),
             Cooldown = dto.Cooldown,
         };
 
-        return indepth;
+        if (description is not null)
+        {
+            indepth.DetailedDescription = CleanDescription(description, prefix);
+        }
+
+        return Ok(indepth);
     }
 
-    private static string CleanDescription(string dirt)
-        => dirt.Replace("%TAB%", "&#9;");
+    private static string CleanDescription(string dirt, string prefix)
+        => dirt
+            .Replace("%TAB%", "&#9;")
+            .Replace("%PREFIX%", prefix);
 }

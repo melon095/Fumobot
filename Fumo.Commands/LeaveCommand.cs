@@ -14,6 +14,7 @@ public class LeaveCommand : ChatCommand
 
     public LeaveCommand()
     {
+        SetGUID("8bdfbb6c-6591-40e2-afc2-03c6354ea8d7");
         SetName("leave|part");
         SetFlags(ChatCommandFlags.BroadcasterOnly);
     }

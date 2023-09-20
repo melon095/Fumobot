@@ -17,6 +17,7 @@ public class SevenTVAliasCommand : ChatCommand
 
     public SevenTVAliasCommand()
     {
+        SetGUID("95278982-014e-4994-b93c-dc422a73c264");
         SetName("(7tv)?alias");
         SetDescription("Set or Reset the alias of an emote");
         SetFlags(ChatCommandFlags.Reply);
@@ -55,17 +56,4 @@ public class SevenTVAliasCommand : ChatCommand
 
         return $"I set the alias of {srcEmote.Name} to {dstEmoteName}";
     }
-
-    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-        => ValueTask.FromResult($"""
-            "Set or Reset the alias of an emote",
-            "",
-            $"**Usage**: {prefix}alias <emote> [alias]",
-            $"**Example**: {prefix}alias Floppal xqcL",
-            $"**Example**: {prefix}alias FloppaL",
-            "%TAB%Removes the alias from the FloppaL emote",
-            "",
-            "**Required 7TV Flags**",
-            "Modify Emotes"
-            """);
 }

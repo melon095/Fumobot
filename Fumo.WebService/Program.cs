@@ -2,6 +2,8 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Shared.Extensions;
 using Fumo.WebService.Mapper;
+using Fumo.WebService.Service;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 
 namespace Fumo.WebService;
@@ -26,12 +28,16 @@ public class Program
             {
                 x.InstallShared(configuration);
                 x.RegisterType<CommandMapper>();
+                x.RegisterType<DescriptionService>();
             });
 
         builder.Host.UseSerilog();
         builder.Services.AddControllers();
 
         var app = builder.Build();
+
+        // Serves at wwwroot
+        app.UseStaticFiles();
 
         if (app.Environment.IsDevelopment())
         {
@@ -43,6 +49,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        app.MapFallbackToFile("index.html");
 
         app.Run();
     }

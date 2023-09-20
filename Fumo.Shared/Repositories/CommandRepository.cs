@@ -10,7 +10,9 @@ namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {
-    public ReadOnlyDictionary<Regex, Type> Commands;
+    // TODO: Is this fine?
+    public readonly Dictionary<Regex, Type> Commands = new();
+    public readonly Dictionary<Guid, Type> CommandsByID = new();
 
     public CommandRepository(ILogger logger, ILifetimeScope lifetimeScope)
     {
@@ -30,17 +32,21 @@ public class CommandRepository
             .Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Contains(typeof(IChatCommand)) && x.IsSubclassOf(typeof(ChatCommand)))
             .ToList();
 
-        Dictionary<Regex, Type> anotherList = new();
         foreach (var command in commands)
         {
             var instance = Activator.CreateInstance(command) as ChatCommand;
             if (instance is not null)
             {
-                anotherList.Add(instance.NameMatcher, instance.GetType());
+                if (instance.ID == Guid.Empty)
+                {
+                    Logger.Warning("Command {Command} has no ID", instance.NameMatcher);
+                    continue;
+                }
+
+                Commands.Add(instance.NameMatcher, instance.GetType());
+                CommandsByID.Add(instance.ID, instance.GetType());
             }
         }
-
-        Commands = new(anotherList);
 
         Logger.Debug("Commands loaded {Commands}", Commands.Select(x => x.Key).ToArray());
     }
@@ -50,6 +56,19 @@ public class CommandRepository
         foreach (var command in Commands)
         {
             if (command.Key.IsMatch(identifier))
+            {
+                return Activator.CreateInstance(command.Value) as ChatCommand;
+            }
+        }
+
+        return null;
+    }
+
+    public ChatCommand? GetCommand(Guid guid)
+    {
+        foreach (var command in CommandsByID)
+        {
+            if (command.Key.Equals(guid))
             {
                 return Activator.CreateInstance(command.Value) as ChatCommand;
             }

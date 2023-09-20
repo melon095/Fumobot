@@ -1,9 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+
+		<PnpmExecutable>pnpm</PnpmExecutable>
+		<FrontendPath>$(SolutionDir)/Fumo.WebFrontend</FrontendPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,5 +26,27 @@
 		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
 		<ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
 	</ItemGroup>
+
+	<Target Name="PnpmInstall" Inputs="$(FrontendPath)/package.json" Outputs="$(FrontendPath)/node_modules/.install-stamp">
+		<Exec Command="$(PnpmExecutable) i" WorkingDirectory="$(FrontendPath)" />
+		<Touch Files="$(FrontendPath)/node_modules/.install-stamp" AlwaysCreate="true" />
+	</Target>
+
+	<Target Name="PnpmBuild" DependsOnTargets="PnpmInstall" AfterTargets="Build">
+		<Exec Command="$(PnpmExecutable) run build" WorkingDirectory="$(FrontendPath)" />
+	</Target>
+
+	<ItemGroup>
+		<DistFiles Include="$(FrontendPath)/dist/**/*.*" />
+	</ItemGroup>
+
+	<Target Name="PnpmMoveDist" DependsOnTargets="PnpmBuild" AfterTargets="Build">
+		<Message Text="Moving files @(DistFiles)" />
+
+		<!-- using $(OutputDir) no worky -->
+		<Move SourceFiles="@(DistFiles)" DestinationFolder="bin/$(Configuration)/$(TargetFramework)/wwwroot/%(RecursiveDir)" ContinueOnError="false">
+			<Output TaskParameter="DestinationFiles" ItemName="FilesWritten" />
+		</Move>
+	</Target>
 
 </Project>

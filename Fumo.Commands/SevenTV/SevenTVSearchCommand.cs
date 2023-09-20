@@ -18,6 +18,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     public SevenTVSearchCommand()
     {
+        SetGUID("2b7f8558-3fa1-45c8-ab84-24665fc04da2");
         SetName("7tv$|search");
         SetDescription("Search 7TV emotes");
 
@@ -114,18 +115,4 @@ public class SevenTVSearchCommand : ChatCommand
 
         return await GetEmoteFromName(searchTerm, ct);
     }
-
-    public override ValueTask<string> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-        => ValueTask.FromResult($"""
-            "Search up 7TV emotes in chat"
-            $"**Usage**: {prefix}7tv <search term>"
-            $"**Example**: {prefix}7tv Apu"
-            ""
-            "-e, --exact"
-            "%TAB%Search for an exact match"
-            ""
-            "-u, --uploader <name>"
-            "%TAB%Search for emotes by a specific uploader"
-            "%TAB%Requires their current Twitch username"
-            """);
 }
