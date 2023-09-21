@@ -75,7 +75,7 @@ public class SevenTVYoinkCommand : ChatCommand
         HashSet<(string Name, StringComparer Comparer)> emotesWant = new();
 
         // TODO: Clean this up later maybe
-        for (var i = 0; i < Input.Count(); i++)
+        for (var i = 0; i < Input.Count; i++)
         {
             if (i == chanIdx) continue;
 
@@ -186,7 +186,7 @@ public class SevenTVYoinkCommand : ChatCommand
             "",
             // TODO: Can explain this better.
             "Emotes by default, are searched case sensitive, this means for example 'Forsen' would match 'Forsen', but not 'forsen'.",
-            "To fix this, your input should be all lowercase or all uppercase. Meaning 'forsen' matches 'Forsen' or 'FORSEN' matches 'Forsen'.",
+            "To search case insensitive your input should be all lowercase or all uppercase. Meaning 'forsen' matches 'Forsen' and 'FORSEN' matches 'Forsen'.",
             "",
             "Emotes are fetched case insensitive by default",
             "",
