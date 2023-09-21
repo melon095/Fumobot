@@ -108,7 +108,9 @@ public class Application : IApplication
                 await userRepo.SaveChanges();
             }
 
-            var input = privmsg.Content.Split(' ').ToList();
+            var input = privmsg.Content
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
 
             ChatMessage message = new(channel, user, input, privmsg);
 
