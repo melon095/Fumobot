@@ -31,7 +31,6 @@ public class SevenTVYoinkCommand : ChatCommand
         SetDescription("Yoink emotes from another channel");
 
         AddParameter(new(typeof(bool), "alias"));
-        AddParameter(new(typeof(bool), "case"));
     }
 
     public SevenTVYoinkCommand(
@@ -65,7 +64,6 @@ public class SevenTVYoinkCommand : ChatCommand
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var keepAlias = GetArgument<bool>("alias");
-        var isCaseSensitive = GetArgument<bool>("case");
 
         if (Input.Count <= 0)
         {
@@ -74,14 +72,26 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var chanIdx = Input.FindIndex((x => ChannelPrefixes.Contains(x[0])));
 
-        var emotesWant = Input.Select((emote, idx) =>
-            {
-                if (idx == chanIdx) return null;
+        HashSet<(string Name, StringComparer Comparer)> emotesWant = new();
 
-                return emote;
-            })
-            .Where(x => x != null)
-            .ToImmutableHashSet();
+        // TODO: Clean this up later maybe
+        for (var i = 0; i < Input.Count(); i++)
+        {
+            if (i == chanIdx) continue;
+
+            var input = Input.ElementAt(i);
+
+            bool
+                allUpper = input.All(char.IsUpper),
+                allLower = input.All(char.IsLower);
+
+            if (allUpper || allLower)
+            {
+                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
+            }
+
+            emotesWant.Add((input, StringComparer.Ordinal));
+        }
 
         string writeChannel, readChannel;
 
@@ -121,12 +131,7 @@ public class SevenTVYoinkCommand : ChatCommand
         writeSet ??= await ConvertToEmoteSet(writeChannel, ct);
 
         var toAdd = (await SevenTVService.GetEnabledEmotes(readSet, ct))
-            .Where(x =>
-            {
-                return isCaseSensitive
-                    ? emotesWant.Contains(x.Name)
-                    : emotesWant.Contains(x.Name.ToLowerInvariant());
-            })
+            .Where(setEmote => emotesWant.Any(input => input.Comparer.Equals(setEmote.Name, input.Name)))
             .ToList();
 
         if (toAdd.Count <= 0)
@@ -179,13 +184,14 @@ public class SevenTVYoinkCommand : ChatCommand
             "The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel.",
             "While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel.",
             "",
+            // TODO: Can explain this better.
+            "Emotes by default, are searched case sensitive, this means for example 'Forsen' would match 'Forsen', but not 'forsen'.",
+            "To fix this, your input should be all lowercase or all uppercase. Meaning 'forsen' matches 'Forsen' or 'FORSEN' matches 'Forsen'.",
+            "",
             "Emotes are fetched case insensitive by default",
             "",
             "-a, --alias",
             "%TAB%By default emotes have their aliases removed, -a will retain the alias",
-            "",
-            "-c, --case",
-            "%TAB%Check emotes by case sensitivity",
         };
 
         return ValueTask.FromResult(strings);
