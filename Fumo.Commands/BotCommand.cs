@@ -113,7 +113,7 @@ public class BotCommand : ChatCommand
     {
         // TODO: Better error
         var command = Input.ElementAtOrDefault(0)
-            ?? throw new ArgumentException("Provide a command");
+            ?? throw new InvalidInputException("Provide a command");
 
         var shouldRemove = GetArgument<bool>("remove");
 
