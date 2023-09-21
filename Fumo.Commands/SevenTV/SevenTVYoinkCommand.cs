@@ -31,6 +31,7 @@ public class SevenTVYoinkCommand : ChatCommand
         SetDescription("Yoink emotes from another channel");
 
         AddParameter(new(typeof(bool), "alias"));
+        AddParameter(new(typeof(bool), "case"));
     }
 
     public SevenTVYoinkCommand(
@@ -64,6 +65,7 @@ public class SevenTVYoinkCommand : ChatCommand
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var keepAlias = GetArgument<bool>("alias");
+        var isCaseSensitive = GetArgument<bool>("case");
 
         if (Input.Count <= 0)
         {
@@ -119,7 +121,12 @@ public class SevenTVYoinkCommand : ChatCommand
         writeSet ??= await ConvertToEmoteSet(writeChannel, ct);
 
         var toAdd = (await SevenTVService.GetEnabledEmotes(readSet, ct))
-            .Where(x => emotesWant.Contains(x.Name))
+            .Where(x =>
+            {
+                return isCaseSensitive
+                    ? emotesWant.Contains(x.Name)
+                    : emotesWant.Contains(x.Name.ToLowerInvariant());
+            })
             .ToList();
 
         if (toAdd.Count <= 0)
@@ -172,8 +179,13 @@ public class SevenTVYoinkCommand : ChatCommand
             "The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel.",
             "While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel.",
             "",
+            "Emotes are fetched case insensitive by default",
+            "",
             "-a, --alias",
             "%TAB%By default emotes have their aliases removed, -a will retain the alias",
+            "",
+            "-c, --case",
+            "%TAB%Check emotes by case sensitivity",
         };
 
         return ValueTask.FromResult(strings);
