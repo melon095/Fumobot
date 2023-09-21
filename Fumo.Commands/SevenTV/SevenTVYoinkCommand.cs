@@ -74,20 +74,22 @@ public class SevenTVYoinkCommand : ChatCommand
 
         HashSet<(string Name, StringComparer Comparer)> emotesWant = new();
 
-        // TODO: Clean this up later maybe
         for (var i = 0; i < Input.Count; i++)
         {
             if (i == chanIdx) continue;
 
             var input = Input.ElementAt(i);
 
-            bool
-                allUpper = input.All(char.IsUpper),
-                allLower = input.All(char.IsLower);
-
-            if (allUpper || allLower)
+            if (input.All(char.IsLower))
             {
                 emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
+                continue;
+            }
+
+            if (input.All(char.IsUpper))
+            {
+                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
+                continue;
             }
 
             emotesWant.Add((input, StringComparer.Ordinal));
