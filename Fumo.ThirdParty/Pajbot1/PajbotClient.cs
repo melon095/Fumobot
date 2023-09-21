@@ -72,13 +72,13 @@ public class PajbotClient
 
         if (!result.IsSuccessStatusCode)
         {
-            return (true, $"Pajbot responded with a bad error code 👉 {result.StatusCode}");
+            return (true, $"bad Status Code: {result.StatusCode}");
         }
 
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
 
         return response is null
-            ? (true, "Pajbot is broken")
+            ? (true, "Pajbot")
             : (response.Banned, "Pajbot");
     }
 }
