@@ -26,4 +26,13 @@ public static class ChannelDTOExtensions
         setting.Value = value;
         return value;
     }
+
+    public static void RemoveSetting(this ChannelDTO channel, string key)
+    {
+        var setting = channel.Settings.FirstOrDefault(x => x.Key == key);
+        if (setting is not null)
+        {
+            channel.Settings.Remove(setting);
+        }
+    }
 }

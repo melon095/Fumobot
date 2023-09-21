@@ -120,14 +120,7 @@ internal class CommandHandler : ICommandHandler
 
         try
         {
-            var result = await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
-
-            if (result.Banned)
-            {
-                return (true, "Pajbot");
-            }
-
-            return (false, string.Empty);
+            return await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
         }
         catch (Exception ex)
         {
