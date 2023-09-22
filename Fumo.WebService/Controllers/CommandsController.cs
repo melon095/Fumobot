@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fumo.WebService.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("v1/[controller]")]
 public class CommandsController : ControllerBase
 {
     private readonly CommandRepository CommandRepository;
@@ -44,7 +44,6 @@ public class CommandsController : ControllerBase
                 Id = guid,
                 NameMatcher = instance.NameMatcher.ToString(),
                 Description = instance.Description,
-                Permissions = instance.Permissions,
                 // TODO: Not pretty
                 Cooldown = (int)instance.Cooldown.TotalSeconds,
             });
@@ -68,9 +67,7 @@ public class CommandsController : ControllerBase
 
         return Ok(new IndepthCommandDTO
         {
-            NameMatcher = command.NameMatcher.ToString(),
             Permissions = command.Permissions,
-            Cooldown = (int)command.Cooldown.TotalSeconds,
             DetailedDescription = description,
         });
     }

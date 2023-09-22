@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Commands</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/js/jquery.dataTables.min.js" integrity="sha512-BkpSL20WETFylMrcirBahHfSnY++H2O1W+UnEEO4yNIl+jI2+zowyoGJpbtk6bx97fBXf++WJHSSK2MV4ghPcg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.0.3/marked.min.js" integrity="sha512-lYRvlgmxv7o+vp/Gmo3p4qLML4csV0loGFy8cP2vpMSwV4F65BTq6LUZyq5zlV5s/LB0KkdGhd/tnMCmjWardA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/css/dataTables.foundation.min.css" integrity="sha512-jyhJOXPqmwwlzhhy2/7edoig3tkyTClebiDZsV2zGb5k4nBol09WyZhK7w1KLl11q79UJjPWgybVu1m52cVehw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="table.css">
+</head>
+<body style="min-height: 100vh">
+    <div id="commands-d">
+        <table>
+            <thead>
+                <tr>
+                    <th class="table-header">Name Matcher</th>
+                    <th class="table-header">Description</th>
+                    <th class="table-header">Cooldown</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+
+    <script>
+        let table;
+        $(async function() {
+            table = $("#commands-d table").DataTable({
+                "paging": false,
+                "searching": true,
+                "info": true,
+                "pageLength": 25,
+                "columnDefs": [
+                    { "orderable": false}
+                ]
+            });
+            
+            try
+            {
+                const response = await fetch("/v1/commands");
+
+                if (!response.ok)
+                {
+                    // TODO: show error
+                    console.error(response);
+                    return;
+                }
+                
+                const commands = await response.json();
+
+                commands.forEach(command => {
+                    const nameMatcher = `<button x-id="${command.id}">${command.nameMatcher}</button>`;
+                    const description = command.description;
+                    const cooldown = `${command.cooldown} Seconds`;
+
+                    table.row.add([
+                        nameMatcher,
+                        description,
+                        cooldown,
+                    ]).draw();
+
+                    $("#commands-d").on("click", `button[x-id="${command.id}"]`, function(e) {
+                        e.preventDefault();
+                        
+                        const id = $(this).attr("x-id");
+                        const query = $.param({ c: id });
+
+                        window.history.pushState("", "", `?${query}`);
+
+                        ShowDrawer(id);
+                    });
+                });
+            }
+            catch (ex)
+            {
+                // TODO: show error
+                console.error(ex);
+            }
+
+            const drawerRow = `
+                <tr id="drawer-row" class="hidden">
+                    <td colspan="3">
+                        <div id="drawer-modal"></div>
+                    </td>
+                </tr>
+            `;
+
+            $(drawerRow).insertAfter($("#commands-d table tbody tr:last-child"));
+
+            const id = CheckForDrawer();
+
+            if (id)
+            {
+                await ShowDrawer(id);
+            }
+        });
+
+        function CheckForDrawer()
+        {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get("c");
+
+            if (id)
+            {
+                return id;
+            }
+
+            return null;
+        }
+
+        async function ShowDrawer(id)
+        {
+            // Make request as the page is sliding the drawer down
+            const responsePromise = fetch(`/v1/commands/${id}`);
+
+            // slide drawer modal up if needed
+            const drawerRow = $("#drawer-row");
+            const drawer = $("#drawer-modal");
+            await $(drawerRow).slideUp("slow", async function() {
+                // TODO: Using table.row didn't work 
+                const row = $(`td button[x-id="${id}"]`).closest("tr");
+
+                if (!row)
+                {
+                    return;
+                }
+
+                const response = await responsePromise;
+
+                if (!response.ok)
+                {
+                    // FIXME: show error in drawer
+                    console.error(response);
+                    return;
+                }
+
+                const command = await response.json();
+
+                const html = `
+                    <div class="drawer">
+                        <div class="drawer-body">
+                            <p>Permissions: ${command.permissions}</p>
+                        </div>
+                    </div>
+                `;
+
+                drawer.html(html)
+
+                if (command.detailedDescription)
+                {
+                    const p = $(`<p>${marked.parse(command.detailedDescription)}</p>`);
+                    drawer.find(".drawer-body").append(p);
+                }
+
+                drawerRow
+                    .insertAfter(row)
+                    .slideDown("slow")
+                    .removeClass("hidden")
+            });
+        }
+    </script>
+</body>
+</html>

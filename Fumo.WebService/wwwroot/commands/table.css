@@ -1,0 +1,114 @@
+.hidden {
+  display: none;
+}
+
+.table-header {
+  padding-left: 1.5rem; /* 24px */
+  padding-right: 1.5rem; /* 24px */
+  padding-top: 0.75rem; /* 12px */
+  padding-bottom: 0.75rem; /* 12px */
+}
+
+#commands-d {
+  max-width: 1000px;
+  margin: 0 auto;
+
+  padding: 0.625rem; /* 10px */
+  padding-bottom: 1rem; /* 16px */
+  position: relative;
+  overflow-x: auto;
+  border-radius: 0.375rem; /* 6px */
+}
+
+#commands-d table {
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  font-size: 0.875rem; /* 14px */
+  text-align: left;
+  color: #718096;
+}
+
+#commands-d tbody {
+  background-color: #ffffff;
+  border-top-width: 1px;
+  border-color: #e2e8f0;
+  border-color: #e2e8f0;
+}
+
+#commands-d tr {
+  background-color: #ffffff;
+  border-bottom-width: 1px;
+  border-color: #e2e8f0;
+}
+
+#commands-d tr:hover {
+  background-color: #edf2f7;
+}
+
+#commands-d td {
+  padding-left: 1.5rem; /* 24px */
+  padding-right: 1.5rem; /* 24px */
+  padding-top: 0.75rem; /* 12px */
+  padding-bottom: 0.75rem; /* 12px */
+}
+
+#DataTables_Table_0_info {
+  color: #718096;
+  font-size: 0.875rem; /* 14px */
+  padding-left: 1.5rem; /* 24px */
+  padding-right: 1.5rem; /* 24px */
+  padding-top: 0.75rem; /* 12px */
+  padding-bottom: 0.75rem; /* 12px */
+}
+
+#commands-d button {
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  box-shadow: rgba(213, 217, 217, 0.5) 0 2px 5px 0;
+  box-sizing: border-box;
+  color: #0f1111;
+  line-height: 29px;
+  padding: 0 10px 0 11px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  #commands-d {
+    border-radius: 0.5rem;
+  }
+}
+
+.comands-d button:hover {
+  background-color: #f7fafa;
+}
+
+.commands-d button:focus {
+  border-color: #008296;
+  box-shadow: rgba(213, 217, 217, 0.5) 0 2px 5px 0;
+  outline: 0;
+}
+
+.drawer {
+  overflow: auto;
+  white-space: pre-wrap;
+  padding-top: 0%;
+  padding-bottom: 0%;
+  padding-left: 1.5rem; /* 24px */
+  padding-right: 1.5rem; /* 24px */
+  overflow-x: auto;
+  font-size: 0.875rem; /* 14px */
+  text-align: left;
+
+  border: 1px solid #e2e8f0;
+}
+
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  color: #000000;
+}

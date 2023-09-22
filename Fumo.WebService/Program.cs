@@ -33,9 +33,6 @@ public class Program
 
         var app = builder.Build();
 
-        // Serves at wwwroot
-        app.UseStaticFiles();
-
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -43,12 +40,30 @@ public class Program
 
         app.UseSerilogRequestLogging();
 
+        app.UseDefaultFiles(new DefaultFilesOptions
+        {
+            DefaultFileNames = new[] { "index.html" }
+        });
+
+        app.UseStaticFiles();
+
         app.UseAuthorization();
 
+        app.UseRouting();
         app.MapControllers();
 
-        app.MapFallbackToFile("index.html");
+        MapBasicRoutes(app);
 
         app.Run();
+    }
+
+    static void MapBasicRoutes(WebApplication app)
+    {
+        app.MapGet("/", (ctx) =>
+        {
+            ctx.Response.Redirect("/commands/");
+
+            return Task.FromResult(0);
+        });
     }
 }

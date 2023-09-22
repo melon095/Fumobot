@@ -25,15 +25,15 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             **Subcommands**:
             
             %PREFIX%bot prefix <prefix>
-            %TAB%Set the prefix used in your channel. The global prefix will not work when a channel prefix is set.
+                Set the prefix used in your channel. The global prefix will not work when a channel prefix is set.
 
             %PREFIX%bot pajbot
-            %TAB%If you have a pajbot instance running in your channel, you tell the bot to check it's messages against the pajbot banphrases.
+                If you have a pajbot instance running in your channel, you tell the bot to check it's messages against the pajbot banphrases.
 
             **Arguments**:
             
             -r, --remove
-            %TAB%Add this flag to remove the data instead of setting it.
+                Add this flag to remove the data instead of setting it.
         |||
     },
     "c6d33008-6daa-474a-84f9-3de65a5a099e": {
@@ -50,10 +50,10 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             **Arguments**
 
             -a, --alias <alias>
-            "%TAB%Set an alias for the emote
+                Set an alias for the emote
             
             -e, --exact
-            %TAB%Search for an exact match
+                Search for an exact match
             
             **Required 7TV Permissions**
             Modify Emotes
@@ -67,7 +67,7 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             **Usage**: %PREFIX%alias <emote> [alias]
             **Example**: %PREFIX%alias Floppal xqcL
             **Example**: %PREFIX%alias FloppaL
-            %TAB%Removes the alias from the FloppaL emote
+                Removes the alias from the FloppaL emote
             
             **Required 7TV Flags**
             Modify Emotes
@@ -105,11 +105,11 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             **Arguments**
             
             -e, --exact
-            "%TAB%Search for an exact match
+                Search for an exact match
             
             -u, --uploader <name>
-            %TAB%Search for emotes by a specific uploader
-            %TAB%Requires their current Twitch username
+                Search for emotes by a specific uploader
+                Requires their current Twitch username
         |||
     },
     "811f1a71-0f31-42c3-9c94-0abe1fea5f73": {
@@ -132,7 +132,7 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             **Arguments**:
 
             -a, --alias
-            %TAB%By default emotes have their aliases removed, -a will retain the alias
+                By default emotes have their aliases removed, -a will retain the alias
         |||
     },
     "95db80b4-06b5-49cc-ba10-8f4d04374a6e": {

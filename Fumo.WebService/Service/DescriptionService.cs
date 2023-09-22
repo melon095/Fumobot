@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Fumo.WebService.Service;
 
-public record DocumentationFileRep(string Class, string Doc);
+public record DocumentationFileRep(string Class, string? Doc);
 
 public class DescriptionService
 {
@@ -87,11 +87,12 @@ public class DescriptionService
             return string.Empty;
         }
 
+        if (doc.Doc is null) return string.Empty;
+
         return CleanDescription(doc.Doc, prefix);
     }
 
     private static string CleanDescription(string dirt, string prefix)
         => dirt
-            .Replace("%TAB%", "&#9;")
             .Replace("%PREFIX%", prefix);
 }
