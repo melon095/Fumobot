@@ -12,7 +12,6 @@ public class Program
     {
         var cwd = Directory.GetCurrentDirectory();
         var configPath = args.Length > 0 ? args[0] : "config.json";
-        var root = AppDomain.CurrentDomain.BaseDirectory.Replace(nameof(WebService), string.Empty);
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(cwd)
@@ -20,11 +19,7 @@ public class Program
             .AddEnvironmentVariables()
             .Build();
 
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            Args = args,
-            ContentRootPath = root,
-        });
+        var builder = WebApplication.CreateBuilder(args);
 
         builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(x =>
