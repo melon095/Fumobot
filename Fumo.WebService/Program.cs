@@ -12,6 +12,7 @@ public class Program
     {
         var cwd = Directory.GetCurrentDirectory();
         var configPath = args.Length > 0 ? args[0] : "config.json";
+        var root = AppDomain.CurrentDomain.BaseDirectory.Replace(nameof(WebService), string.Empty);
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(cwd)
@@ -30,6 +31,7 @@ public class Program
 
         builder.Host.UseSerilog();
         builder.Services.AddControllers();
+        builder.Host.UseContentRoot(root);
 
         var app = builder.Build();
 
@@ -44,6 +46,7 @@ public class Program
         {
             DefaultFileNames = new[] { "index.html" }
         });
+
 
         app.UseStaticFiles();
 
