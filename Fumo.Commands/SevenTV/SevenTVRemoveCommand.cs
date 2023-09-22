@@ -23,7 +23,6 @@ public class SevenTVRemoveCommand : ChatCommand
 
     public SevenTVRemoveCommand()
     {
-        SetGUID("172698b3-50b7-4baf-8943-6712df480955");
         SetName("(7tv)?remove");
         SetDescription("Remove 7TV emotes");
     }

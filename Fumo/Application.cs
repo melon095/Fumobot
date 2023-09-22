@@ -38,7 +38,6 @@ public class Application : IApplication
         ChannelRepository = channelRepository;
         MetricsTracker = metricsTracker;
 
-        IrcClient.OnReconnect += IrcClient_OnReconnect;
         IrcClient.OnMessage += IrcClient_OnMessage;
         IrcClient.OnChannelJoin += IrcClient_OnChannelJoin;
         IrcClient.OnChannelPart += IrcClient_OnChannelPart;
@@ -85,16 +84,6 @@ public class Application : IApplication
         }
     }
 
-    private async ValueTask IrcClient_OnReconnect()
-    {
-        var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
-
-        await foreach (var channel in channels)
-        {
-            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
-        }
-    }
-
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)
     {
         try
@@ -119,7 +108,9 @@ public class Application : IApplication
                 await userRepo.SaveChanges();
             }
 
-            var input = privmsg.Content.Split(' ').ToList();
+            var input = privmsg.Content
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
 
             ChatMessage message = new(channel, user, input, privmsg);
 

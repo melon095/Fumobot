@@ -18,7 +18,6 @@ public class SevenTVSearchCommand : ChatCommand
 
     public SevenTVSearchCommand()
     {
-        SetGUID("2b7f8558-3fa1-45c8-ab84-24665fc04da2");
         SetName("7tv$|search");
         SetDescription("Search 7TV emotes");
 

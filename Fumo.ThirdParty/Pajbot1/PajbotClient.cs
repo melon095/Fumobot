@@ -1,4 +1,6 @@
-﻿using System.Net.Http.Json;
+﻿using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace Fumo.ThirdParty.Pajbot1;
 
@@ -16,28 +18,67 @@ public class PajbotClient
         };
     }
 
-    /// <exception cref="Exception"></exception>
-    public async Task<PajbotResponse> Check(string message, string baseURL, CancellationToken cancellationToken)
+    public static string NormalizeDomain(string input)
     {
-        if (!baseURL.StartsWith("https://")) baseURL = $"https://{baseURL}";
+        if (!input.StartsWith("https://"))
+        {
+            input = "https://" + input;
+        }
 
+        if (input.EndsWith('/'))
+        {
+            input = input[..^1];
+        }
+
+        if (input.EndsWith(Endpoint))
+        {
+            input = input[..^Endpoint.Length];
+        }
+
+        return input;
+    }
+
+    public async Task<bool> ValidateDomain(string url, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await HttpClient.GetAsync(url, ct);
+
+            return result.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <exception cref="Exception"></exception>
+    public async Task<(bool Banned, string Reason)> Check(string message, string baseURL, CancellationToken cancellationToken)
+    {
         var url = $"{baseURL}/{Endpoint}";
 
-        PajbotRequest request = new(message);
-
-        var result = await this.HttpClient.PostAsJsonAsync(url, request, cancellationToken);
-
-        if (result.IsSuccessStatusCode)
+        // send the request using x-www-form-urlencoded
+        Dictionary<string, string> formData = new()
         {
-            var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
+            { "message", message }
+        };
 
-            return response is null
-                ? throw new Exception("Pajbot returned null")
-                : response;
-        }
-        else
+        var content = new FormUrlEncodedContent(formData);
+
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
+        // Not going to catch the exceptions. I would rather have the calle worry about it.
+        var result = await HttpClient.PostAsync(url, content, cancellationToken);
+
+        if (!result.IsSuccessStatusCode)
         {
-            throw new Exception($"Pajbot at {url} responded with a bad error code ({result.StatusCode})");
+            return (true, $"bad Status Code: {result.StatusCode}");
         }
+
+        var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
+
+        return response is null
+            ? (true, "Pajbot")
+            : (response.Banned, "Pajbot");
     }
 }

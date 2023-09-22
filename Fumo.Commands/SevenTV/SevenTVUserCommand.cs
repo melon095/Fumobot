@@ -21,7 +21,6 @@ public class SevenTVUserCommand : ChatCommand
 
     public SevenTVUserCommand()
     {
-        SetGUID("95db80b4-06b5-49cc-ba10-8f4d04374a6e");
         SetName("7tvu(ser)?");
         SetDescription("Display information about you or another 7TV user");
         SetFlags(ChatCommandFlags.Reply);

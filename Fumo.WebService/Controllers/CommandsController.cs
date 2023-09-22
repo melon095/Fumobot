@@ -1,6 +1,5 @@
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
-using Fumo.WebService.Mapper;
 using Fumo.WebService.Models;
 using Fumo.WebService.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +10,12 @@ namespace Fumo.WebService.Controllers;
 [Route("[controller]")]
 public class CommandsController : ControllerBase
 {
-    private readonly CommandMapper Mapper;
     private readonly CommandRepository CommandRepository;
     private readonly IConfiguration Config;
     private readonly DescriptionService DescriptionService;
 
-    public CommandsController(CommandMapper mapper, CommandRepository commandRepository, IConfiguration config, DescriptionService descriptionService)
+    public CommandsController(CommandRepository commandRepository, IConfiguration config, DescriptionService descriptionService)
     {
-        Mapper = mapper;
         CommandRepository = commandRepository;
         Config = config;
         DescriptionService = descriptionService;
@@ -31,7 +28,7 @@ public class CommandsController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<BasicCommandDTO> Get()
+    public async Task<IEnumerable<BasicCommandDTO>> Get(CancellationToken ct)
     {
         List<BasicCommandDTO> commands = new();
 
@@ -40,46 +37,41 @@ public class CommandsController : ControllerBase
             // not very nice xp
             var instance = Activator.CreateInstance(command.Value) as ChatCommand;
 
-            commands.Add(Mapper.CommandToBasic(instance!));
+            var guid = await DescriptionService.GetMatchingID(command.Value, ct);
+
+            commands.Add(new()
+            {
+                Id = guid,
+                NameMatcher = instance.NameMatcher.ToString(),
+                Description = instance.Description,
+                Permissions = instance.Permissions,
+                // TODO: Not pretty
+                Cooldown = (int)instance.Cooldown.TotalSeconds,
+            });
         }
 
         return commands;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<IndepthCommandDTO> GetByName(Guid id)
+    public async Task<ActionResult<IndepthCommandDTO>> GetByName(Guid id, CancellationToken ct)
     {
         var prefix = Config["GlobalPrefix"] ?? "!";
 
-        var command = CommandRepository.GetCommand(id);
-
+        var command = await DescriptionService.GetCommandByID(id, ct);
         if (command is null)
         {
             return NotFound();
         }
 
-        var description = DescriptionService.CreateDescription(command);
+        var description = await DescriptionService.CompileDescription(id, prefix, ct);
 
-        BasicCommandDTO dto = Mapper.CommandToBasic(command);
-
-        // TODO: Can mapperly do this for me.
-        IndepthCommandDTO indepth = new()
+        return Ok(new IndepthCommandDTO
         {
-            NameMatcher = dto.NameMatcher,
-            Permissions = dto.Permissions,
-            Cooldown = dto.Cooldown,
-        };
-
-        if (description is not null)
-        {
-            indepth.DetailedDescription = CleanDescription(description, prefix);
-        }
-
-        return Ok(indepth);
+            NameMatcher = command.NameMatcher.ToString(),
+            Permissions = command.Permissions,
+            Cooldown = (int)command.Cooldown.TotalSeconds,
+            DetailedDescription = description,
+        });
     }
-
-    private static string CleanDescription(string dirt, string prefix)
-        => dirt
-            .Replace("%TAB%", "&#9;")
-            .Replace("%PREFIX%", prefix);
 }

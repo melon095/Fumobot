@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.Tests", "Fumo.Tests\Fu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.Commands", "Fumo.Commands\Fumo.Commands.csproj", "{80639043-51F5-4A05-880F-840A1517A278}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fumo.WebService", "Fumo.WebService\Fumo.WebService.csproj", "{94EC19DD-E447-455C-8511-702C20BF8EEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.WebService", "Fumo.WebService\Fumo.WebService.csproj", "{94EC19DD-E447-455C-8511-702C20BF8EEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

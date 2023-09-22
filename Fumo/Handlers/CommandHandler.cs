@@ -48,10 +48,11 @@ internal class CommandHandler : ICommandHandler
     // On messages that begin with the channel/global prefix are executed.
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
     {
+        // TODO: Very inefficient
         var prefix = GetPrefixForChannel(message.Channel);
         if (!message.Input.ElementAt(0).StartsWith(prefix)) return;
 
-        var (commandName, input) = ParseMessage(message.Input, prefix);
+        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
         if (commandName is null) return;
 
         message.Input.Clear();
@@ -76,16 +77,29 @@ internal class CommandHandler : ICommandHandler
         return this.Configuration["GlobalPrefix"]!;
     }
 
-    private static (string?, List<string>) ParseMessage(List<string> message, string prefix)
+    private static (string?, List<string>) ParseMessage(string message, string prefix)
     {
-        var cleanMessage = message
-            .Select(x => x.Replace(prefix, string.Empty))
+
+        var cleanMessage = ReplaceFirst(message, prefix, string.Empty)
+            .Split(' ')
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .ToList();
 
         var commandName = cleanMessage.FirstOrDefault();
 
         return (commandName, cleanMessage.Skip(1).ToList());
+
+        // https://csharp-extension.com/en/method/1002132/string-replacefirst
+        static string ReplaceFirst(string input, string search, string replace)
+        {
+            int pos = input.IndexOf(search);
+            if (pos < 0)
+            {
+                return input;
+            }
+
+            return input.Remove(pos, search.Length).Insert(pos, replace);
+        }
     }
 
     private async Task<(bool Banned, string Reason)> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken)
@@ -106,14 +120,7 @@ internal class CommandHandler : ICommandHandler
 
         try
         {
-            var result = await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
-
-            if (result.Banned)
-            {
-                return (true, "Pajbot");
-            }
-
-            return (false, string.Empty);
+            return await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -17,7 +17,6 @@ public class SevenTVAliasCommand : ChatCommand
 
     public SevenTVAliasCommand()
     {
-        SetGUID("95278982-014e-4994-b93c-dc422a73c264");
         SetName("(7tv)?alias");
         SetDescription("Set or Reset the alias of an emote");
         SetFlags(ChatCommandFlags.Reply);

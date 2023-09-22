@@ -27,7 +27,6 @@ public class SevenTVYoinkCommand : ChatCommand
 
     public SevenTVYoinkCommand()
     {
-        SetGUID("811f1a71-0f31-42c3-9c94-0abe1fea5f73");
         SetName("(7tv)?yoink|steal");
         SetDescription("Yoink emotes from another channel");
 
@@ -73,14 +72,28 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var chanIdx = Input.FindIndex((x => ChannelPrefixes.Contains(x[0])));
 
-        var emotesWant = Input.Select((emote, idx) =>
-            {
-                if (idx == chanIdx) return null;
+        HashSet<(string Name, StringComparer Comparer)> emotesWant = new();
 
-                return emote;
-            })
-            .Where(x => x != null)
-            .ToImmutableHashSet();
+        for (var i = 0; i < Input.Count; i++)
+        {
+            if (i == chanIdx) continue;
+
+            var input = Input.ElementAt(i);
+
+            if (input.All(char.IsLower))
+            {
+                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
+                continue;
+            }
+
+            if (input.All(char.IsUpper))
+            {
+                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
+                continue;
+            }
+
+            emotesWant.Add((input, StringComparer.Ordinal));
+        }
 
         string writeChannel, readChannel;
 
@@ -120,7 +133,7 @@ public class SevenTVYoinkCommand : ChatCommand
         writeSet ??= await ConvertToEmoteSet(writeChannel, ct);
 
         var toAdd = (await SevenTVService.GetEnabledEmotes(readSet, ct))
-            .Where(x => emotesWant.Contains(x.Name))
+            .Where(setEmote => emotesWant.Any(input => input.Comparer.Equals(setEmote.Name, input.Name)))
             .ToList();
 
         if (toAdd.Count <= 0)

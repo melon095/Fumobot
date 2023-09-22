@@ -24,7 +24,6 @@ public class JoinCommand : ChatCommand
 
     public JoinCommand()
     {
-        SetGUID("fa4b9629-7339-44f9-a3c1-273e129382c8");
         SetName("(re)?join");
         SetDescription("Allow the bot to join you or a channel you mod");
         SetCooldown(TimeSpan.FromMinutes(1));

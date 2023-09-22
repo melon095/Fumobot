@@ -1,128 +1,97 @@
-﻿using Fumo.Commands;
-using Fumo.Commands.SevenTV;
-using Fumo.Shared.Models;
+﻿using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using System.Collections.Concurrent;
+using System.Reflection;
+using System.Text.Json;
 
 namespace Fumo.WebService.Service;
 
+public record DocumentationFileRep(string Class, string Doc);
+
 public class DescriptionService
 {
-    private delegate string DescriptionDelegate();
+    private readonly ConcurrentDictionary<Guid, DocumentationFileRep> Dictionary = new();
+    private readonly string DocumentationPath;
+    private readonly CommandRepository CommandRepository;
+    private bool Ready = false;
 
-    private readonly ConcurrentDictionary<Type, DescriptionDelegate> delegates = new();
-
-    public DescriptionService()
+    public DescriptionService(CommandRepository commandRepository)
     {
-        Add<SevenTVYoinkCommand>(SVTYoinkDelegate);
-        Add<SevenTVSearchCommand>(SVTSearchDelegate);
-        Add<SevenTVRemoveCommand>(SVTRemoveDelegate);
-        Add<SevenTVAddCommand>(SVTAddDelegate);
-        Add<SevenTVAliasCommand>(SVTAliasDelegate);
-        Add<SevenTVEditorCommand>(SVTEditorDelegate);
+        // Very nice
+        var domain = AppDomain.CurrentDomain.BaseDirectory.Replace(nameof(WebService), nameof(Commands));
+
+        Assembly.Load("Fumo.Commands");
+        DocumentationPath = $"{domain}/Data/Documentation.json"; ;
+
+        CommandRepository = commandRepository;
     }
 
-    #region Delegates
-
-    private string SVTAddDelegate()
-    => """
-        "Add a 7TV emote"
-        $"**Usage**: %PREFIX%add <emote>"
-        $"**Usage**: %PREFIX%add FloppaL"
-        ""
-        "You can also add emotes by ID or URL"
-        $"**Example**: %PREFIX%add 60aeab8df6a2c3b332d21139"
-        $"**Example**: %PREFIX%add https://7tv.app/emotes/60aeab8df6a2c3b332d21139"
-        ""
-        "-a, --alias <alias>"
-        "%TAB%Set an alias for the emote"
-        ""
-        "-e, --exact"
-        "%TAB%Search for an exact match"
-        ""
-        ""
-        "**Required 7TV Permissions**"
-        "Modify Emotes"
-        """;
-
-    private string SVTAliasDelegate()
-    => """
-        "Set or Reset the alias of an emote",
-        "",
-        $"**Usage**: %PREFIX%alias <emote> [alias]",
-        $"**Example**: %PREFIX%alias Floppal xqcL",
-        $"**Example**: %PREFIX%alias FloppaL",
-        "%TAB%Removes the alias from the FloppaL emote",
-        "",
-        "**Required 7TV Flags**",
-        "Modify Emotes"
-        """;
-
-    private string SVTEditorDelegate()
-    => """
-        "This command allows the broadcaster to add and remove users as 7TV editors",
-        "",
-        $"**Usage**: %PREFIX%editor <username>",
-        $"**Example**: %PREFIX%editor forsen",
-        "",
-        "",
-        "Required 7TV Flags",
-        "Manage Editors",
-        """;
-
-    private string SVTRemoveDelegate()
-    => """
-        "Removes 7TV emotes from your emote set",
-        $"Usage: %PREFIX%remove <emote names>",
-        "",
-        "**Required 7TV Permissions**",
-        "Manage Emotes",
-        """;
-
-    private string SVTSearchDelegate()
-    => """
-        "Search up 7TV emotes in chat"
-        $"**Usage**: %PREFIX%7tv <search term>"
-        $"**Example**: %PREFIX%7tv Apu"
-        ""
-        "-e, --exact"
-        "%TAB%Search for an exact match"
-        ""
-        "-u, --uploader <name>"
-        "%TAB%Search for emotes by a specific uploader"
-        "%TAB%Requires their current Twitch username"
-        """;
-
-
-    private string SVTYoinkDelegate()
-    => """
-        "Steal emotes from another channel"
-        ""
-        $"**Usage:**: %PREFIX% yoink #channel <emote names>"
-        $"**Example**: %PREFIX% yoink #pajlada WideDankCrouching"
-        $"**Example**: %PREFIX% yoink @forsen FloppaDank FloppaL"
-        $"**Example**: %PREFIX% yoink 30Dank @forsen"
-        $"**Example**: %PREFIX% yoink DankG"
-        ""
-        "The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel."
-        "While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel."
-        ""
-        "-a, --alias"
-        "%TAB%By default emotes have their aliases removed, -a will retain the alias"
-        """;
-
-    #endregion
-
-    private void Add<TCommand>(DescriptionDelegate @delegate) where TCommand : ChatCommand
-        => this.delegates.TryAdd(typeof(TCommand), @delegate);
-
-    public string? CreateDescription(ChatCommand command)
+    private async Task Load(CancellationToken ct)
     {
-        if (delegates.TryGetValue(command.GetType(), out var @delegate))
+        if (Ready) return;
+
+        var json = await File.ReadAllTextAsync(DocumentationPath, ct);
+
+        var root = JsonSerializer.Deserialize<Dictionary<Guid, DocumentationFileRep>>(json)
+            ?? throw new NullReferenceException("Failed to deserialize documentation file.");
+
+        foreach (var (key, value) in root)
         {
-            return @delegate();
+            Dictionary.TryAdd(key, value);
+        }
+
+        Ready = true;
+    }
+
+    public async Task<ChatCommand?> GetCommandByID(Guid id, CancellationToken ct)
+    {
+        await Load(ct);
+
+        if (!Dictionary.TryGetValue(id, out var doc))
+        {
+            return null;
+        }
+
+        foreach (var command in CommandRepository.Commands)
+        {
+            if (doc.Class == command.Value.FullName)
+            {
+                return Activator.CreateInstance(command.Value) as ChatCommand;
+            }
         }
 
         return null;
     }
+
+    public async Task<Guid> GetMatchingID(Type command, CancellationToken ct)
+    {
+        await Load(ct);
+
+        foreach (var (key, value) in Dictionary)
+        {
+            if (value.Class == command.FullName)
+            {
+                return key;
+            }
+        }
+
+        throw new NullReferenceException("Failed to find matching ID.");
+    }
+
+    public async Task<string> CompileDescription(Guid id, string prefix, CancellationToken ct)
+    {
+        await Load(ct);
+
+        if (!Dictionary.TryGetValue(id, out var doc))
+        {
+            return string.Empty;
+        }
+
+        return CleanDescription(doc.Doc, prefix);
+    }
+
+    private static string CleanDescription(string dirt, string prefix)
+        => dirt
+            .Replace("%TAB%", "&#9;")
+            .Replace("%PREFIX%", prefix);
 }

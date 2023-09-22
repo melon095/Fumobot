@@ -1,9 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Shared.Extensions;
-using Fumo.WebService.Mapper;
 using Fumo.WebService.Service;
-using Microsoft.Extensions.FileProviders;
 using Serilog;
 
 namespace Fumo.WebService;
@@ -27,7 +25,6 @@ public class Program
             .ConfigureContainer<ContainerBuilder>(x =>
             {
                 x.InstallShared(configuration);
-                x.RegisterType<CommandMapper>();
                 x.RegisterType<DescriptionService>();
             });
 

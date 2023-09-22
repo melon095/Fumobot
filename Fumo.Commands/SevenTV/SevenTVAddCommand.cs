@@ -19,7 +19,6 @@ public class SevenTVAddCommand : ChatCommand
 
     public SevenTVAddCommand()
     {
-        SetGUID("c6d33008-6daa-474a-84f9-3de65a5a099e");
         SetName("(7tv)?add");
         SetDescription("Adds a 7TV emote to the channel.");
 

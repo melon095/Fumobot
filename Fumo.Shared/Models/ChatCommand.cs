@@ -75,7 +75,6 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
         get => _cooldown;
         protected set => _cooldown = value;
     }
-    public Guid ID { get; protected set; }
 
     #endregion
 
@@ -98,9 +97,6 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 
     protected void SetDescription(string description)
         => this.Description = description;
-
-    protected void SetGUID(string guid)
-        => this.ID = Guid.Parse(guid);
 
     #endregion
 }
