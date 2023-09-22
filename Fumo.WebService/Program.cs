@@ -20,7 +20,11 @@ public class Program
             .AddEnvironmentVariables()
             .Build();
 
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            Args = args,
+            ContentRootPath = root,
+        });
 
         builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(x =>
@@ -31,7 +35,6 @@ public class Program
 
         builder.Host.UseSerilog();
         builder.Services.AddControllers();
-        builder.Host.UseContentRoot(root);
 
         var app = builder.Build();
 
