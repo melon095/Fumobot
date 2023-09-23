@@ -47,7 +47,7 @@
                     console.error(response);
                     return;
                 }
-                
+
                 const commands = await response.json();
 
                 commands.forEach(command => {
@@ -62,8 +62,14 @@
                     ]).draw();
 
                     $("#commands-d").on("click", `button[x-id="${command.id}"]`, function(e) {
+                        if ($("#drawer-row").prev().find("button").attr("x-id") === command.id)
+                        {
+                            drawerRow.toggleClass("hidden");
+                            return;
+                        }
+
                         e.preventDefault();
-                        
+
                         const id = $(this).attr("x-id");
                         const query = $.param({ c: id });
 
