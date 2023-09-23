@@ -5,12 +5,8 @@ function service {
 
 git pull
 
-sudo systemctl 
-
 service stop
 
 dotnet build -c Release
 
 service start
-
-# a
