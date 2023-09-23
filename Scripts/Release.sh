@@ -12,3 +12,5 @@ service stop
 dotnet build -c Release
 
 service start
+
+# a
