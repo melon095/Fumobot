@@ -62,11 +62,6 @@ public static class AutoFacSingletonInstaller
                 .SingleInstance();
 
         builder
-            .RegisterType<CommandRepository>()
-                .AsSelf()
-                .SingleInstance();
-
-        builder
             .RegisterType<MetricsTracker>()
             .SingleInstance();
 

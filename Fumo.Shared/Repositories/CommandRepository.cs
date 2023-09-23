@@ -10,7 +10,7 @@ namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {
-    private ReadOnlyDictionary<Regex, Type> Commands;
+    public readonly Dictionary<Regex, Type> Commands = new();
 
     public CommandRepository(ILogger logger, ILifetimeScope lifetimeScope)
     {
@@ -30,17 +30,14 @@ public class CommandRepository
             .Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Contains(typeof(IChatCommand)) && x.IsSubclassOf(typeof(ChatCommand)))
             .ToList();
 
-        Dictionary<Regex, Type> anotherList = new();
         foreach (var command in commands)
         {
             var instance = Activator.CreateInstance(command) as ChatCommand;
             if (instance is not null)
             {
-                anotherList.Add(instance.NameMatcher, instance.GetType());
+                Commands.Add(instance.NameMatcher, instance.GetType());
             }
         }
-
-        Commands = new(anotherList);
 
         Logger.Debug("Commands loaded {Commands}", Commands.Select(x => x.Key).ToArray());
     }

@@ -1,5 +1,12 @@
+function service {
+    sudo systemctl $1 fumo_bot.service
+    sudo systemctl $1 fumo_web.service
+}
+
 git pull
+
+service stop
 
 dotnet build -c Release
 
-sudo systemctl restart fumo_bot.service
+service start

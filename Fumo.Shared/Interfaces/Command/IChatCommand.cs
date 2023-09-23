@@ -12,16 +12,4 @@ public interface IChatCommand
     /// A string that is outputted in chat
     /// </returns>
     public ValueTask<CommandResult> Execute(CancellationToken ct);
-
-    /// <summary>
-    /// Optional function that can generate extra data on the website
-    /// <br />
-    /// Supports markdown
-    /// <br />
-    /// Every entry in the list is by itself a line and is automatically split by newlines
-    /// </summary>
-    /// <returns>
-    /// A list of data.
-    /// </returns>
-    public ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct);
 }

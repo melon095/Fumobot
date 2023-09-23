@@ -6,6 +6,7 @@ using Fumo.Extensions.AutoFacInstallers;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
+using Fumo.Shared.Extensions;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
@@ -26,15 +27,14 @@ internal class Program
         var configuration = new ConfigurationBuilder()
             .SetBasePath(cwd)
             .AddJsonFile(configPath, optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables()
             .Build();
 
         var container = new ContainerBuilder()
             .InstallGlobalCancellationToken(configuration)
-            .InstallConfig(configuration)
-            .InstallSerilog(configuration)
-            .InstallDatabase(configuration)
-            .InstallSingletons(configuration)
+            .InstallShared(configuration)
             .InstallScoped(configuration)
+            .InstallSingletons(configuration)
             .InstallQuartz(configuration)
             .Build();
 

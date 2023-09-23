@@ -1,20 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Serilog" Version="3.0.1" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Serilog" Version="3.0.1" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
-    <ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
-    <ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
+		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
+		<ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
+	</ItemGroup>
+
+	<Target Name="CompileDocumentation" BeforeTargets="BeforeBuild">
+		<Exec Command="jsonnet -o $(OutputPath)/Data/Documentation.json $(ProjectDir)/Data/Documentation.jsonnet -c" />
+	</Target>
 
 </Project>

@@ -16,6 +16,7 @@
     <PackageReference Include="Autofac.Extras.Quartz" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
     <PackageReference Include="MiniTwitch.Irc" Version="1.2.4" />
     <PackageReference Include="Npgsql" Version="7.0.4" />

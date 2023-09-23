@@ -5,8 +5,6 @@ using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.ThirdParty.Pajbot1;
-using System.ComponentModel;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Fumo.Commands;
 

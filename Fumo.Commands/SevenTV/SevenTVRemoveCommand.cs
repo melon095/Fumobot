@@ -109,18 +109,4 @@ public class SevenTVRemoveCommand : ChatCommand
 
         return output.ToString();
     }
-
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
-            "Removes 7TV emotes from your emote set",
-            $"Usage: {prefix}remove <emote names>",
-            "",
-            "**Required 7TV Permissions**",
-            "Manage Emotes",
-        };
-
-        return ValueTask.FromResult(strings);
-    }
 }

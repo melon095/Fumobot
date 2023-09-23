@@ -102,21 +102,4 @@ public class SevenTVEditorCommand : ChatCommand
             return $"{userToMutate.Username} is now an editor";
         }
     }
-
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> strings = new()
-        {
-            "This command allows the broadcaster to add and remove users as 7TV editors",
-            "",
-            $"**Usage**: {prefix}editor <username>",
-            $"**Example**: {prefix}editor forsen",
-            "",
-            "",
-            "Required 7TV Flags",
-            "Manage Editors",
-        };
-
-        return ValueTask.FromResult(strings);
-    }
 }

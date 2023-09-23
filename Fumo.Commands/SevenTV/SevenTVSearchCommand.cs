@@ -114,23 +114,4 @@ public class SevenTVSearchCommand : ChatCommand
 
         return await GetEmoteFromName(searchTerm, ct);
     }
-
-    public override ValueTask<List<string>> GenerateWebsiteDescription(string prefix, CancellationToken ct)
-    {
-        List<string> description = new()
-        {
-            "Search up 7TV emotes in chat",
-            $"**Usage**: {prefix}7tv <search term>",
-            $"**Example**: {prefix}7tv Apu",
-            "",
-            "-e, --exact",
-            "%TAB%Search for an exact match",
-            "",
-            "-u, --uploader <name>",
-            "%TAB%Search for emotes by a specific uploader",
-            "%TAB%Requires their current Twitch username",
-        };
-
-        return ValueTask.FromResult(description);
-    }
 }

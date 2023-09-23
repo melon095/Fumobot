@@ -21,6 +21,9 @@
         "Port": 42069,
         "Enabled": false
     },
+    "Website": {
+        "PublicURL": "https://yeah.com"
+    },
     "GlobalPrefix": "buh",
     "DebugTMI": false
 }
