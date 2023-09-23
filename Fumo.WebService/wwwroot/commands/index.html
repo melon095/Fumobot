@@ -33,7 +33,10 @@
                 "info": true,
                 "pageLength": 25,
                 "columnDefs": [
-                    { "orderable": false}
+                    { "orderable": false},
+                    { "searchable": true, "targets": 0 },
+                    { "searchable": false, "targets": 1 },
+                    { "searchable": false, "targets": 2 },
                 ]
             });
             
@@ -70,6 +73,7 @@
                         }
 
                         e.preventDefault();
+                        AddDrawRow();
 
                         const id = $(this).attr("x-id");
                         const query = $.param({ c: id });
@@ -86,15 +90,7 @@
                 console.error(ex);
             }
 
-            const drawerRow = `
-                <tr id="drawer-row" class="hidden">
-                    <td colspan="3">
-                        <div id="drawer-modal"></div>
-                    </td>
-                </tr>
-            `;
-
-            $(drawerRow).insertAfter($("#commands-d table tbody tr:last-child"));
+            AddDrawRow();
 
             const id = CheckForDrawer();
 
@@ -103,6 +99,24 @@
                 await ShowDrawer(id);
             }
         });
+
+        function AddDrawRow()
+        {
+            if ($("#drawer-row").length > 0)
+            {
+                return;
+            }
+            
+            const drawerRow = `
+                <tr id="drawer-row" class="hidden">
+                    <td colspan="3">
+                        <div id="drawer-modal"></div>
+                    </td>
+                </tr>
+            `;
+
+            $("#commands-d table tbody tr:last-child").after(drawerRow);
+        }
 
         function CheckForDrawer()
         {
@@ -119,10 +133,8 @@
 
         async function ShowDrawer(id)
         {
-            // Make request as the page is sliding the drawer down
             const response = await fetch(`/v1/commands/${id}`);
 
-            // slide drawer modal up if needed
             const drawerRow = $("#drawer-row");
             const drawer = $("#drawer-modal");
 
