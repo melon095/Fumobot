@@ -62,7 +62,8 @@
                     ]).draw();
 
                     $("#commands-d").on("click", `button[x-id="${command.id}"]`, function(e) {
-                        if ($("#drawer-row").prev().find("button").attr("x-id") === command.id)
+                        const drawerRow = $("#drawer-row");
+                        if (drawerRow.prev().find("button").attr("x-id") === command.id)
                         {
                             drawerRow.toggleClass("hidden");
                             return;
