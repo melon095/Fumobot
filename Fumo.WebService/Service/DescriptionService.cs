@@ -94,5 +94,7 @@ public class DescriptionService
 
     private static string CleanDescription(string dirt, string prefix)
         => dirt
-            .Replace("%PREFIX%", prefix);
+            .Replace("%PREFIX%", prefix)
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;");
 }

@@ -7,6 +7,7 @@ WorkingDirectory=/opt/fumobot/
 SyslogIdentifier=FumoBot
 
 Environment=FUMO_PROG_TYPE=bot
+
 User=user
 
 RestartSec=5

@@ -24,7 +24,6 @@
         </table>
     </div>
 
-
     <script>
         let table;
         $(async function() {
@@ -114,52 +113,48 @@
         async function ShowDrawer(id)
         {
             // Make request as the page is sliding the drawer down
-            const responsePromise = fetch(`/v1/commands/${id}`);
+            const response = await fetch(`/v1/commands/${id}`);
 
             // slide drawer modal up if needed
             const drawerRow = $("#drawer-row");
             const drawer = $("#drawer-modal");
-            await $(drawerRow).slideUp("slow", async function() {
-                // TODO: Using table.row didn't work 
-                const row = $(`td button[x-id="${id}"]`).closest("tr");
 
-                if (!row)
-                {
-                    return;
-                }
+            // TODO: Using table.row didn't work 
+            const row = $(`td button[x-id="${id}"]`).closest("tr");
 
-                const response = await responsePromise;
+            if (!row)
+            {
+                return;
+            }
 
-                if (!response.ok)
-                {
-                    // FIXME: show error in drawer
-                    console.error(response);
-                    return;
-                }
+            if (!response.ok)
+            {
+                // FIXME: show error in drawer
+                console.error(response);
+                return;
+            }
 
-                const command = await response.json();
+            const command = await response.json();
 
-                const html = `
-                    <div class="drawer">
-                        <div class="drawer-body">
-                            <p>Permissions: ${command.permissions}</p>
-                        </div>
+            const html = `
+                <div class="drawer">
+                    <div class="drawer-body">
+                        <p>Permissions: ${command.permission}</p>
                     </div>
-                `;
+                </div>
+            `;
 
-                drawer.html(html)
+            drawer.html(html)
 
-                if (command.detailedDescription)
-                {
-                    const p = $(`<p>${marked.parse(command.detailedDescription)}</p>`);
-                    drawer.find(".drawer-body").append(p);
-                }
+            if (command.description)
+            {
+                const p = $(`<div><p>${marked.parse(command.description)}</p></div>`);
+                $(".drawer-body").append(p);
+            }
 
-                drawerRow
-                    .insertAfter(row)
-                    .slideDown("slow")
-                    .removeClass("hidden")
-            });
+            drawerRow
+                .insertAfter(row)
+                .removeClass("hidden")
         }
     </script>
 </body>

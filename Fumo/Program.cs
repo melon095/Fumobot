@@ -34,6 +34,7 @@ internal class Program
             .InstallGlobalCancellationToken(configuration)
             .InstallShared(configuration)
             .InstallScoped(configuration)
+            .InstallSingletons(configuration)
             .InstallQuartz(configuration)
             .Build();
 

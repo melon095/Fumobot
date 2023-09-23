@@ -2,7 +2,6 @@
 
 public class IndepthCommandDTO
 {
-    public List<string> Permissions { get; set; }
-
-    public string? DetailedDescription { get; set; } = null;
+    public List<string> Permission { get; set; }
+    public string Description { get; set; }
 }

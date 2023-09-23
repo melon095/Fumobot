@@ -3,7 +3,7 @@ Description=Fumo website
 
 [Service]
 ExecStart=/usr/bin/dotnet /opt/fumobot/Fumo.WebService/bin/Release/net7.0/Fumo.WebService.dll /etc/fumo_bot.json
-WorkingDirectory=/opt/fumobot/
+WorkingDirectory=/opt/fumobot/Fumo.WebService/bin/Release/net7.0/
 SyslogIdentifier=FumoWeb
 
 Environment=FUMO_PROG_TYPE=web

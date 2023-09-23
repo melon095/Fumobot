@@ -3,6 +3,7 @@ using Fumo.Shared.Repositories;
 using Fumo.WebService.Models;
 using Fumo.WebService.Service;
 using Microsoft.AspNetCore.Mvc;
+using System.Security;
 
 namespace Fumo.WebService.Controllers;
 
@@ -67,8 +68,9 @@ public class CommandsController : ControllerBase
 
         return Ok(new IndepthCommandDTO
         {
-            Permissions = command.Permissions,
-            DetailedDescription = description,
+            Permission = command.Permissions,
+            Description = description,
         });
+
     }
 }
