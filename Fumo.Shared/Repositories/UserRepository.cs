@@ -40,6 +40,10 @@ public class UserRepository : IUserRepository
             TwitchName = tlaUser.User.Login,
         };
 
+        Database.Entry(user).State = !(await Database.Users.AnyAsync(x => x.TwitchID.Equals(user.TwitchID), cancellationToken))
+            ? EntityState.Added
+            : EntityState.Modified;
+
         await Database.Users.AddAsync(user, cancellationToken);
         await Database.SaveChangesAsync(cancellationToken);
 

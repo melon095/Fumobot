@@ -7,7 +7,6 @@ using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
-using Fumo.Shared.Regexes;
 using Fumo.ThirdParty.Exceptions;
 using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +23,6 @@ internal class CommandHandler : ICommandHandler
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
-    private readonly PajbotClient Pajbot = new();
 
     public CommandHandler(
         IApplication application,
@@ -102,33 +100,6 @@ internal class CommandHandler : ICommandHandler
         }
     }
 
-    private async Task<(bool Banned, string Reason)> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken)
-    {
-        foreach (var func in BanphraseRegex.GlobalRegex)
-        {
-            if (func(message))
-            {
-                return (true, "Global banphrase");
-            }
-        }
-
-        var pajbot1Instance = channel.GetSetting(ChannelSettingKey.Pajbot1);
-        if (string.IsNullOrEmpty(pajbot1Instance))
-        {
-            return (false, string.Empty);
-        }
-
-        try
-        {
-            return await this.Pajbot.Check(message, pajbot1Instance, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            this.Logger.Error(ex, "Asking pajbot for banphrase for {Channel}", channel.TwitchName);
-            return (true, "Internal error");
-        }
-    }
-
     public async Task<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
         using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
@@ -185,13 +156,6 @@ internal class CommandHandler : ICommandHandler
                 : "(No Response)";
 
             await this.CooldownHandler.SetCooldownAsync(message, command);
-
-            var (banphraseCheck, banphraseReason) = await this.CheckBanphrase(message.Channel, result.Message, cancellationToken);
-            if (banphraseCheck)
-            {
-                // Overwrite the output
-                result.Message = $"FeelsOkayMan blocked by 👉 {banphraseReason}";
-            }
 
             if ((command.Flags & ChatCommandFlags.Reply) != 0)
             {
