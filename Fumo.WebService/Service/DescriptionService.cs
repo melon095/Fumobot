@@ -30,9 +30,9 @@ public class DescriptionService
     {
         if (Ready) return;
 
-        var json = await File.ReadAllTextAsync(DocumentationPath, ct);
+        var stream = File.Open(DocumentationPath, FileMode.Open);
 
-        var root = JsonSerializer.Deserialize<Dictionary<Guid, DocumentationFileRep>>(json)
+        var root = await JsonSerializer.DeserializeAsync<Dictionary<Guid, DocumentationFileRep>>(stream, cancellationToken: ct)
             ?? throw new NullReferenceException("Failed to deserialize documentation file.");
 
         foreach (var (key, value) in root)

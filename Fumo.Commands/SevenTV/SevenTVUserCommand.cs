@@ -8,12 +8,14 @@ using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using System.Text;
 
 namespace Fumo.Commands.SevenTV;
 
-public class SevenTVUserCommand : ChatCommand
+public partial class SevenTVUserCommand : ChatCommand
 {
-    private readonly static Regex MaxSlotsRegex = new("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Compiled | RegexOptions.Multiline);
+    [GeneratedRegex("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Multiline | RegexOptions.Compiled)]
+    private static partial Regex MaxSlotsRegex();
 
     private readonly IUserRepository UserRepository;
     private readonly ISevenTVService SevenTV;
@@ -64,17 +66,14 @@ public class SevenTVUserCommand : ChatCommand
         var maxSlots = emoteSet?.Capacity ?? slots;
 
         var joinOffset = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() - ((DateTimeOffset)seventvUser.CreatedAt).ToUnixTimeSeconds());
-        var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 5);
+        var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 4);
 
-        var result = new List<string>()
-        {
-            $"{seventvUser.Username} ({user.TwitchID})",
-            $"https://7tv.app/users/{seventvUser.Id}",
-            roles is not null ? roles : "(No roles)",
-            $"Join {joinTime} ago",
-            $"Slots {slots} / {MaxSlotsRegex.Replace(maxSlots.ToString(), "_")}"
-        }.Where(x => !string.IsNullOrEmpty(x));
-
-        return string.Join(" | ", result);
+        return new StringBuilder()
+            .Append($"{seventvUser.Username} ({user.TwitchID}) | ")
+            .Append($"https://7tv.app/users/{seventvUser.Id} | ")
+            .Append(string.IsNullOrEmpty(roles) ? "(No roles) | " : $"{roles} | ")
+            .Append($"Joined {joinTime} ago | ")
+            .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")
+            .ToString();
     }
 }
