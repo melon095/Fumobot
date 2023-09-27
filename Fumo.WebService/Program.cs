@@ -25,7 +25,7 @@ public class Program
             .ConfigureContainer<ContainerBuilder>(x =>
             {
                 x.InstallShared(configuration);
-                x.RegisterType<DescriptionService>();
+                x.RegisterType<DescriptionService>().SingleInstance();
             });
 
         builder.Host.UseSerilog();
