@@ -141,6 +141,8 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     /// <inheritdoc/>
     public async ValueTask SendMessage(string channel, string message, string? replyID = null)
     {
+        if (string.IsNullOrEmpty(message)) return;
+
         var dto = await ChannelRepository.GetByName(channel, CancellationToken)
             ?? throw new Exception($"Channel {channel} not found");
 
