@@ -31,6 +31,7 @@ public class SevenTVYoinkCommand : ChatCommand
         SetDescription("Yoink emotes from another channel");
 
         AddParameter(new(typeof(bool), "alias"));
+        AddParameter(new(typeof(bool), "case"));
     }
 
     public SevenTVYoinkCommand(
@@ -64,6 +65,11 @@ public class SevenTVYoinkCommand : ChatCommand
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var keepAlias = GetArgument<bool>("alias");
+        var isCaseSensitive = GetArgument<bool>("case");
+
+        var stringComparer = isCaseSensitive 
+            ? StringComparer.Ordinal 
+            : StringComparer.OrdinalIgnoreCase;
 
         if (Input.Count <= 0)
         {
@@ -72,7 +78,7 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var chanIdx = Input.FindIndex((x => ChannelPrefixes.Contains(x[0])));
 
-        HashSet<(string Name, StringComparer Comparer)> emotesWant = new();
+        HashSet<string> emotesWant = new();
 
         for (var i = 0; i < Input.Count; i++)
         {
@@ -80,19 +86,7 @@ public class SevenTVYoinkCommand : ChatCommand
 
             var input = Input.ElementAt(i);
 
-            if (input.All(char.IsLower))
-            {
-                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
-                continue;
-            }
-
-            if (input.All(char.IsUpper))
-            {
-                emotesWant.Add((input, StringComparer.OrdinalIgnoreCase));
-                continue;
-            }
-
-            emotesWant.Add((input, StringComparer.Ordinal));
+            emotesWant.Add(input);
         }
 
         string writeChannel, readChannel;
@@ -133,7 +127,7 @@ public class SevenTVYoinkCommand : ChatCommand
         writeSet ??= await ConvertToEmoteSet(writeChannel, ct);
 
         var toAdd = (await SevenTVService.GetEnabledEmotes(readSet, ct))
-            .Where(setEmote => emotesWant.Any(input => input.Comparer.Equals(setEmote.Name, input.Name)))
+            .Where(x => emotesWant.Contains(x.Name, stringComparer))
             .ToList();
 
         if (toAdd.Count <= 0)

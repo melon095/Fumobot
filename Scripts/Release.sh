@@ -7,6 +7,7 @@ git pull
 
 service stop
 
+dotnet clean
 dotnet build -c Release
 
 service start

@@ -126,13 +126,13 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             The yoink command has the ability to add emote both ways, if you do not include a channel the emotes are taken from the current channel and added to your own channel.
             While adding a channel e.g (@forsen) would take emotes from forsen and add them to the current channel.
             
-            Emotes by default, are searched case sensitive, this means for example 'Forsen' would match 'Forsen', but not 'forsen'.
-            To search case insensitive your input should be all lowercase or all uppercase. Meaning 'forsen' matches 'Forsen' and 'FORSEN' matches 'Forsen'.
-            
             **Arguments**:
 
             -a, --alias
-                By default emotes have their aliases removed, -a will retain the alias
+                By default emotes have their aliases removed, -a will retain the alias,
+
+            -c, --case
+                Check emotes by case sensitivity
         |||
     },
     "95db80b4-06b5-49cc-ba10-8f4d04374a6e": {
