@@ -42,7 +42,7 @@ public partial class SevenTVUserCommand : ChatCommand
 
         return JsonSerializer.Deserialize<SevenTVRoles>(roles!)!
             .Roles
-            .Where(x => userRoles.Contains(x.Name) && x.Name != "Default")
+            .Where(x => userRoles.Contains(x.ID) && x.Name != "Default")
             .Select(x => x.Name);
     }
 
