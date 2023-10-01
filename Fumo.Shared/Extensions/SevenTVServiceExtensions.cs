@@ -23,26 +23,23 @@ public static class SevenTVServiceExtensions
         var sevenTVId = channel.GetSetting(ChannelSettingKey.SevenTV_UserID)
             ?? throw new InvalidInputException("The channel is missing a 7TV user ID");
 
+        RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
+        var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
+
+        // Bot is editor
+        if (contains[0] == false)
+        {
+            throw new InvalidInputException("I am not an editor in this channel");
+        }
+
         // Is broadcaster
         if (channel.TwitchID == invoker.TwitchID)
         {
             return (currentEmoteSet, sevenTVId);
         }
 
-        var botIsMember = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), botID);
-        var invokerIsMember = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), invoker.TwitchID);
-
-        // StackExchange.Redis.RedisServerException: ERR unknown command `SMISMEMBER`
-
-        //RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
-        //var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
-
-        if (botIsMember == false)
-        {
-            throw new InvalidInputException("I am not an editor in this channel");
-        }
-
-        if (invokerIsMember == false)
+        // Invoker is editor
+        if (contains[1] == false)
         {
             throw new InvalidInputException("You're not an editor in this channel");
         }
