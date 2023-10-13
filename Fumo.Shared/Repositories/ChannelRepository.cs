@@ -21,21 +21,21 @@ public class ChannelRepository : IChannelRepository
         _ = Fill(default);
     }
 
-    private async Task Fill(CancellationToken cancellationToken)
+    private async ValueTask Fill(CancellationToken cancellationToken)
     {
-        if (Channels is null)
+        if (Channels is not null)
+            return;
+
+        Channels = new();
+
+        var channels = await this.Database.Channels
+            .Where(x => !x.SetForDeletion)
+            .Include(x => x.User)
+            .ToListAsync(cancellationToken);
+
+        foreach (var channel in channels)
         {
-            Channels = new();
-
-            var channels = await this.Database.Channels
-                .Where(x => !x.SetForDeletion)
-                .Include(x => x.User)
-                .ToListAsync(cancellationToken);
-
-            foreach (var channel in channels)
-            {
-                Channels[channel.TwitchName] = channel;
-            }
+            Channels[channel.TwitchName] = channel;
         }
     }
 
