@@ -51,6 +51,7 @@ internal class CommandHandler : ICommandHandler
         if (!message.Input[0].StartsWith(prefix)) return;
 
         var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
+        if (commandName is null) return;
 
         message.Input.Clear();
         message.Input.AddRange(input);
