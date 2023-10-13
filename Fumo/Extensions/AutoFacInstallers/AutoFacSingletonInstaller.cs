@@ -3,6 +3,8 @@ using Fumo.Handlers;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
+using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.ThirdParty.ThreeLetterAPI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Irc;
@@ -64,6 +66,22 @@ public static class AutoFacSingletonInstaller
         builder
             .RegisterType<MetricsTracker>()
             .SingleInstance();
+
+        builder
+            .RegisterType<ChannelRepository>()
+            .As<IChannelRepository>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<ThreeLetterAPI>()
+            .As<IThreeLetterAPI>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<SevenTVService>()
+            .As<ISevenTVService>()
+            .SingleInstance();
+
 
         return builder;
     }

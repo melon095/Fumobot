@@ -23,9 +23,9 @@ internal class FetchEmoteSetsJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var channels = ChannelRepository.GetAll(context.CancellationToken);
+        var channels = ChannelRepository.GetAll();
 
-        await foreach (var channel in channels)
+        foreach (var channel in channels)
         {
             try
             {

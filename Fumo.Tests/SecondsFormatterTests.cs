@@ -2,7 +2,7 @@
 
 namespace Fumo.Tests;
 
-public class SettingsFormatterTests
+public class SecondsFormatterTests
 {
     [Theory]
     [InlineData(302, "5m, 2s")]

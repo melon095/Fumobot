@@ -4,15 +4,15 @@ namespace Fumo.Shared.Interfaces;
 
 public interface IChannelRepository
 {
-    IAsyncEnumerable<ChannelDTO> GetAll(CancellationToken cancellationToken = default);
+    IEnumerable<ChannelDTO> GetAll();
 
-    ValueTask<ChannelDTO?> GetByID(string ID, CancellationToken cancellationToken = default);
+    ChannelDTO? GetByID(string ID);
 
-    ValueTask<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default);
+    ChannelDTO? GetByName(string Name);
 
-    Task Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default);
+    Task Create(ChannelDTO channelDTO, CancellationToken ct = default);
 
-    Task Delete(ChannelDTO channelDTO, CancellationToken cancellationToken = default);
+    Task Delete(ChannelDTO channelDTO, CancellationToken ct = default);
 
-    Task Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default);
+    Task Update(ChannelDTO channelDTO, CancellationToken ct = default);
 }
