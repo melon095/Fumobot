@@ -19,21 +19,21 @@ public class ChannelRepository : IChannelRepository
         Database = database;
     }
 
-    private async Task FIllIfNeeded(CancellationToken cancellationToken)
+    private async ValueTask FIllIfNeeded(CancellationToken cancellationToken)
     {
-        if (Channels is null)
+        if (Channels is not null)
+            return;
+
+        Channels = new();
+
+        var channels = await this.Database.Channels
+            .Where(x => !x.SetForDeletion)
+            .Include(x => x.User)
+            .ToListAsync(cancellationToken);
+
+        foreach (var channel in channels)
         {
-            Channels = new();
-
-            var channels = await this.Database.Channels
-                .Where(x => !x.SetForDeletion)
-                .Include(x => x.User)
-                .ToListAsync(cancellationToken);
-
-            foreach (var channel in channels)
-            {
-                Channels[channel.TwitchName] = channel;
-            }
+            Channels[channel.TwitchName] = channel;
         }
     }
 
@@ -51,14 +51,14 @@ public class ChannelRepository : IChannelRepository
         }
     }
 
-    public async Task<ChannelDTO?> GetByID(string ID, CancellationToken cancellationToken = default)
+    public async ValueTask<ChannelDTO?> GetByID(string ID, CancellationToken cancellationToken = default)
     {
         await FIllIfNeeded(cancellationToken);
 
         return Channels.Where(x => x.Value.TwitchID == ID).Select(x => x.Value).FirstOrDefault();
     }
 
-    public async Task<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default)
+    public async ValueTask<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default)
     {
         await FIllIfNeeded(cancellationToken);
 
@@ -77,7 +77,7 @@ public class ChannelRepository : IChannelRepository
 
         ChannelDTO newlyAdded = await Database.Channels.Where(x => x.TwitchID == channelDTO.TwitchID).SingleAsync(cancellationToken);
 
-        if (newlyAdded != null)
+        if (newlyAdded is not null)
         {
             Channels[newlyAdded.TwitchName] = newlyAdded;
         }

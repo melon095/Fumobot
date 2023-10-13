@@ -6,9 +6,9 @@ public interface IChannelRepository
 {
     IAsyncEnumerable<ChannelDTO> GetAll(CancellationToken cancellationToken = default);
 
-    Task<ChannelDTO?> GetByID(string ID, CancellationToken cancellationToken = default);
+    ValueTask<ChannelDTO?> GetByID(string ID, CancellationToken cancellationToken = default);
 
-    Task<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default);
+    ValueTask<ChannelDTO?> GetByName(string Name, CancellationToken cancellationToken = default);
 
     Task Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default);
 
