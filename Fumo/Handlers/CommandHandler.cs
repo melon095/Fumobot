@@ -85,7 +85,6 @@ internal class CommandHandler : ICommandHandler
 
         return (commandName, new ArraySegment<string>(cleanMessage, 1, cleanMessage.Length - 1));
 
-        // https://csharp-extension.com/en/method/1002132/string-replacefirst
         static string ReplaceFirst(string input, string search, string replace)
         {
             ReadOnlySpan<char> i = input;
