@@ -48,10 +48,9 @@ internal class CommandHandler : ICommandHandler
     {
         // TODO: Very inefficient
         var prefix = GetPrefixForChannel(message.Channel);
-        if (!message.Input.ElementAt(0).StartsWith(prefix)) return;
+        if (!message.Input[0].StartsWith(prefix)) return;
 
         var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
-        if (commandName is null) return;
 
         message.Input.Clear();
         message.Input.AddRange(input);
@@ -90,17 +89,25 @@ internal class CommandHandler : ICommandHandler
         // https://csharp-extension.com/en/method/1002132/string-replacefirst
         static string ReplaceFirst(string input, string search, string replace)
         {
-            int pos = input.IndexOf(search);
+            ReadOnlySpan<char> i = input;
+            int pos = i.IndexOf(search);
             if (pos < 0)
             {
                 return input;
             }
 
-            return input.Remove(pos, search.Length).Insert(pos, replace);
+            Span<char> output = stackalloc char[i.Length - search.Length + replace.Length];
+            // Copy chars to output until 'pos' index
+            i[..pos].CopyTo(output[..pos]);
+            // Insert replacement at 'pos'
+            replace.AsSpan().CopyTo(output[pos..]);
+            // Copy the rest of input (after 'search' value) to output (after 'replace' value)
+            i[(pos + search.Length)..].CopyTo(output[(pos + replace.Length)..]);
+            return output.ToString();
         }
     }
 
-    public async Task<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
+    public async ValueTask<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
         using var commandScope = this.CommandRepository.CreateCommandScope(commandName);
         if (commandScope is null) return null;
@@ -138,7 +145,7 @@ internal class CommandHandler : ICommandHandler
             command.ParseArguments(message.Input);
 
             /*
-                FIXME: This should be changed. 
+                FIXME: This should be changed.
             */
             command.Channel = message.Channel;
             command.User = message.User;
