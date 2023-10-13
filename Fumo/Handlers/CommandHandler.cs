@@ -75,17 +75,15 @@ internal class CommandHandler : ICommandHandler
         return this.Configuration["GlobalPrefix"]!;
     }
 
-    private static (string?, List<string>) ParseMessage(string message, string prefix)
+    private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
 
         var cleanMessage = ReplaceFirst(message, prefix, string.Empty)
-            .Split(' ')
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .ToList();
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         var commandName = cleanMessage.FirstOrDefault();
 
-        return (commandName, cleanMessage.Skip(1).ToList());
+        return (commandName, new ArraySegment<string>(cleanMessage, 1, cleanMessage.Length - 1));
 
         // https://csharp-extension.com/en/method/1002132/string-replacefirst
         static string ReplaceFirst(string input, string search, string replace)
