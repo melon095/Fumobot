@@ -76,9 +76,9 @@ public class Application : IApplication
 
         Logger.Information("Connected to TMI");
 
-        var channels = ChannelRepository.GetAll(CancellationTokenSource.Token);
+        var channels = ChannelRepository.GetAll();
 
-        await foreach (var channel in channels)
+        foreach (var channel in channels)
         {
             await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
         }
@@ -90,11 +90,10 @@ public class Application : IApplication
         {
             CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
-            /* TODO: Remove resolving anything per message */
             using var scope = Scope.BeginLifetimeScope();
             var userRepo = scope.Resolve<IUserRepository>();
 
-            var channel = await ChannelRepository.GetByID(privmsg.Channel.Id.ToString(), token);
+            var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
             var user = await userRepo.SearchIDAsync(privmsg.Author.Id.ToString(), token);
 

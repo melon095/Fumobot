@@ -110,7 +110,7 @@ public class JoinCommand : ChatCommand
         }
 
 
-        if (await ChannelRepository.GetByID(userToJoin.TwitchID, ct) is ChannelDTO channel)
+        if (ChannelRepository.GetByID(userToJoin.TwitchID) is ChannelDTO channel)
         {
             var possesivePronoun = other ? "their" : "your";
 

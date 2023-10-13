@@ -50,15 +50,14 @@ internal class Program
             var tlp = scope.Resolve<IThreeLetterAPI>();
             var db = scope.Resolve<DatabaseContext>();
             var ctoken = scope.Resolve<CancellationTokenSource>().Token;
+            var channelRepo = scope.Resolve<IChannelRepository>();
 
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);
 
             var scheduler = scope.Resolve<IScheduler>();
 
-            var botChannel = await db.Channels
-                .Where(x => x.UserTwitchID.Equals(config["Twitch:UserID"]))
-                .SingleOrDefaultAsync();
+            var botChannel = channelRepo.GetByID(config["Twitch:UserID"]!);
 
             if (botChannel is null)
             {
@@ -79,7 +78,7 @@ internal class Program
                 };
 
                 // add to database
-                db.Channels.Add(channel);
+                await channelRepo.Create(channel, ctoken);
                 db.Users.Add(user);
 
                 await db.SaveChangesAsync();

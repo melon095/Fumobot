@@ -143,7 +143,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     {
         if (string.IsNullOrEmpty(message)) return;
 
-        var dto = await ChannelRepository.GetByName(channel, CancellationToken)
+        var dto = ChannelRepository.GetByName(channel)
             ?? throw new Exception($"Channel {channel} not found");
 
         var (banphraseCheck, banphraseReason) = await CheckBanphrase(dto, message, CancellationToken);
