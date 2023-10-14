@@ -23,7 +23,6 @@ internal class CommandHandler : ICommandHandler
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
-    private readonly string globalPrefix;
 
     public CommandHandler(
         IApplication application,
@@ -40,7 +39,6 @@ internal class CommandHandler : ICommandHandler
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
         DatabaseContext = databaseContext;
-        globalPrefix = this.Configuration["GlobalPrefix"]!;
 
         application.OnMessage += this.OnMessage;
     }
@@ -50,9 +48,9 @@ internal class CommandHandler : ICommandHandler
     {
         // TODO: Very inefficient
         var prefix = GetPrefixForChannel(message.Channel);
-        if (!message.Input[0].AsSpan().StartsWith(prefix)) return;
+        if (!message.Input[0].StartsWith(prefix)) return;
 
-        var (commandName, input) = ParseMessage(message.Input, prefix);
+        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
         if (commandName is null) return;
 
         message.Input.Clear();
@@ -74,27 +72,36 @@ internal class CommandHandler : ICommandHandler
             return channelPrefix;
         }
 
-        return globalPrefix;
+        return this.Configuration["GlobalPrefix"]!;
     }
 
-    private static (string?, IEnumerable<string>) ParseMessage(List<string> message, string prefix)
+    private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
 
-        var cleanMessage = ReplaceFirst(message, prefix, string.Empty);
+        var cleanMessage = ReplaceFirst(message, prefix, string.Empty)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         var commandName = cleanMessage.FirstOrDefault();
 
-        return (commandName, cleanMessage.Skip(1));
+        return (commandName, new ArraySegment<string>(cleanMessage, 1, cleanMessage.Length - 1));
 
-        static List<string> ReplaceFirst(List<string> message, string search, string replace)
+        static string ReplaceFirst(string input, string search, string replace)
         {
-            for (int i = 0; i < message.Count; i++)
+            ReadOnlySpan<char> i = input;
+            int pos = i.IndexOf(search);
+            if (pos < 0)
             {
-                if (message[i] != search) continue;
-                message[i] = replace;
-                break;
+                return input;
             }
-            return message;
+
+            Span<char> output = stackalloc char[i.Length - search.Length + replace.Length];
+            // Copy chars to output until 'pos' index
+            i[..pos].CopyTo(output[..pos]);
+            // Insert replacement at 'pos'
+            replace.AsSpan().CopyTo(output[pos..]);
+            // Copy the rest of input (after 'search' value) to output (after 'replace' value)
+            i[(pos + search.Length)..].CopyTo(output[(pos + replace.Length)..]);
+            return output.ToString();
         }
     }
 
