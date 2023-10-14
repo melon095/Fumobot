@@ -81,6 +81,8 @@ internal class CommandHandler : ICommandHandler
         var cleanMessage = ReplaceFirst(message, prefix, string.Empty)
             .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
+        if (cleanMessage.Length < 1) return (null, Array.Empty<string>());
+
         var commandName = cleanMessage.FirstOrDefault();
 
         return (commandName, new ArraySegment<string>(cleanMessage, 1, cleanMessage.Length - 1));
