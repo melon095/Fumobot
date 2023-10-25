@@ -80,12 +80,12 @@ public class JoinCommand : ChatCommand
         var other = false;
         var userToJoin = User;
         var otherUser = Input.ElementAtOrDefault(0) ?? "";
-        var username = UsernameCleanerRegex.CleanUsername(otherUser);
+        var otherUsersUsername = UsernameCleanerRegex.CleanUsername(otherUser);
 
 
-        if (!string.IsNullOrEmpty(otherUser) && User.TwitchName != username)
+        if (!string.IsNullOrEmpty(otherUser) && User.TwitchName != otherUsersUsername)
         {
-            var isMod = await this.IsMod(User, username, ct) || (User.HasPermission("admin.*"));
+            var isMod = await this.IsMod(User, otherUsersUsername, ct) || (User.HasPermission("admin.*"));
 
             if (!isMod)
             {
@@ -94,7 +94,7 @@ public class JoinCommand : ChatCommand
 
             try
             {
-                userToJoin = await this.UserRepository.SearchNameAsync(username, ct);
+                userToJoin = await this.UserRepository.SearchNameAsync(otherUsersUsername, ct);
                 other = true;
             }
             catch (UserNotFoundException ex)
@@ -119,8 +119,8 @@ public class JoinCommand : ChatCommand
                 return "That channel was recently removed, please wait an hour or so before trying to 'join' again";
             }
 
-            await this.Irc.PartChannel(username, ct);
-            await this.Irc.JoinChannel(username, ct);
+            await this.Irc.PartChannel(userToJoin.TwitchName, ct);
+            await this.Irc.JoinChannel(userToJoin.TwitchName, ct);
 
             return $"I tried to rejoin {possesivePronoun} channel.";
         }
