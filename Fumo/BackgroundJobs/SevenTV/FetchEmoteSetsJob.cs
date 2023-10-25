@@ -51,6 +51,11 @@ internal class FetchEmoteSetsJob : IJob
             {
                 continue;
             }
+            catch (TaskCanceledException)
+            {
+                // HTTP Timeout, cause the remote server is slow
+                continue;
+            }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Failed to get 7TV emote set for {ChannelName}", channel.TwitchName);
