@@ -1,7 +1,5 @@
 ﻿using Fumo.Shared.Enums;
-using Fumo.Shared.Exceptions;
 using Fumo.Shared.Models;
-using Fumo.Shared.Repositories;
 using Microsoft.Extensions.Configuration;
 
 namespace Fumo.Commands;
