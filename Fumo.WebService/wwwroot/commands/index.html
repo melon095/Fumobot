@@ -16,7 +16,7 @@
         <table>
             <thead>
                 <tr>
-                    <th class="table-header">Name Matcher</th>
+                    <th class="table-header">Name</th>
                     <th class="table-header">Description</th>
                     <th class="table-header">Cooldown</th>
                 </tr>
@@ -54,33 +54,41 @@
                 const commands = await response.json();
 
                 commands.forEach(command => {
-                    const nameMatcher = `<button x-id="${command.id}">${command.nameMatcher}</button>`;
+                    const name = `<p>${command.name}</p>`;
                     const description = command.description;
                     const cooldown = `${command.cooldown} Seconds`;
 
-                    table.row.add([
-                        nameMatcher,
-                        description,
-                        cooldown,
-                    ]).draw();
+                    const row = table
+                        .row
+                        .add([
+                            name,
+                            description,
+                            cooldown,
+                        ])
+                        .draw()
+                        .node();
 
-                    $("#commands-d").on("click", `button[x-id="${command.id}"]`, function(e) {
+                    $(row).on("click", function (evt) {
+                        evt.preventDefault();
+
                         const drawerRow = $("#drawer-row");
-                        if (drawerRow.prev().find("button").attr("x-id") === command.id)
+                        const drawerRowIsLast = drawerRow.next().length === 0;
+
+                        if (drawerRow.prev().find("p").text() === command.name &&
+                            !drawerRowIsLast)
                         {
                             drawerRow.toggleClass("hidden");
                             return;
                         }
 
-                        e.preventDefault();
                         AddDrawRow();
 
-                        const id = $(this).attr("x-id");
-                        const query = $.param({ c: id });
+                        const name = $(this).find("p").text();
+                        const query = $.param({ c: name });
 
                         window.history.pushState("", "", `?${query}`);
 
-                        ShowDrawer(id);
+                        ShowDrawer(name);        
                     });
                 });
             }
@@ -92,11 +100,11 @@
 
             AddDrawRow();
 
-            const id = CheckForDrawer();
+            const name = CheckForDrawer();
 
-            if (id)
+            if (name)
             {
-                await ShowDrawer(id);
+                await ShowDrawer(name);
             }
         });
 
@@ -121,25 +129,21 @@
         function CheckForDrawer()
         {
             const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get("c");
-
-            if (id)
-            {
-                return id;
-            }
-
-            return null;
+            return urlParams.get("c") || null;
         }
 
-        async function ShowDrawer(id)
+        async function ShowDrawer(name)
         {
-            const response = await fetch(`/v1/commands/${id}`);
+            const response = await fetch(`/v1/commands/${name}`);
 
             const drawerRow = $("#drawer-row");
             const drawer = $("#drawer-modal");
 
-            // TODO: Using table.row didn't work 
-            const row = $(`td button[x-id="${id}"]`).closest("tr");
+            const row = $(table
+                .rows()
+                .nodes())
+                .filter((_, e) => $(e).find("p").text() === name)
+
 
             if (!row)
             {
@@ -158,6 +162,7 @@
             const html = `
                 <div class="drawer">
                     <div class="drawer-body">
+                        <p>Regex: ${command.regex}</p>
                         <p>Permissions: ${command.permission}</p>
                     </div>
                 </div>

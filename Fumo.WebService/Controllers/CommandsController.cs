@@ -3,7 +3,6 @@ using Fumo.Shared.Repositories;
 using Fumo.WebService.Models;
 using Fumo.WebService.Service;
 using Microsoft.AspNetCore.Mvc;
-using System.Security;
 
 namespace Fumo.WebService.Controllers;
 
@@ -20,12 +19,6 @@ public class CommandsController : ControllerBase
         CommandRepository = commandRepository;
         Config = config;
         DescriptionService = descriptionService;
-
-        // TODO: Move this somewhere else maybe
-        if (CommandRepository.Commands is { Count: 0 })
-        {
-            CommandRepository.LoadAssemblyCommands();
-        }
     }
 
     [HttpGet]
@@ -38,14 +31,12 @@ public class CommandsController : ControllerBase
             // not very nice xp
             var instance = Activator.CreateInstance(command.Value) as ChatCommand;
 
-            var guid = await DescriptionService.GetMatchingID(command.Value, ct);
+            var name = await DescriptionService.GetMatchingName(command.Value, ct);
 
             commands.Add(new()
             {
-                Id = guid,
-                NameMatcher = instance.NameMatcher.ToString(),
+                Name = name,
                 Description = instance.Description,
-                // TODO: Not pretty
                 Cooldown = (int)instance.Cooldown.TotalSeconds,
             });
         }
@@ -53,21 +44,22 @@ public class CommandsController : ControllerBase
         return commands;
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<IndepthCommandDTO>> GetByName(Guid id, CancellationToken ct)
+    [HttpGet("{name}")]
+    public async Task<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
     {
         var prefix = Config["GlobalPrefix"] ?? "!";
 
-        var command = await DescriptionService.GetCommandByID(id, ct);
+        var command = await DescriptionService.GetCommandByID(name, ct);
         if (command is null)
         {
             return NotFound();
         }
 
-        var description = await DescriptionService.CompileDescription(id, prefix, ct);
+        var description = await DescriptionService.CompileDescription(name, prefix, ct);
 
         return Ok(new IndepthCommandDTO
         {
+            Regex = command.NameMatcher.ToString(),
             Permission = command.Permissions,
             Description = description,
         });

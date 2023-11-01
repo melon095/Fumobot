@@ -10,7 +10,7 @@ public record DocumentationFileRep(string Class, string? Doc);
 
 public class DescriptionService
 {
-    private readonly ConcurrentDictionary<Guid, DocumentationFileRep> Dictionary = new();
+    private readonly ConcurrentDictionary<string, DocumentationFileRep> Dictionary = new();
     private readonly string DocumentationPath;
     private readonly CommandRepository CommandRepository;
     private bool Ready = false;
@@ -32,7 +32,7 @@ public class DescriptionService
 
         using var stream = File.Open(DocumentationPath, FileMode.Open);
 
-        var root = await JsonSerializer.DeserializeAsync<Dictionary<Guid, DocumentationFileRep>>(stream, cancellationToken: ct)
+        var root = await JsonSerializer.DeserializeAsync<Dictionary<string, DocumentationFileRep>>(stream, cancellationToken: ct)
             ?? throw new NullReferenceException("Failed to deserialize documentation file.");
 
         foreach (var (key, value) in root)
@@ -43,11 +43,11 @@ public class DescriptionService
         Ready = true;
     }
 
-    public async Task<ChatCommand?> GetCommandByID(Guid id, CancellationToken ct)
+    public async Task<ChatCommand?> GetCommandByID(string name, CancellationToken ct)
     {
         await Load(ct);
 
-        if (!Dictionary.TryGetValue(id, out var doc))
+        if (!Dictionary.TryGetValue(name, out var doc))
         {
             return null;
         }
@@ -63,7 +63,7 @@ public class DescriptionService
         return null;
     }
 
-    public async Task<Guid> GetMatchingID(Type command, CancellationToken ct)
+    public async Task<string> GetMatchingName(Type command, CancellationToken ct)
     {
         await Load(ct);
 
@@ -78,11 +78,11 @@ public class DescriptionService
         throw new NullReferenceException("Failed to find matching ID.");
     }
 
-    public async Task<string> CompileDescription(Guid id, string prefix, CancellationToken ct)
+    public async Task<string> CompileDescription(string name, string prefix, CancellationToken ct)
     {
         await Load(ct);
 
-        if (!Dictionary.TryGetValue(id, out var doc))
+        if (!Dictionary.TryGetValue(name, out var doc))
         {
             return string.Empty;
         }

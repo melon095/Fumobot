@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Shared.Extensions;
+using Fumo.Shared.Repositories;
 using Fumo.WebService.Service;
 using Serilog;
 
@@ -54,6 +55,7 @@ public class Program
         app.MapControllers();
 
         MapBasicRoutes(app);
+        PrepareServices(app.Services);
 
         app.Run();
     }
@@ -66,5 +68,15 @@ public class Program
 
             return Task.FromResult(0);
         });
+    }
+
+    static void PrepareServices(IServiceProvider serviceProvider)
+    {
+        var CommandRepository = serviceProvider.GetRequiredService<CommandRepository>();
+
+        if (CommandRepository.Commands is { Count: 0 })
+        {
+            CommandRepository.LoadAssemblyCommands();
+        }
     }
 }
