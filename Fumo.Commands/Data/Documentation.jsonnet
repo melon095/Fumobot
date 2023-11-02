@@ -27,8 +27,11 @@ local S7TV(class) = Namespace + "SevenTV." + class;
             %PREFIX% bot prefix <prefix>
                 Set the prefix used in your channel. The global prefix will not work when a channel prefix is set.
 
-            %PREFIX% bot pajbot
-                If you have a pajbot instance running in your channel, you tell the bot to check it's messages against the pajbot banphrases.
+            %PREFIX% bot pajbot <base-url>
+                If you have a Pajbot instance running in your channel, you can tell the bot to check responses against Pajbot.
+                The input should be _my.domain.com_
+                The remote server has to be served with TLS. The bot will not accept a non-https url.
+
 
             **Arguments**:
             
