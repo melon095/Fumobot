@@ -51,7 +51,7 @@ public class SevenTVAddCommand : ChatCommand
 
         var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
 
-        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emotes found");
+        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
 
         if (index >= emotes.Items.Count) throw new InvalidInputException("Index out of range");
 
@@ -82,6 +82,14 @@ public class SevenTVAddCommand : ChatCommand
         }
         catch (GraphQLException ex)
         {
+            if (SevenTVErrorMapper.TryErrorCodeFromGQL(ex, out var errorCode))
+            {
+                if (errorCode == SevenTVErrorMapper.ErrorEmoteAlreadyEnabled)
+                {
+                    return $"Emote {emote.Name} is already enabled";
+                }
+            }
+
             return ex.Message;
         }
     }
