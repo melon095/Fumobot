@@ -35,7 +35,7 @@ internal class JobRegister
         var trigger = TriggerBuilder.Create()
             .WithIdentity(nameof(ChannelRemoverJob))
             .StartNow()
-            .WithSchedule(SimpleScheduleBuilder.RepeatHourlyForever())
+            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(30))
             .Build();
 
         return (job, new() { trigger });

@@ -2,6 +2,7 @@
 using Fumo.Database.DTO;
 using Fumo.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MiniTwitch.Common.Extensions;
 using System.Collections.Concurrent;
 using System.Data;
 
@@ -11,6 +12,9 @@ public class ChannelRepository : IChannelRepository
 {
     // TODO: Look into using IDbContextFactory
     private readonly DatabaseContext Database;
+
+    public event Func<ChannelDTO, ValueTask> OnChannelCreated = default!;
+    public event Func<ChannelDTO, ValueTask> OnChannelDeleted = default!;
 
     private static ConcurrentDictionary<string, ChannelDTO> Channels { get; set; }
 
@@ -53,7 +57,7 @@ public class ChannelRepository : IChannelRepository
     public ChannelDTO? GetByName(string Name)
         => Channels[Name];
 
-    public async Task Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
+    public async ValueTask Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
         using (var transaction = await Database.Database.BeginTransactionAsync(cancellationToken))
         {
@@ -63,15 +67,17 @@ public class ChannelRepository : IChannelRepository
             await transaction.CommitAsync(cancellationToken);
         }
 
-        ChannelDTO newlyAdded = await Database.Channels.Where(x => x.TwitchID == channelDTO.TwitchID).SingleAsync(cancellationToken);
+        // SMH if this shit is null.
+        ChannelDTO newlyAdded = await Database.Channels.Where(x => x.TwitchID == channelDTO.TwitchID).SingleAsync(cancellationToken)!;
 
-        if (newlyAdded != null)
-        {
-            Channels[newlyAdded.TwitchName] = newlyAdded;
-        }
+        Channels[newlyAdded.TwitchName] = newlyAdded;
+
+        OnChannelCreated
+            .Invoke(newlyAdded)
+            .StepOver();
     }
 
-    public async Task Delete(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
+    public async ValueTask Delete(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
         using var transaction = await Database.Database.BeginTransactionAsync(cancellationToken);
 
@@ -80,9 +86,13 @@ public class ChannelRepository : IChannelRepository
         await transaction.CommitAsync(cancellationToken);
 
         Channels.TryRemove(channelDTO.TwitchName, out _);
+
+        OnChannelDeleted
+            .Invoke(channelDTO)
+            .StepOver();
     }
 
-    public async Task Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
+    public async ValueTask Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
         // Very ugly xd
         // Issue is that EF Core can't update the key so just gotta do it this way.

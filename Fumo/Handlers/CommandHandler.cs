@@ -40,7 +40,11 @@ internal class CommandHandler : ICommandHandler
         DatabaseContext = databaseContext;
 
         application.OnMessage += this.OnMessage;
+
+        Logger.Information("CommandHandler Initialized. Global Prefix is {GlobalPrefix}", GlobalPrefix);
     }
+
+    private string GlobalPrefix => this.Configuration["GlobalPrefix"]!;
 
     // On messages that begin with the channel/global prefix are executed.
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
@@ -71,7 +75,7 @@ internal class CommandHandler : ICommandHandler
             return channelPrefix;
         }
 
-        return this.Configuration["GlobalPrefix"]!;
+        return GlobalPrefix;
     }
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)

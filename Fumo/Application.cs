@@ -6,6 +6,9 @@ using MiniTwitch.Irc;
 using MiniTwitch.Irc.Interfaces;
 using MiniTwitch.Irc.Models;
 using Serilog;
+using Fumo.Database.DTO;
+using Quartz;
+using Fumo.BackgroundJobs.SevenTV;
 
 namespace Fumo;
 
@@ -16,9 +19,10 @@ public class Application
     private readonly ILogger Logger;
     private readonly ILifetimeScope Scope;
     private readonly IConfiguration Configuration;
-    private readonly CancellationTokenSource CancellationTokenSource;
+    private readonly CancellationToken CancellationToken;
     private readonly IrcClient IrcClient;
     private readonly IChannelRepository ChannelRepository;
+    private readonly ISchedulerFactory SchedulerFactory;
     private readonly MetricsTracker MetricsTracker;
 
     public Application(
@@ -28,19 +32,32 @@ public class Application
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient,
         IChannelRepository channelRepository,
+        ISchedulerFactory schedulerFactory,
         MetricsTracker metricsTracker)
     {
         Logger = logger.ForContext<Application>();
         Scope = scope;
         Configuration = configuration;
-        CancellationTokenSource = cancellationTokenSource;
+        CancellationToken = cancellationTokenSource.Token;
         IrcClient = ircClient;
         ChannelRepository = channelRepository;
+        SchedulerFactory = schedulerFactory;
         MetricsTracker = metricsTracker;
 
         IrcClient.OnMessage += IrcClient_OnMessage;
         IrcClient.OnChannelJoin += IrcClient_OnChannelJoin;
         IrcClient.OnChannelPart += IrcClient_OnChannelPart;
+
+        ChannelRepository.OnChannelCreated += ChannelRepository_OnChannelCreated;
+    }
+
+    private async ValueTask ChannelRepository_OnChannelCreated(ChannelDTO arg)
+    {
+        var scheduler = await SchedulerFactory.GetScheduler(CancellationToken);
+
+        // Cluegi
+        await scheduler.TriggerJob(new(nameof(FetchChannelEditorsJob)), CancellationToken);
+        await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), CancellationToken);
     }
 
     private ValueTask IrcClient_OnChannelPart(IPartedChannel arg)
@@ -64,8 +81,8 @@ public class Application
         var debugTMI = this.Configuration.GetValue<bool>("DebugTMI");
         var connected = debugTMI switch
         {
-            true => await IrcClient.ConnectAsync("ws://localhost:6969/", CancellationTokenSource.Token),
-            false => await IrcClient.ConnectAsync(cancellationToken: CancellationTokenSource.Token)
+            true => await IrcClient.ConnectAsync("ws://localhost:6969/", CancellationToken),
+            false => await IrcClient.ConnectAsync(cancellationToken: CancellationToken)
         };
 
         if (!connected)
@@ -80,7 +97,7 @@ public class Application
 
         foreach (var channel in channels)
         {
-            await IrcClient.JoinChannel(channel.TwitchName, CancellationTokenSource.Token);
+            await IrcClient.JoinChannel(channel.TwitchName, CancellationToken);
         }
     }
 
@@ -88,7 +105,7 @@ public class Application
     {
         try
         {
-            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
+            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken).Token;
 
             using var scope = Scope.BeginLifetimeScope();
             var userRepo = scope.Resolve<IUserRepository>();
