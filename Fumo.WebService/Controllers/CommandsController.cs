@@ -29,7 +29,8 @@ public class CommandsController : ControllerBase
         foreach (var command in CommandRepository.Commands)
         {
             // not very nice xp
-            var instance = Activator.CreateInstance(command.Value) as ChatCommand;
+            var instance = (Activator.CreateInstance(command.Value) as ChatCommand)
+                ?? throw new Exception("Failed to create instance of command");
 
             var name = await DescriptionService.GetMatchingName(command.Value, ct);
 
