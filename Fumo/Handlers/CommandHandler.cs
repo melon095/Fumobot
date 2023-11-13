@@ -171,8 +171,9 @@ internal class CommandHandler : ICommandHandler
 
             return result;
         }
-        catch (Exception ex) when (ex is InvalidInputException ||
+        catch (Exception ex) when (ex is InvalidInputException || // xdd
                                    ex is UserNotFoundException ||
+                                   ex is InvalidCommandArgumentException ||
                                    ex is GraphQLException)
         {
             commandExecutionLogs.Success = false;

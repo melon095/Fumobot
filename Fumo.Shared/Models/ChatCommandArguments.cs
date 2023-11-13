@@ -5,6 +5,10 @@ namespace Fumo.Shared.Models;
 
 public class ChatCommandArguments
 {
+    private const string CLRString = nameof(String);
+    private const string CLRInt32 = nameof(Int32);
+    private const string CLRBoolean = nameof(Boolean);
+
     private readonly List<Parameter> parameters = new();
     private readonly Dictionary<string, object> parsedParameters = new();
 
@@ -21,7 +25,7 @@ public class ChatCommandArguments
 
             switch (param.Type.Name)
             {
-                case "String":
+                case CLRString:
                     {
                         var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, "expected a text value");
 
@@ -57,7 +61,7 @@ public class ChatCommandArguments
                     }
                     break;
 
-                case "Int32":
+                case CLRInt32:
                     {
                         var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, $"is missing a number (--{param.Name} 42)");
                         if (int.TryParse(value, out var number))
@@ -73,7 +77,7 @@ public class ChatCommandArguments
                     }
                     break;
 
-                case "Boolean":
+                case CLRBoolean:
                     {
                         parsedParameters[param.Name] = true;
 
