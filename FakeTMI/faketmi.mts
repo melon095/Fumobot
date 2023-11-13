@@ -59,5 +59,5 @@ wss.on("connection", async function (ws) {
 
 
 function CreatePrivmsg(message) {
-    return `@flags=;badge-info=;badges=moderator/1,bits-charity/1;room-id=146910710;id=bb78fca8-7023-4e29-9442-897e3a36d201;user-id=146910710;turbo=0;color=#FF0000;emotes=;display-name=melon095;first-msg=0;mod=1;historical=1;user-type=mod;returning-chatter=0;subscriber=0;rm-received-ts=1693421328783;tmi-sent-ts=1693421328599 :melon095!melon095@melon095.tmi.twitch.tv PRIVMSG #146910710 :${message}\r\n`;
+    return `@flags=;badge-info=;badges=moderator/1,bits-charity/1;room-id=146910710;id=bb78fca8-7023-4e29-9442-897e3a36d201;user-id=146910710;turbo=0;color=#FF0000;emotes=;display-name=melon095;first-msg=0;mod=1;historical=1;user-type=mod;returning-chatter=0;subscriber=0;rm-received-ts=1693421328783;tmi-sent-ts=1693421328599 :melon095!melon095@melon095.tmi.twitch.tv PRIVMSG #melon095 :${message}\r\n`;
 }
