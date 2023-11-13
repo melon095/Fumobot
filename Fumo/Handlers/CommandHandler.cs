@@ -8,7 +8,6 @@ using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.ThirdParty.Exceptions;
-using Fumo.ThirdParty.Pajbot1;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Diagnostics;
@@ -25,7 +24,7 @@ internal class CommandHandler : ICommandHandler
     private readonly DatabaseContext DatabaseContext;
 
     public CommandHandler(
-        IApplication application,
+        Application application,
         ILogger logger,
         ICooldownHandler cooldownHandler,
         IConfiguration configuration,

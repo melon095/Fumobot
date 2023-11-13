@@ -9,7 +9,7 @@ using Serilog;
 
 namespace Fumo;
 
-public class Application : IApplication
+public class Application
 {
     public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
 

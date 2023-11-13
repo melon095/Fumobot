@@ -50,18 +50,18 @@ public static class AutoFacSingletonInstaller
 
         builder
             .RegisterType<Application>()
-                .As<IApplication>()
-                .SingleInstance();
+            .AsSelf()
+            .SingleInstance();
 
         builder
             .RegisterType<CooldownHandler>()
-                .As<ICooldownHandler>()
-                .SingleInstance();
+            .As<ICooldownHandler>()
+            .SingleInstance();
 
         builder
             .RegisterType<MessageSenderHandler>()
-                .As<IMessageSenderHandler>()
-                .SingleInstance();
+            .As<IMessageSenderHandler>()
+            .SingleInstance();
 
         builder
             .RegisterType<MetricsTracker>()

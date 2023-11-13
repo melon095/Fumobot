@@ -95,7 +95,7 @@ internal class Program
 
             await scheduler.Start(ctoken);
 
-            await scope.Resolve<IApplication>().StartAsync();
+            await scope.Resolve<Application>().StartAsync();
         }
 
         var token = container.Resolve<CancellationTokenSource>();
