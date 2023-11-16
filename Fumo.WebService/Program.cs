@@ -9,6 +9,8 @@ namespace Fumo.WebService;
 
 public class Program
 {
+    private static readonly string[] DefaultFileNames = ["index.html"];
+
     public static void Main(string[] args)
     {
         var cwd = Directory.GetCurrentDirectory();
@@ -43,7 +45,7 @@ public class Program
 
         app.UseDefaultFiles(new DefaultFilesOptions
         {
-            DefaultFileNames = new[] { "index.html" }
+            DefaultFileNames = DefaultFileNames
         });
 
 
@@ -66,7 +68,7 @@ public class Program
         {
             ctx.Response.Redirect("/commands/");
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         });
     }
 
