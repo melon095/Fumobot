@@ -11,7 +11,7 @@ using Serilog;
 
 namespace Fumo.Handlers;
 
-using MessageQueue = ConcurrentQueue<(string Channel, string Message, string? ReplyID)>;
+using MessageQueue = ConcurrentQueue<ScheduleMessageSpecification>;
 
 /*
     Made with help by foretack ;P
@@ -63,28 +63,26 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                     long now = Unix();
                     foreach (var (channel, queue) in this.Queues)
                     {
-                        while (queue.TryDequeue(out var message))
+                        while (queue.TryDequeue(out var spec))
                         {
                             if (this.SendHistory.TryGetValue(channel, out var lastSent))
                             {
                                 if (now - lastSent > MessageInterval)
                                 {
-                                    await this.SendMessage(message.Channel, message.Message, message.ReplyID);
+                                    await this.SendMessage(spec);
                                     continue;
                                 }
 
                                 await Task.Delay(MessageInterval);
-                                await this.SendMessage(message.Channel, message.Message, message.ReplyID);
+                                await this.SendMessage(spec);
                                 continue;
                             }
 
                             this.SendHistory[channel] = now;
-                            await this.SendMessage(message.Channel, message.Message, message.ReplyID);
+                            await this.SendMessage(spec);
                         }
                     }
 
-                    // This super duper incredibly important line of code stops the garbage collector from going insane.
-                    // Without it the garbage collector would run level 1 collector every few milliseconds for a few seconds.
                     await Task.Delay(100);
                 }
             }
@@ -119,56 +117,77 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         catch (Exception ex)
         {
             Logger.Error(ex, "Asking pajbot for banphrase for {Channel}", channel.TwitchName);
-            return (true, "Internal error");
+            // Lole @brian6932
+            return (true, "Pepega 📣 SOMETHING'S WRONG WITH YOUR BANPHRASES -> (Check help command to remove it)");
         }
     }
 
-
     /// <inheritdoc/>
-    public void ScheduleMessage(string channel, string message, string? replyID = null)
+    public void ScheduleMessage(ScheduleMessageSpecification spec)
     {
-        this.SendHistory[channel] = Unix();
+        this.SendHistory[spec.Channel] = Unix();
 
-        if (!this.Queues.TryGetValue(channel, out var queue))
+        if (!this.Queues.TryGetValue(spec.Channel, out var queue))
         {
             queue = new MessageQueue();
-            this.Queues[channel] = queue;
+            this.Queues[spec.Channel] = queue;
         }
 
-        queue.Enqueue((channel, message, replyID));
+        queue.Enqueue(spec);
+    }
+
+    public void ScheduleMessage(string channel, string message)
+    {
+        this.ScheduleMessage(new ScheduleMessageSpecification
+        {
+            Channel = channel,
+            Message = message
+        });
     }
 
     /// <inheritdoc/>
-    public async ValueTask SendMessage(string channel, string message, string? replyID = null)
+    public async ValueTask SendMessage(ScheduleMessageSpecification spec)
     {
-        if (string.IsNullOrEmpty(message)) return;
+        if (string.IsNullOrEmpty(spec.Message)) return;
 
-        var dto = ChannelRepository.GetByName(channel)
-            ?? throw new Exception($"Channel {channel} not found");
+        var dto = ChannelRepository.GetByName(spec.Channel)
+            ?? throw new Exception($"Channel {spec.Channel} not found");
 
-        var (banphraseCheck, banphraseReason) = await CheckBanphrase(dto, message, CancellationToken);
-        if (banphraseCheck)
+        if (!spec.IgnoreBanphrase)
         {
-            // Overwrite the output
-            message = $"FeelsOkayMan blocked by 👉 {banphraseReason}";
+            var (banphraseCheck, banphraseReason) = await CheckBanphrase(dto, spec.Message, CancellationToken);
+            if (banphraseCheck)
+            {
+                // Overwrite the output
+                spec.Message = banphraseReason;
+            }
         }
 
-        this.SendHistory[channel] = Unix();
+        this.SendHistory[spec.Channel] = Unix();
 
-        message = message
+        spec.Message = spec.Message
             .Replace("\r", string.Empty)
             .Replace("\n", string.Empty)
             .Trim();
 
         MetricsTracker.TotalMessagesSent.Inc();
 
-        if (replyID is null)
+        if (spec.ReplyID is null)
         {
-            await this.IrcClient.SendMessage(channel, message, cancellationToken: this.CancellationToken);
+            await this.IrcClient.SendMessage(spec.Channel, spec.Message, cancellationToken: this.CancellationToken);
         }
         else
         {
-            await this.IrcClient.ReplyTo(replyID, channel, message, cancellationToken: this.CancellationToken);
+            await this.IrcClient.ReplyTo(spec.ReplyID, spec.Channel, spec.Message, cancellationToken: this.CancellationToken);
         }
+    }
+
+    public ValueTask SendMessage(string channel, string message)
+    {
+        return this.SendMessage(new ScheduleMessageSpecification
+        {
+            Channel = channel,
+            Message = message
+        });
     }
 }

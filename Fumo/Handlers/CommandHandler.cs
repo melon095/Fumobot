@@ -63,7 +63,13 @@ internal class CommandHandler : ICommandHandler
 
         if (result is null) return;
 
-        this.MessageSenderHandler.ScheduleMessage(message.Channel.TwitchName, result.Message, result.ReplyID);
+        ScheduleMessageSpecification spec = new(message.Channel.TwitchName, result.Message)
+        {
+            IgnoreBanphrase = result.IgnoreBanphrase,
+            ReplyID = result.ReplyID,
+        };
+
+        this.MessageSenderHandler.ScheduleMessage(spec);
     }
 
     private string GetPrefixForChannel(ChannelDTO channel)
@@ -164,6 +170,8 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Result = result.Message.Length > 0
                 ? result.Message
                 : "(No Response)";
+
+            result.IgnoreBanphrase = (command.Flags & ChatCommandFlags.IgnoreBanphrase) != 0;
 
             await this.CooldownHandler.SetCooldownAsync(message, command);
 

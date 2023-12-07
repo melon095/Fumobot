@@ -7,5 +7,7 @@ public class CommandResult
 
     public string? ReplyID { get; set; } = null;
 
+    public bool IgnoreBanphrase { get; set; } = false;
+
     public static implicit operator CommandResult(string message) => new() { Message = message };
 }

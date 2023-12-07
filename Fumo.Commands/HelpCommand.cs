@@ -11,7 +11,7 @@ public class HelpCommand : ChatCommand
     public HelpCommand()
     {
         SetName("help");
-        SetFlags(ChatCommandFlags.Reply);
+        SetFlags(ChatCommandFlags.Reply | ChatCommandFlags.IgnoreBanphrase);
         SetCooldown(TimeSpan.FromSeconds(10));
     }
 

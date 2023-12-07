@@ -77,7 +77,7 @@ public class PajbotClient
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
 
         return response is null
-            ? (true, "Pajbot")
-            : (response.Banned, "Pajbot");
+            ? (true, "FeelsOkayMan blocked by Pajbot")
+            : (response.Banned, "FeelsOkayMan blocked by Pajbot");
     }
 }

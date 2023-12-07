@@ -16,7 +16,7 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVYoinkCommand : ChatCommand
 {
-    private static readonly char[] ChannelPrefixes = new[] { '@', '#' };
+    private static readonly char[] ChannelPrefixes = ['@', '#'];
 
     private readonly ISevenTVService SevenTVService;
     private readonly IDatabase Redis;
@@ -67,8 +67,8 @@ public class SevenTVYoinkCommand : ChatCommand
         var keepAlias = GetArgument<bool>("alias");
         var isCaseSensitive = GetArgument<bool>("case");
 
-        var stringComparer = isCaseSensitive 
-            ? StringComparer.Ordinal 
+        var stringComparer = isCaseSensitive
+            ? StringComparer.Ordinal
             : StringComparer.OrdinalIgnoreCase;
 
         if (Input.Count <= 0)
@@ -78,7 +78,7 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var chanIdx = Input.FindIndex((x => ChannelPrefixes.Contains(x[0])));
 
-        HashSet<string> emotesWant = new();
+        HashSet<string> emotesWant = [];
 
         for (var i = 0; i < Input.Count; i++)
         {
