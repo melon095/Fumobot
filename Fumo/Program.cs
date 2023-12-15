@@ -61,7 +61,7 @@ internal class Program
 
             if (botChannel is null)
             {
-                var response = await tlp.SendAsync<BasicUserResponse>(new BasicUserInstruction(id: config["Twitch:UserID"]), ctoken);
+                var response = await tlp.Send<BasicUserResponse>(new BasicUserInstruction(id: config["Twitch:UserID"]), ctoken);
 
                 UserDTO user = new()
                 {
@@ -95,7 +95,7 @@ internal class Program
 
             await scheduler.Start(ctoken);
 
-            await scope.Resolve<Application>().StartAsync();
+            await scope.Resolve<Application>().Start();
         }
 
         var token = container.Resolve<CancellationTokenSource>();

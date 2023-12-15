@@ -2,11 +2,6 @@
 
 namespace Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 
-
-/// <summary>
-/// id -> String
-/// login -> String
-/// </summary>
 public class BasicUserInstruction : IGraphQLInstruction
 {
     public string? Id { get; }

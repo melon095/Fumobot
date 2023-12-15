@@ -95,7 +95,7 @@ public class SevenTVSearchCommand : ChatCommand
         if (string.IsNullOrEmpty(uploader))
             return;
 
-        var user = await UserRepository.SearchNameAsync(uploader, ct);
+        var user = await UserRepository.SearchName(uploader, ct);
         var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
         emotes.RemoveAll(x => x.Owner.Id != seventvUser.Id);

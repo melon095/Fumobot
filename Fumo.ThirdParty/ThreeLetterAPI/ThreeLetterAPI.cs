@@ -7,7 +7,6 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
 {
     public IConfiguration Config { get; }
 
-
     public ThreeLetterAPI(IConfiguration config)
         : base("https://gql.twitch.tv/gql")
     {
@@ -16,11 +15,11 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
         HttpClient.DefaultRequestHeaders.Add("Client-ID", Config["Twitch:ThreeLetterAPI"]);
     }
 
-    public new Task<TResponse> SendAsync<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default)
+    public new Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default)
         // This is fine..
         => base.SendAsync<TResponse>(instructions, cancellationToken);
 
-    public async Task<List<TResponse>> PaginatedQueryAsync<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default)
+    public async Task<List<TResponse>> PaginatedQuery<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default)
     {
         List<TResponse> responses = [];
 
@@ -35,7 +34,7 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
         {
             // TODO: Add exponential backoff maybe
 
-            var response = await this.SendAsync<TResponse>(instruction, cancellationToken);
+            var response = await this.Send<TResponse>(instruction, cancellationToken);
             responses.Add(response);
             instruction = prepare(response);
         } while (instruction is not null);
@@ -44,7 +43,7 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
     }
 
     // TODO Fix complexity limit. Max 35 instructions per request on some queries
-    public async Task<TResponse> SendMultipleAsync<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default)
+    public async Task<TResponse> SendMultiple<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default)
     {
         List<GraphQLRequest> requestList = new();
 

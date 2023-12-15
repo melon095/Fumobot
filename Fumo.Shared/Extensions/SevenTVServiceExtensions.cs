@@ -26,7 +26,7 @@ public static class SevenTVServiceExtensions
         RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
         var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
 
-        // Bot is editor
+        // Bot is not editor
         if (contains[0] == false)
         {
             throw new InvalidInputException("I am not an editor in this channel");

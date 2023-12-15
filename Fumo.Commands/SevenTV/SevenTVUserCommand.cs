@@ -53,7 +53,7 @@ public partial class SevenTVUserCommand : ChatCommand
         if (Input.Count > 0)
         {
             var username = UsernameCleanerRegex.CleanUsername(Input[0].ToLower());
-            user = await UserRepository.SearchNameAsync(username, ct);
+            user = await UserRepository.SearchName(username, ct);
         }
 
         SevenTVUser seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);

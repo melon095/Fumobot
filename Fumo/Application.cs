@@ -58,7 +58,7 @@ public class Application
         await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), CancellationToken);
     }
 
-    public async Task StartAsync()
+    public async ValueTask Start()
     {
         Logger.Information("Connecting to TMI");
 
@@ -97,7 +97,7 @@ public class Application
             var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
 
-            var user = await userRepo.SearchIDAsync(privmsg.Author.Id.ToString(), token);
+            var user = await userRepo.SearchID(privmsg.Author.Id.ToString(), token);
 
             MetricsTracker.TotalMessagesRead.WithLabels(channel.TwitchName).Inc();
 

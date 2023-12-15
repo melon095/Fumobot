@@ -51,7 +51,7 @@ public class SevenTVYoinkCommand : ChatCommand
 
     private async Task<string> ConvertToEmoteSet(string channel, CancellationToken ct)
     {
-        var user = await UserRepository.SearchNameAsync(channel, ct);
+        var user = await UserRepository.SearchName(channel, ct);
 
         var seventvUser = await SevenTVService.GetUserInfo(user.TwitchID, ct);
 

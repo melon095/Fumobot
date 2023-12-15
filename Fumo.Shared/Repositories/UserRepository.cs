@@ -27,7 +27,7 @@ public class UserRepository : IUserRepository
 
     private async ValueTask<UserDTO?> SearchWithThreeLetterAPI(string? id = null, string? login = null, CancellationToken cancellationToken = default)
     {
-        var tlaUser = await ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
+        var tlaUser = await ThreeLetterAPI.Send<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
 
         if (tlaUser is null || tlaUser.User is null)
         {
@@ -51,7 +51,7 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc/>
-    public async ValueTask<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
+    public async ValueTask<UserDTO> SearchID(string id, CancellationToken cancellationToken = default)
     {
         var dbUser = await Database
             .Users
@@ -71,7 +71,7 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc/>
-    public async ValueTask<UserDTO> SearchNameAsync(string username, CancellationToken cancellationToken = default)
+    public async ValueTask<UserDTO> SearchName(string username, CancellationToken cancellationToken = default)
     {
         var cleanedUsername = UsernameCleanerRegex.CleanUsername(username);
 
@@ -91,7 +91,7 @@ public class UserRepository : IUserRepository
         };
     }
 
-    public async ValueTask<List<UserDTO>> SearchMultipleByIDAsync(IEnumerable<string> ids, CancellationToken cancellation = default)
+    public async ValueTask<List<UserDTO>> SearchMultipleByID(IEnumerable<string> ids, CancellationToken cancellation = default)
     {
         var dbUsers = await Database.Users
             .Where(x => ids.Contains(x.TwitchID))
@@ -106,7 +106,7 @@ public class UserRepository : IUserRepository
 
         BasicBatchUserInstruction request = new(missing);
 
-        var response = await ThreeLetterAPI.SendAsync<BasicBatchUserResponse>(request, cancellation);
+        var response = await ThreeLetterAPI.Send<BasicBatchUserResponse>(request, cancellation);
 
         // create dto objects from every object in response
         foreach (var twitchUser in response.Users)

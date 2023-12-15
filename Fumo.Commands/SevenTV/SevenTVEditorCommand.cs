@@ -44,7 +44,7 @@ public class SevenTVEditorCommand : ChatCommand
     {
         var username = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Provide a username to add or remove");
 
-        var user = await UserRepository.SearchNameAsync(username, ct);
+        var user = await UserRepository.SearchName(username, ct);
 
         return await SevenTVService.GetUserInfo(user.TwitchID, ct);
     }

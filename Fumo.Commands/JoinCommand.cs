@@ -47,7 +47,7 @@ public class JoinCommand : ChatCommand
 
     private async Task<bool> IsMod(UserDTO user, string channelName, CancellationToken ct)
     {
-        var list = await this.ThreeLetterAPI.PaginatedQueryAsync<ChannelModsResponse>(resp =>
+        var list = await this.ThreeLetterAPI.PaginatedQuery<ChannelModsResponse>(resp =>
         {
             if (resp is null)
             {
@@ -94,7 +94,7 @@ public class JoinCommand : ChatCommand
 
             try
             {
-                userToJoin = await this.UserRepository.SearchNameAsync(otherUsersUsername, ct);
+                userToJoin = await this.UserRepository.SearchName(otherUsersUsername, ct);
                 other = true;
             }
             catch (UserNotFoundException ex)

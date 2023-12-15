@@ -1,9 +1,7 @@
-﻿using Fumo.Database;
-using Fumo.Shared.Interfaces;
+﻿using Fumo.Shared.Interfaces;
 using Fumo.ThirdParty.ThreeLetterAPI;
 using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.ThirdParty.ThreeLetterAPI.Response;
-using Microsoft.EntityFrameworkCore;
 using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
@@ -29,7 +27,6 @@ internal class ChannelRenameJob : IJob
         IrcClient = ircClient;
     }
 
-
     public async Task Execute(IJobExecutionContext context)
     {
         var channels = ChannelRepository.GetAll();
@@ -38,7 +35,7 @@ internal class ChannelRenameJob : IJob
         {
             try
             {
-                var tlaUser = await ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(id: channel.TwitchID), context.CancellationToken);
+                var tlaUser = await ThreeLetterAPI.Send<BasicUserResponse>(new BasicUserInstruction(id: channel.TwitchID), context.CancellationToken);
 
                 if (tlaUser.User.Login == channel.TwitchName)
                 {

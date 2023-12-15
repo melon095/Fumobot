@@ -64,7 +64,7 @@ internal class FetchChannelEditorsJob : IJob
                     .Select(x => x!.Id)
                     .ToArray();
 
-                var mappedUsers = (await (UserRepository.SearchMultipleByIDAsync(idsToMap, context.CancellationToken)))
+                var mappedUsers = (await (UserRepository.SearchMultipleByID(idsToMap, context.CancellationToken)))
                     .Select(x => x.TwitchID)
                     .ToArray();
 
