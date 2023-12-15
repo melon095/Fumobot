@@ -18,6 +18,8 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             throw new ArgumentException("Bearer token is missing from configuration", nameof(config));
 
         HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+        WithBrowserUA();
     }
 
     public async Task<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default)
