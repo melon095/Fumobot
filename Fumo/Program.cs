@@ -67,7 +67,7 @@ internal class Program
                 {
                     TwitchID = response.User.ID,
                     TwitchName = response.User.Login,
-                    Permissions = new() { "default", "bot" }
+                    Permissions = ["default", "bot"]
                 };
 
                 ChannelDTO channel = new()

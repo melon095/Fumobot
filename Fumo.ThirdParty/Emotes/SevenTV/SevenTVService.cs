@@ -27,7 +27,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             Query = @"query GetRoles{roles {name id}}"
         };
 
-        return await SendAsync<SevenTVRoles>(request, ct);
+        return await Send<SevenTVRoles>(request, ct);
     }
 
     public async Task<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default)
@@ -42,7 +42,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await SendAsync<OuterSevenTVUser>(request, ct)).UserByConnection;
+        return (await Send<OuterSevenTVUser>(request, ct)).UserByConnection;
     }
 
     public async Task<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
@@ -57,7 +57,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await SendAsync<SevenTVEditorEmoteSetsRoot>(request, ct)).UserByConnection;
+        return (await Send<SevenTVEditorEmoteSetsRoot>(request, ct)).UserByConnection;
     }
 
     public async Task<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default)
@@ -72,7 +72,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await SendAsync<SevenTVEditorsRoot>(request, ct)).UserByConnection;
+        return (await Send<SevenTVEditorsRoot>(request, ct)).UserByConnection;
     }
 
     public async Task<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct)
@@ -86,7 +86,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await SendAsync<EmoteRoot>(request, ct)).Emote;
+        return (await Send<EmoteRoot>(request, ct)).Emote;
     }
 
     public async Task<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
@@ -106,7 +106,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await SendAsync<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
+        return (await Send<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
     }
 
     public async Task<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)
@@ -131,7 +131,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        var response = await SendAsync<SevenTVModifyEmoteSetRoot>(request, ct);
+        var response = await Send<SevenTVModifyEmoteSetRoot>(request, ct);
 
         return response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()?.Name ?? default;
     }
@@ -147,13 +147,13 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        var response = await SendAsync<JsonDocument>(request, ct);
+        var response = await Send<JsonDocument>(request, ct);
 
         return response
             .RootElement
             .GetProperty("emoteSet")
             .GetProperty("emotes")
-            .Deserialize<List<SevenTVEnabledEmote>>() ?? new();
+            .Deserialize<List<SevenTVEnabledEmote>>() ?? [];
     }
 
     public async Task ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)
@@ -172,7 +172,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        await SendAsync<JsonDocument>(request, ct);
+        await Send<JsonDocument>(request, ct);
     }
 }
 

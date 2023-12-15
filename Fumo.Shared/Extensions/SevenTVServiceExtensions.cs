@@ -23,7 +23,7 @@ public static class SevenTVServiceExtensions
         var sevenTVId = channel.GetSetting(ChannelSettingKey.SevenTV_UserID)
             ?? throw new InvalidInputException("The channel is missing a 7TV user ID");
 
-        RedisValue[] redisValues = new[] { new RedisValue(botID), new RedisValue(invoker.TwitchID) };
+        RedisValue[] redisValues = [new RedisValue(botID), new RedisValue(invoker.TwitchID)];
         var contains = await redis.SetContainsAsync(service.EditorKey(channel.TwitchID), redisValues);
 
         // Bot is not editor

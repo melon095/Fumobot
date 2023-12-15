@@ -9,7 +9,7 @@ public abstract class AbstractGraphQLClient : IDisposable
 {
     private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
-    
+
     protected HttpClient HttpClient { get; set; }
 
     private bool disposed = false;
@@ -36,11 +36,11 @@ public abstract class AbstractGraphQLClient : IDisposable
         disposed = true;
     }
 
-    protected Task<TResponse> SendAsync<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
-        => SendAsync<TResponse>(instructions.Create(), ct);
+    protected Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
+        => Send<TResponse>(instructions.Create(), ct);
 
     // FIXME: Maybe change that "object" constraint to something better
-    protected async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken)
+    protected async Task<TResponse> Send<TResponse>(object request, CancellationToken cancellationToken)
     {
         var response = await HttpClient.PostAsJsonAsync(string.Empty, request, cancellationToken);
 

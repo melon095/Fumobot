@@ -17,7 +17,7 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
 
     public new Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default)
         // This is fine..
-        => base.SendAsync<TResponse>(instructions, cancellationToken);
+        => base.Send<TResponse>(instructions, cancellationToken);
 
     public async Task<List<TResponse>> PaginatedQuery<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default)
     {
@@ -45,13 +45,13 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
     // TODO Fix complexity limit. Max 35 instructions per request on some queries
     public async Task<TResponse> SendMultiple<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default)
     {
-        List<GraphQLRequest> requestList = new();
+        List<GraphQLRequest> requestList = [];
 
         foreach (var instruction in instructions)
         {
             requestList.Add(instruction.Create());
         }
 
-        return await SendAsync<TResponse>(requestList, cancellationToken);
+        return await Send<TResponse>(requestList, cancellationToken);
     }
 }
