@@ -68,7 +68,7 @@ internal class CommandHandler : ICommandHandler
             ReplyID = result.ReplyID,
         };
 
-        this.MessageSenderHandler.ScheduleMessage(spec);
+        MessageSenderHandler.ScheduleMessage(spec);
     }
 
     private string GetPrefixForChannel(ChannelDTO channel)
@@ -85,7 +85,6 @@ internal class CommandHandler : ICommandHandler
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
-
         var cleanMessage = ReplaceFirst(message, prefix, string.Empty)
             .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -148,10 +147,6 @@ internal class CommandHandler : ICommandHandler
             if (onCooldown) return null;
 
             command.ParseArguments(message.Input);
-
-            /*
-                FIXME: This should be changed.
-            */
             command.Channel = message.Channel;
             command.User = message.User;
             command.Input = message.Input;

@@ -56,7 +56,6 @@ public class PajbotClient
     {
         var url = $"{baseURL}/{Endpoint}";
 
-        // send the request using x-www-form-urlencoded
         Dictionary<string, string> formData = new()
         {
             { "message", message }
@@ -66,7 +65,7 @@ public class PajbotClient
 
         content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
-        // Not going to catch the exceptions. I would rather have the calle worry about it.
+        // Not going to catch the exceptions. I would rather have the caller worry about it.
         var result = await HttpClient.PostAsync(url, content, cancellationToken);
 
         if (!result.IsSuccessStatusCode)

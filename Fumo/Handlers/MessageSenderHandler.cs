@@ -43,6 +43,8 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         ChannelRepository = channelRepository;
         CancellationToken = cancellationTokenSource.Token;
 
+        channelRepository.OnChannelDeleted += DoCleanChannelQueue;
+
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
 
@@ -53,38 +55,47 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         this.MessageTask.Dispose();
     }
 
+    private ValueTask DoCleanChannelQueue(ChannelDTO channel)
+    {
+        Logger.Information("Cleaning queue for {Channel}", channel.TwitchName);
+
+        if (this.Queues.TryRemove(channel.TwitchName, out var queue))
+        {
+            queue.Clear();
+        }
+
+        return ValueTask.CompletedTask;
+    }
+
     private Task SendTask() => Task.Run(async () =>
     {
         while (true)
             try
             {
-
+                long now = Unix();
+                foreach (var (channel, queue) in this.Queues)
                 {
-                    long now = Unix();
-                    foreach (var (channel, queue) in this.Queues)
+                    while (queue.TryDequeue(out var spec))
                     {
-                        while (queue.TryDequeue(out var spec))
+                        if (this.SendHistory.TryGetValue(channel, out var lastSent))
                         {
-                            if (this.SendHistory.TryGetValue(channel, out var lastSent))
+                            if (now - lastSent > MessageInterval)
                             {
-                                if (now - lastSent > MessageInterval)
-                                {
-                                    await this.SendMessage(spec);
-                                    continue;
-                                }
-
-                                await Task.Delay(MessageInterval);
                                 await this.SendMessage(spec);
                                 continue;
                             }
 
-                            this.SendHistory[channel] = now;
+                            await Task.Delay(MessageInterval);
                             await this.SendMessage(spec);
+                            continue;
                         }
-                    }
 
-                    await Task.Delay(100);
+                        this.SendHistory[channel] = now;
+                        await this.SendMessage(spec);
+                    }
                 }
+
+                await Task.Delay(100);
             }
             catch (Exception ex)
             {

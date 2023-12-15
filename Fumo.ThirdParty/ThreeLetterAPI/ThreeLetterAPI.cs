@@ -22,10 +22,10 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
 
     public async Task<List<TResponse>> PaginatedQueryAsync<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default)
     {
-        List<TResponse> responses = new();
+        List<TResponse> responses = [];
 
         /*
-            This could be fixed by passing in a seperate instruction as a first parameter, but this should work. 
+            This could be fixed by passing in a separate instruction as a first parameter, but this should work. 
         */
         var instruction = prepare(default!);
 
