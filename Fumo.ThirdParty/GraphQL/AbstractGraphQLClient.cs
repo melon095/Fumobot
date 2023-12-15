@@ -7,7 +7,7 @@ namespace Fumo.ThirdParty.GraphQL;
 
 public abstract class AbstractGraphQLClient : IDisposable
 {
-    private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0";
+    private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
     protected HttpClient HttpClient { get; set; }
