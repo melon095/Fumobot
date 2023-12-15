@@ -45,8 +45,6 @@ public class Application
         MetricsTracker = metricsTracker;
 
         IrcClient.OnMessage += IrcClient_OnMessage;
-        IrcClient.OnChannelJoin += IrcClient_OnChannelJoin;
-        IrcClient.OnChannelPart += IrcClient_OnChannelPart;
 
         ChannelRepository.OnChannelCreated += ChannelRepository_OnChannelCreated;
     }
@@ -58,20 +56,6 @@ public class Application
         // Cluegi
         await scheduler.TriggerJob(new(nameof(FetchChannelEditorsJob)), CancellationToken);
         await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), CancellationToken);
-    }
-
-    private ValueTask IrcClient_OnChannelPart(IPartedChannel arg)
-    {
-        MetricsTracker.ChannelsJoined.Dec();
-
-        return ValueTask.CompletedTask;
-    }
-
-    private ValueTask IrcClient_OnChannelJoin(IrcChannel channel)
-    {
-        MetricsTracker.ChannelsJoined.Inc();
-
-        return ValueTask.CompletedTask;
     }
 
     public async Task StartAsync()
@@ -112,6 +96,7 @@ public class Application
 
             var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
+
             var user = await userRepo.SearchIDAsync(privmsg.Author.Id.ToString(), token);
 
             MetricsTracker.TotalMessagesRead.WithLabels(channel.TwitchName).Inc();
@@ -128,7 +113,10 @@ public class Application
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
 
-            ChatMessage message = new(channel, user, input, privmsg);
+            bool isBroadcaster = user.TwitchID == channel.TwitchID;
+            bool isMod = privmsg.Author.IsMod || isBroadcaster;
+
+            ChatMessage message = new(channel, user, input, isBroadcaster, isMod, privmsg.Id);
 
             await (OnMessage?.Invoke(message, token) ?? ValueTask.CompletedTask);
         }

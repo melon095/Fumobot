@@ -25,10 +25,8 @@ public class MetricsTracker : IDisposable
 
     public readonly Counter TotalMessagesRead = Metrics.CreateCounter("fumo_messages_read_total", "Total numberof messages read by Fumobot", new CounterConfiguration
     {
-        LabelNames = new[] { "channel" }
+        LabelNames = ["channel"]
     });
-
-    public readonly Gauge ChannelsJoined = Metrics.CreateGauge("fumo_channels_joined", "Total number of channels joined");
 
     #endregion
 

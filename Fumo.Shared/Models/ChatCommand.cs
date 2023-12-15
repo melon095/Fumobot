@@ -14,7 +14,6 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
     public ChannelDTO Channel { get; set; }
     public UserDTO User { get; set; }
     public List<string> Input { get; set; }
-    public Privmsg Privmsg { get; set; }
 
     /// <summary>
     /// The command invocation is the part of the message that matches the command name
@@ -26,55 +25,26 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
     /// </summary>
     public Regex NameMatcher { get; protected set; }
 
-
-    private ChatCommandFlags _flags = ChatCommandFlags.None;
-
     /// <summary>
     /// Flags that change behaviour
     /// </summary>
-    public ChatCommandFlags Flags
-    {
-        get => _flags;
-        protected set => _flags = value;
-    }
+    public ChatCommandFlags Flags { get; protected set; } = ChatCommandFlags.None;
 
-    private List<string> _permissions = new() { "default" };
+    public List<string> Permissions { get; protected set; } = ["default"];
 
-    /// <summary>
-    /// Permissions a user requires to execute this command
-    /// 
-    /// Every user has "default"
-    /// </summary>
-    public List<string> Permissions
-    {
-        get => _permissions;
-        protected set => _permissions = value;
-    }
-
-    private string? _description;
-    public string Description
-    {
-        get => _description ?? "No description provided";
-        protected set => _description = value;
-    }
+    public string Description { get; protected set; } = "No description provided";
 
     /// <summary>
     /// If Moderators and Broadcasters are the only ones that can execute this command in a chat
     /// </summary>
-    public bool ModeratorOnly => (Flags & ChatCommandFlags.ModeratorOnly) != 0;
+    public bool ModeratorOnly => Flags.HasFlag(ChatCommandFlags.ModeratorOnly);
 
     /// <summary>
     /// If the Broadcaster of the chat is the only one that can execute this command in a chat
     /// </summary>
-    public bool BroadcasterOnly => (Flags & ChatCommandFlags.BroadcasterOnly) != 0;
+    public bool BroadcasterOnly => Flags.HasFlag(ChatCommandFlags.BroadcasterOnly);
 
-
-    private TimeSpan _cooldown = TimeSpan.FromSeconds(5);
-    public TimeSpan Cooldown
-    {
-        get => _cooldown;
-        protected set => _cooldown = value;
-    }
+    public TimeSpan Cooldown { get; protected set; } = TimeSpan.FromSeconds(5);
 
     #endregion
 

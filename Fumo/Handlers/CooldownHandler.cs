@@ -17,14 +17,14 @@ public class CooldownHandler : ICooldownHandler
     private static string Key(ChatMessage message, ChatCommand command) => $"channel:{message.Channel.TwitchID}:cooldown:{command.NameMatcher}:{message.User.TwitchID}";
 
 
-    public async Task<bool> IsOnCooldownAsync(ChatMessage message, ChatCommand command)
+    public async Task<bool> IsOnCooldown(ChatMessage message, ChatCommand command)
     {
         var key = Key(message, command);
 
-        return (await this.Redis.KeyExistsAsync(key)) == true;
+        return await this.Redis.KeyExistsAsync(key);
     }
 
-    public async Task SetCooldownAsync(ChatMessage message, ChatCommand command)
+    public async Task SetCooldown(ChatMessage message, ChatCommand command)
     {
         var key = Key(message, command);
 

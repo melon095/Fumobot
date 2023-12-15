@@ -49,7 +49,6 @@ internal class CommandHandler : ICommandHandler
     // On messages that begin with the channel/global prefix are executed.
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
     {
-        // TODO: Very inefficient
         var prefix = GetPrefixForChannel(message.Channel);
         if (!message.Input[0].StartsWith(prefix)) return;
 
@@ -135,20 +134,17 @@ internal class CommandHandler : ICommandHandler
 
         try
         {
-            bool isBroadcaster = message.User.TwitchID == message.Channel.TwitchID;
-            bool isMod = message.Privmsg.Author.IsMod || isBroadcaster;
-
             if (!message.User.HasPermission("admin.execute"))
             {
                 if (!command.Permissions.All(message.User.Permissions.Contains) ||
-                    (!isMod && command.ModeratorOnly) ||
-                    (!isBroadcaster && command.BroadcasterOnly))
+                    (!message.IsMod && command.ModeratorOnly) ||
+                    (!message.IsBroadcaster && command.BroadcasterOnly))
                 {
                     return null;
                 }
             }
 
-            bool onCooldown = await this.CooldownHandler.IsOnCooldownAsync(message, command);
+            bool onCooldown = await this.CooldownHandler.IsOnCooldown(message, command);
             if (onCooldown) return null;
 
             command.ParseArguments(message.Input);
@@ -159,7 +155,6 @@ internal class CommandHandler : ICommandHandler
             command.Channel = message.Channel;
             command.User = message.User;
             command.Input = message.Input;
-            command.Privmsg = message.Privmsg;
             command.CommandInvocationName = commandName;
 
             this.Logger.Debug("Executing command {CommandName}", command.NameMatcher);
@@ -171,13 +166,13 @@ internal class CommandHandler : ICommandHandler
                 ? result.Message
                 : "(No Response)";
 
-            result.IgnoreBanphrase = (command.Flags & ChatCommandFlags.IgnoreBanphrase) != 0;
+            result.IgnoreBanphrase = command.Flags.HasFlag(ChatCommandFlags.IgnoreBanphrase);
 
-            await this.CooldownHandler.SetCooldownAsync(message, command);
+            await this.CooldownHandler.SetCooldown(message, command);
 
-            if ((command.Flags & ChatCommandFlags.Reply) != 0)
+            if (command.Flags.HasFlag(ChatCommandFlags.Reply))
             {
-                result.ReplyID = message.Privmsg.Id;
+                result.ReplyID = message.ReplyID;
             }
 
             return result;

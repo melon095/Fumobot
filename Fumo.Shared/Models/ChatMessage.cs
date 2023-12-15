@@ -8,5 +8,7 @@ public record ChatMessage(
     ChannelDTO Channel,
     UserDTO User,
     List<string> Input,
-    Privmsg Privmsg
+    bool IsBroadcaster,
+    bool IsMod,
+    string? ReplyID = null
 );

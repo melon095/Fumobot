@@ -25,7 +25,7 @@ public class UserRepository : IUserRepository
         ThreeLetterAPI = threeLetterAPI;
     }
 
-    private async Task<UserDTO?> SearchWithThreeLetterAPI(string? id = null, string? login = null, CancellationToken cancellationToken = default)
+    private async ValueTask<UserDTO?> SearchWithThreeLetterAPI(string? id = null, string? login = null, CancellationToken cancellationToken = default)
     {
         var tlaUser = await ThreeLetterAPI.SendAsync<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
 
@@ -51,7 +51,7 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc/>
-    public async Task<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
+    public async ValueTask<UserDTO> SearchIDAsync(string id, CancellationToken cancellationToken = default)
     {
         var dbUser = await Database
             .Users
@@ -71,7 +71,7 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc/>
-    public async Task<UserDTO> SearchNameAsync(string username, CancellationToken cancellationToken = default)
+    public async ValueTask<UserDTO> SearchNameAsync(string username, CancellationToken cancellationToken = default)
     {
         var cleanedUsername = UsernameCleanerRegex.CleanUsername(username);
 
@@ -91,7 +91,7 @@ public class UserRepository : IUserRepository
         };
     }
 
-    public async Task<List<UserDTO>> SearchMultipleByIDAsync(IEnumerable<string> ids, CancellationToken cancellation = default)
+    public async ValueTask<List<UserDTO>> SearchMultipleByIDAsync(IEnumerable<string> ids, CancellationToken cancellation = default)
     {
         var dbUsers = await Database.Users
             .Where(x => ids.Contains(x.TwitchID))
@@ -126,8 +126,8 @@ public class UserRepository : IUserRepository
         return dbUsers;
     }
 
-    public Task SaveChanges(CancellationToken cancellationToken = default)
+    public async ValueTask SaveChanges(CancellationToken cancellationToken = default)
     {
-        return Database.SaveChangesAsync(cancellationToken);
+        await Database.SaveChangesAsync(cancellationToken);
     }
 }
