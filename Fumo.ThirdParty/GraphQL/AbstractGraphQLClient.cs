@@ -51,7 +51,7 @@ public abstract class AbstractGraphQLClient : IDisposable
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new GraphQLException("Bad response statuscode", response.StatusCode);
+            throw new GraphQLException($"Bad Response StatusCode ({response.StatusCode})", response.StatusCode);
         }
 
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
