@@ -18,7 +18,6 @@ public abstract class AbstractGraphQLClient : IDisposable
     {
         HttpClient = httpClient ?? new HttpClient();
 
-        this.HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
         this.HttpClient.Timeout = Timeout;
 
         this.HttpClient.BaseAddress = new(gqlAddress);
@@ -34,6 +33,12 @@ public abstract class AbstractGraphQLClient : IDisposable
         }
 
         disposed = true;
+    }
+
+    protected void WithBrowserUA()
+    {
+        HttpClient.DefaultRequestHeaders.Remove("User-Agent");
+        HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
     }
 
     protected Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)

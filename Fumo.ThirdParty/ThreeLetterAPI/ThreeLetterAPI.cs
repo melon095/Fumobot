@@ -13,6 +13,8 @@ public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
         Config = config;
 
         HttpClient.DefaultRequestHeaders.Add("Client-ID", Config["Twitch:ThreeLetterAPI"]);
+
+        WithBrowserUA();
     }
 
     public new Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default)
