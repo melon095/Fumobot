@@ -172,10 +172,16 @@ internal class CommandHandler : ICommandHandler
 
             return result;
         }
+        catch (GraphQLException ex)
+        {
+            commandExecutionLogs.Success = false;
+            commandExecutionLogs.Result = $"{ex.Message} ({ex.StatusCode})";
+
+            return commandExecutionLogs.Result;
+        }
         catch (Exception ex) when (ex is InvalidInputException || // xdd
                                    ex is UserNotFoundException ||
-                                   ex is InvalidCommandArgumentException ||
-                                   ex is GraphQLException)
+                                   ex is InvalidCommandArgumentException)
         {
             commandExecutionLogs.Success = false;
             commandExecutionLogs.Result = ex.Message;
