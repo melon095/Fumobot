@@ -29,8 +29,8 @@
 	</PropertyGroup>
 
 	<Target Name="ShipFrontend" BeforeTargets="AfterBuild" Condition="'$(Configuration)' == 'Release'">
-		<Exec Command="npm install" WorkingDirectory="$(FrontendRoot)" />
-		<Exec Command="npm run build" WorkingDirectory="$(FrontendRoot)" />
+		<Exec Command="pnpm install" WorkingDirectory="$(FrontendRoot)" />
+		<Exec Command="pnpm run build" WorkingDirectory="$(FrontendRoot)" />
 
 		<ItemGroup>
 			<FrontendFiles Include="$(FrontendOutputRoot)**\*.*" />
