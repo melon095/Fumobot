@@ -9,8 +9,6 @@ namespace Fumo.WebService;
 
 public class Program
 {
-    private static readonly string[] DefaultFileNames = ["index.html"];
-
     public static void Main(string[] args)
     {
         var cwd = Directory.GetCurrentDirectory();
@@ -45,9 +43,8 @@ public class Program
 
         app.UseDefaultFiles(new DefaultFilesOptions
         {
-            DefaultFileNames = DefaultFileNames
+            DefaultFileNames = ["index.html"]
         });
-
 
         app.UseStaticFiles();
 
@@ -56,20 +53,9 @@ public class Program
         app.UseRouting();
         app.MapControllers();
 
-        MapBasicRoutes(app);
         PrepareServices(app.Services);
 
         app.Run();
-    }
-
-    static void MapBasicRoutes(WebApplication app)
-    {
-        app.MapGet("/", (ctx) =>
-        {
-            ctx.Response.Redirect("/commands/");
-
-            return Task.CompletedTask;
-        });
     }
 
     static void PrepareServices(IServiceProvider serviceProvider)
