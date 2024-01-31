@@ -28,14 +28,15 @@
 		<FrontendOutputRoot>$(FrontendRoot)build\</FrontendOutputRoot>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Folder Include="wwwroot\*" />
-	</ItemGroup>
-
 	<Target Name="ShipFrontend" BeforeTargets="AfterBuild" Condition="'$(Configuration)' == 'Release'">
 		<Exec Command="npm install" WorkingDirectory="$(FrontendRoot)" />
 		<Exec Command="npm run build" WorkingDirectory="$(FrontendRoot)" />
-		<Exec Command="xcopy /s /y $(FrontendOutputRoot) $(Outdir)\wwwroot" />
+
+		<ItemGroup>
+			<FrontendFiles Include="$(FrontendOutputRoot)**\*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(FrontendFiles)" DestinationFolder="$(OutDir)wwwroot\%(RecursiveDir)" />
 	</Target>
 
 </Project>
