@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fumo.WebService.Controllers;
 
 [ApiController]
-[Route("v1/[controller]")]
+[Route("api/[controller]")]
 public class CommandsController : ControllerBase
 {
     private readonly CommandRepository CommandRepository;

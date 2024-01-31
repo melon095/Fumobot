@@ -23,9 +23,19 @@
 		<ProjectReference Include="..\Fumo.ThirdParty\Fumo.ThirdParty.csproj" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<FrontendRoot>..\Fumo.Frontend\</FrontendRoot>
+		<FrontendOutputRoot>$(FrontendRoot)build\</FrontendOutputRoot>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<Content Update="wwwroot\**\*">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<Folder Include="wwwroot\*" />
 	</ItemGroup>
+
+	<Target Name="ShipFrontend" BeforeTargets="AfterBuild" Condition="'$(Configuration)' == 'Release'">
+		<Exec Command="npm install" WorkingDirectory="$(FrontendRoot)" />
+		<Exec Command="npm run build" WorkingDirectory="$(FrontendRoot)" />
+		<Exec Command="xcopy /s /y $(FrontendOutputRoot) $(Outdir)\wwwroot" />
+	</Target>
+
 </Project>
