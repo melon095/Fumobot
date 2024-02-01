@@ -46,7 +46,7 @@ public class SevenTVAliasCommand : ChatCommand
 
         var dstEmoteName = Input.ElementAtOrDefault(1);
 
-        var newEmoteName = await SevenTVService.ModifyEmoteSet(EmoteSet, ListItemAction.Update, srcEmote.Id, dstEmoteName, ct);
+        await SevenTVService.ModifyEmoteSet(EmoteSet, ListItemAction.Update, srcEmote.Id, dstEmoteName, ct);
 
         if (dstEmoteName is null)
         {

@@ -42,8 +42,6 @@ internal class FetchChannelEditorsJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var channels = ChannelRepository.GetAll().ToList();
-
         var botEmoteSets = (await SevenTVService.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken))
             .EditorOf
             .Where(x => x.User.Connections.GetTwitchConnection() is not null);

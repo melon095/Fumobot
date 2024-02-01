@@ -81,7 +81,7 @@ internal class Program
                 await channelRepo.Create(channel, ctoken);
                 db.Users.Add(user);
 
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(ctoken);
             }
 
             Log.Information("Registering Quartz jobs");
@@ -106,7 +106,7 @@ internal class Program
             await Task.Delay(100);
         }
 
-        await container.Resolve<IScheduler>().Shutdown();
+        await container.Resolve<IScheduler>().Shutdown(token.Token);
         await container.DisposeAsync();
     }
 }

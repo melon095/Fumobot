@@ -106,7 +106,7 @@ public class Application
                 user.TwitchName = privmsg.Author.Name;
                 user.UsernameHistory.Add(new(user.TwitchName, DateTime.Now));
 
-                await userRepo.SaveChanges();
+                await userRepo.SaveChanges(token);
             }
 
             var input = privmsg.Content
