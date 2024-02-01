@@ -40,7 +40,7 @@ public class SevenTVEditorCommand : ChatCommand
         BotID = configuration["Twitch:UserID"]!;
     }
 
-    private async Task<SevenTVUser> GetUser(CancellationToken ct)
+    private async ValueTask<SevenTVUser> GetUser(CancellationToken ct)
     {
         var username = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Provide a username to add or remove");
 

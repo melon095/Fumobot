@@ -37,7 +37,7 @@ public class PajbotClient
         return input;
     }
 
-    public async Task<bool> ValidateDomain(string url, CancellationToken ct = default)
+    public async ValueTask<bool> ValidateDomain(string url, CancellationToken ct = default)
     {
         try
         {
@@ -52,7 +52,7 @@ public class PajbotClient
     }
 
     /// <exception cref="Exception"></exception>
-    public async Task<(bool Banned, string Reason)> Check(string message, string baseURL, CancellationToken cancellationToken)
+    public async ValueTask<(bool Banned, string Reason)> Check(string message, string baseURL, CancellationToken cancellationToken)
     {
         var url = $"{baseURL}/{Endpoint}";
 

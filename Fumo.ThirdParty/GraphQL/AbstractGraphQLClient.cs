@@ -41,11 +41,11 @@ public abstract class AbstractGraphQLClient : IDisposable
         HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
     }
 
-    protected Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
+    protected ValueTask<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
         => Send<TResponse>(instructions.Create(), ct);
 
     // FIXME: Maybe change that "object" constraint to something better
-    protected async Task<TResponse> Send<TResponse>(object request, CancellationToken cancellationToken)
+    protected async ValueTask<TResponse> Send<TResponse>(object request, CancellationToken cancellationToken)
     {
         var response = await HttpClient.PostAsJsonAsync(string.Empty, request, cancellationToken);
 

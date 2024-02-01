@@ -26,7 +26,7 @@ public class DescriptionService
         CommandRepository = commandRepository;
     }
 
-    private async Task Load(CancellationToken ct)
+    private async ValueTask Load(CancellationToken ct)
     {
         if (Ready) return;
 
@@ -43,7 +43,7 @@ public class DescriptionService
         Ready = true;
     }
 
-    public async Task<ChatCommand?> GetCommandByID(string name, CancellationToken ct)
+    public async ValueTask<ChatCommand?> GetCommandByID(string name, CancellationToken ct)
     {
         await Load(ct);
 
@@ -63,7 +63,7 @@ public class DescriptionService
         return null;
     }
 
-    public async Task<string> GetMatchingName(Type command, CancellationToken ct)
+    public async ValueTask<string> GetMatchingName(Type command, CancellationToken ct)
     {
         await Load(ct);
 
@@ -78,7 +78,7 @@ public class DescriptionService
         throw new NullReferenceException("Failed to find matching ID.");
     }
 
-    public async Task<string> CompileDescription(string name, string prefix, CancellationToken ct)
+    public async ValueTask<string> CompileDescription(string name, string prefix, CancellationToken ct)
     {
         await Load(ct);
 

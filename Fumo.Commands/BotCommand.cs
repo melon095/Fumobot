@@ -38,7 +38,7 @@ public class BotCommand : ChatCommand
 
     #region Methods
 
-    private async Task<string> RemovePrefix(CancellationToken ct)
+    private async ValueTask<string> RemovePrefix(CancellationToken ct)
     {
         AssertBroadcaster();
 
@@ -49,7 +49,7 @@ public class BotCommand : ChatCommand
         return "Removed the channel-wide prefix";
     }
 
-    private async Task<string> SetPrefix(CancellationToken ct)
+    private async ValueTask<string> SetPrefix(CancellationToken ct)
     {
         AssertBroadcaster();
 
@@ -69,7 +69,7 @@ public class BotCommand : ChatCommand
         return $"Set the prefix to {prefix}. (The global prefix won't work now)";
     }
 
-    private async Task<string> RemovePajbot(CancellationToken ct)
+    private async ValueTask<string> RemovePajbot(CancellationToken ct)
     {
         AssertBroadcaster();
 
@@ -80,7 +80,7 @@ public class BotCommand : ChatCommand
         return "Disabled checking against pajbot";
     }
 
-    private async Task<string> SetPajbot(CancellationToken ct)
+    private async ValueTask<string> SetPajbot(CancellationToken ct)
     {
         AssertBroadcaster();
 

@@ -31,7 +31,7 @@ public class SevenTVSearchCommand : ChatCommand
         UserRepository = userRepository;
     }
 
-    private async Task<CommandResult> GetEmoteFromName(string searchTerm, CancellationToken ct)
+    private async ValueTask<CommandResult> GetEmoteFromName(string searchTerm, CancellationToken ct)
     {
         var exact = GetArgument<bool>("exact");
 
@@ -71,7 +71,7 @@ public class SevenTVSearchCommand : ChatCommand
         return builder.ToString();
     }
 
-    private async Task<CommandResult> GetEmoteFromID(string id, CancellationToken ct)
+    private async ValueTask<CommandResult> GetEmoteFromID(string id, CancellationToken ct)
     {
         try
         {
@@ -90,7 +90,7 @@ public class SevenTVSearchCommand : ChatCommand
         }
     }
 
-    private async Task FilterByUploader(List<SevenTVEmoteByNameItem> emotes, string uploader, CancellationToken ct)
+    private async ValueTask FilterByUploader(List<SevenTVEmoteByNameItem> emotes, string uploader, CancellationToken ct)
     {
         if (string.IsNullOrEmpty(uploader))
             return;

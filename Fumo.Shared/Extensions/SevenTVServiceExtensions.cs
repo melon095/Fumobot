@@ -15,7 +15,7 @@ public static class SevenTVServiceExtensions
     /// <summary>
     /// Ensures the current user is allowed to change emotes in the channel
     /// </summary>
-    public static async Task<(string EmoteSet, string UserID)> EnsureCanModify(this ISevenTVService service, string botID, IDatabase redis, ChannelDTO channel, UserDTO invoker)
+    public static async ValueTask<(string EmoteSet, string UserID)> EnsureCanModify(this ISevenTVService service, string botID, IDatabase redis, ChannelDTO channel, UserDTO invoker)
     {
         var currentEmoteSet = channel.GetSetting(ChannelSettingKey.SevenTV_EmoteSet)
             ?? throw new InvalidInputException("The channel is missing an emote set");

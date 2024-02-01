@@ -4,7 +4,7 @@ namespace Fumo.Shared.Interfaces;
 
 public interface ICooldownHandler
 {
-    public Task<bool> IsOnCooldown(ChatMessage message, ChatCommand command);
+    public ValueTask<bool> IsOnCooldown(ChatMessage message, ChatCommand command);
 
-    public Task SetCooldown(ChatMessage message, ChatCommand command);
+    public ValueTask SetCooldown(ChatMessage message, ChatCommand command);
 }

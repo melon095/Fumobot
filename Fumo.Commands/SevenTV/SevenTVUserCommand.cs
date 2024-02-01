@@ -36,7 +36,7 @@ public partial class SevenTVUserCommand : ChatCommand
         Redis = redis;
     }
 
-    private async Task<IEnumerable<string>> GetRoles(IEnumerable<string> userRoles)
+    private async ValueTask<IEnumerable<string>> GetRoles(IEnumerable<string> userRoles)
     {
         var roles = await Redis.StringGetAsync("seventv:roles");
 

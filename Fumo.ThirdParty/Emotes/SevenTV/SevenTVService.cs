@@ -20,7 +20,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
     }
 
-    public async Task<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default)
+    public async ValueTask<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -30,7 +30,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return await Send<SevenTVRoles>(request, ct);
     }
 
-    public async Task<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default)
+    public async ValueTask<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -45,7 +45,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<OuterSevenTVUser>(request, ct)).UserByConnection;
     }
 
-    public async Task<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
+    public async ValueTask<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -60,7 +60,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<SevenTVEditorEmoteSetsRoot>(request, ct)).UserByConnection;
     }
 
-    public async Task<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default)
+    public async ValueTask<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -75,7 +75,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<SevenTVEditorsRoot>(request, ct)).UserByConnection;
     }
 
-    public async Task<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct)
+    public async ValueTask<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct)
     {
         GraphQLRequest request = new()
         {
@@ -89,7 +89,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<EmoteRoot>(request, ct)).Emote;
     }
 
-    public async Task<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
+    public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -109,7 +109,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
     }
 
-    public async Task<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)
+    public async ValueTask<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)
     {
         var stringAction = action switch
         {
@@ -136,7 +136,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()?.Name ?? default;
     }
 
-    public async Task<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
+    public async ValueTask<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -156,7 +156,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             .Deserialize<List<SevenTVEnabledEmote>>() ?? [];
     }
 
-    public async Task ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)
+    public async ValueTask ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {

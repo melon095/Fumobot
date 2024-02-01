@@ -22,7 +22,7 @@ public class CommandsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<BasicCommandDTO>> Get(CancellationToken ct)
+    public async ValueTask<IEnumerable<BasicCommandDTO>> Get(CancellationToken ct)
     {
         List<BasicCommandDTO> commands = new();
 
@@ -46,7 +46,7 @@ public class CommandsController : ControllerBase
     }
 
     [HttpGet("{name}")]
-    public async Task<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
+    public async ValueTask<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
     {
         var prefix = Config["GlobalPrefix"] ?? "!";
 

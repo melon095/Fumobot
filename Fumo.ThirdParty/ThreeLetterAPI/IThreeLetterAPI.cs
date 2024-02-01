@@ -13,10 +13,10 @@ public interface IThreeLetterAPI
     /// <exception cref="Exception">
     /// Throws when the status is not 200. indicating the service is broken.
     /// </exception>
-    Task<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default);
+    ValueTask<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken cancellationToken = default);
 
-    Task<TResponse> SendMultiple<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default);
+    ValueTask<TResponse> SendMultiple<TResponse>(IEnumerable<IGraphQLInstruction> instructions, CancellationToken cancellationToken = default);
 
-    Task<List<TResponse>> PaginatedQuery<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default);
+    ValueTask<List<TResponse>> PaginatedQuery<TResponse>(Func<TResponse?, IGraphQLInstruction?> prepare, CancellationToken cancellationToken = default);
 
 }

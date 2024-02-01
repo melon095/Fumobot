@@ -45,7 +45,7 @@ public class JoinCommand : ChatCommand
         BotID = config["Twitch:UserID"] ?? throw new ArgumentException("missing Twitch:UserID config");
     }
 
-    private async Task<bool> IsMod(UserDTO user, string channelName, CancellationToken ct)
+    private async ValueTask<bool> IsMod(UserDTO user, string channelName, CancellationToken ct)
     {
         var list = await this.ThreeLetterAPI.PaginatedQuery<ChannelModsResponse>(resp =>
         {

@@ -16,7 +16,7 @@ internal class JobRegister
         CreateSevenTVEditors,
     });
 
-    public static async Task RegisterJobs(IScheduler scheduler, CancellationToken cancellationToken)
+    public static async ValueTask RegisterJobs(IScheduler scheduler, CancellationToken cancellationToken)
     {
         foreach (var jobFactory in _jobFactories)
         {

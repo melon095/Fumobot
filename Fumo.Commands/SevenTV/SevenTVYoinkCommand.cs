@@ -49,7 +49,7 @@ public class SevenTVYoinkCommand : ChatCommand
         BotID = configuration["Twitch:UserID"]!;
     }
 
-    private async Task<string> ConvertToEmoteSet(string channel, CancellationToken ct)
+    private async ValueTask<string> ConvertToEmoteSet(string channel, CancellationToken ct)
     {
         var user = await UserRepository.SearchName(channel, ct);
 

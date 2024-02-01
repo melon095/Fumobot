@@ -33,7 +33,7 @@ public class SevenTVAddCommand : ChatCommand
         BotID = configuration["Twitch:UserID"]!;
     }
 
-    private async Task<SevenTVBasicEmote> ResolveEmote(string search, CancellationToken ct)
+    private async ValueTask<SevenTVBasicEmote> ResolveEmote(string search, CancellationToken ct)
     {
         var id = ExtractSevenTVIDRegex.Extract(search);
 
@@ -44,7 +44,7 @@ public class SevenTVAddCommand : ChatCommand
         };
     }
 
-    private async Task<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
+    private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
     {
         var exact = GetArgument<bool>("exact");
         var index = GetArgument<int>("index"); // Fuck it not writing documentation for this one
