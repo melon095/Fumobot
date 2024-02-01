@@ -20,7 +20,13 @@ public class Program
             .AddEnvironmentVariables()
             .Build();
 
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+        {
+            Args = args,
+            ContentRootPath = cwd,
+            EnvironmentName = configuration["Environment"] ?? Environments.Production,
+            WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
+        });
 
         builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(x =>
@@ -34,19 +40,21 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseSerilogRequestLogging();
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
         }
-
-        app.UseSerilogRequestLogging();
-
-        app.UseDefaultFiles(new DefaultFilesOptions
+        else
         {
-            DefaultFileNames = ["index.html"]
-        });
+            app.UseDefaultFiles(new DefaultFilesOptions
+            {
+                DefaultFileNames = ["index.html"]
+            });
 
-        app.UseStaticFiles();
+            app.UseStaticFiles();
+        }
 
         app.UseAuthorization();
 
