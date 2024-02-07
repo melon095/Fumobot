@@ -18,7 +18,7 @@ public class Application
 
     private readonly ILogger Logger;
     private readonly ILifetimeScope Scope;
-    private readonly IConfiguration Configuration;
+    private readonly AppSettings Settings;
     private readonly CancellationToken CancellationToken;
     private readonly IrcClient IrcClient;
     private readonly IChannelRepository ChannelRepository;
@@ -28,7 +28,7 @@ public class Application
     public Application(
         ILogger logger,
         ILifetimeScope scope,
-        IConfiguration configuration,
+        AppSettings settings,
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient,
         IChannelRepository channelRepository,
@@ -37,7 +37,7 @@ public class Application
     {
         Logger = logger.ForContext<Application>();
         Scope = scope;
-        Configuration = configuration;
+        Settings = settings;
         CancellationToken = cancellationTokenSource.Token;
         IrcClient = ircClient;
         ChannelRepository = channelRepository;
@@ -62,8 +62,7 @@ public class Application
     {
         Logger.Information("Connecting to TMI");
 
-        var debugTMI = this.Configuration.GetValue<bool>("DebugTMI");
-        var connected = debugTMI switch
+        var connected = Settings.DebugTMI switch
         {
             true => await IrcClient.ConnectAsync("ws://localhost:6969/", CancellationToken),
             false => await IrcClient.ConnectAsync(cancellationToken: CancellationToken)

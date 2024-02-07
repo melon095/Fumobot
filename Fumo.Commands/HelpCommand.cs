@@ -6,7 +6,7 @@ namespace Fumo.Commands;
 
 public class HelpCommand : ChatCommand
 {
-    private readonly IConfiguration Configuration;
+    private readonly string PublicURL;
 
     public HelpCommand()
     {
@@ -15,16 +15,14 @@ public class HelpCommand : ChatCommand
         SetCooldown(TimeSpan.FromSeconds(10));
     }
 
-    public HelpCommand(IConfiguration configuration) : this()
+    public HelpCommand(AppSettings settings) : this()
     {
-        Configuration = configuration;
+        PublicURL = settings.Website.PublicURL;
     }
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var baseUrl = Configuration["Website:PublicURL"]!;
-
-        var url = new Uri(new Uri(baseUrl), "/commands/index.html");
+        var url = new Uri(new Uri(PublicURL), "/commands/");
 
         return ValueTask.FromResult(new CommandResult
         {

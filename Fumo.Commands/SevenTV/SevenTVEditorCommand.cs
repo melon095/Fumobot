@@ -29,7 +29,7 @@ public class SevenTVEditorCommand : ChatCommand
     }
 
     public SevenTVEditorCommand(
-        IConfiguration configuration,
+        AppSettings settings,
         IDatabase redis,
         ISevenTVService sevenTVService,
         IUserRepository userRepository) : this()
@@ -37,7 +37,7 @@ public class SevenTVEditorCommand : ChatCommand
         Redis = redis;
         SevenTVService = sevenTVService;
         UserRepository = userRepository;
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<SevenTVUser> GetUser(CancellationToken ct)

@@ -31,14 +31,14 @@ public class SevenTVRemoveCommand : ChatCommand
         ILogger logger,
         ISevenTVService sevenTVService,
         IDatabase redis,
-        IConfiguration configuration,
+        AppSettings settings,
         IMessageSenderHandler messageSender) : this()
     {
         Logger = logger.ForContext<SevenTVRemoveCommand>();
         SevenTVService = sevenTVService;
         Redis = redis;
         MessageSender = messageSender;
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)

@@ -18,33 +18,32 @@ internal class CommandHandler : ICommandHandler
 {
     private readonly ILogger Logger;
     private readonly ICooldownHandler CooldownHandler;
-    private readonly IConfiguration Configuration;
     private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly DatabaseContext DatabaseContext;
+    private readonly string GlobalPrefix;
 
     public CommandHandler(
         Application application,
         ILogger logger,
         ICooldownHandler cooldownHandler,
-        IConfiguration configuration,
+        AppSettings settings,
         CommandRepository commandRepository,
         IMessageSenderHandler messageSenderHandler,
         DatabaseContext databaseContext)
     {
         Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
-        Configuration = configuration;
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
         DatabaseContext = databaseContext;
+        GlobalPrefix = settings.GlobalPrefix;
 
         application.OnMessage += this.OnMessage;
 
         Logger.Information("CommandHandler Initialized. Global Prefix is {GlobalPrefix}", GlobalPrefix);
     }
 
-    private string GlobalPrefix => this.Configuration["GlobalPrefix"]!;
 
     // On messages that begin with the channel/global prefix are executed.
     private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)

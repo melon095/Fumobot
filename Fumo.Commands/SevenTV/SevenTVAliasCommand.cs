@@ -22,11 +22,11 @@ public class SevenTVAliasCommand : ChatCommand
         SetFlags(ChatCommandFlags.Reply);
     }
 
-    public SevenTVAliasCommand(ISevenTVService sevenTVService, IConfiguration configuration, IDatabase redis) : this()
+    public SevenTVAliasCommand(ISevenTVService sevenTVService, AppSettings settings, IDatabase redis) : this()
     {
         SevenTVService = sevenTVService;
         Redis = redis;
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)

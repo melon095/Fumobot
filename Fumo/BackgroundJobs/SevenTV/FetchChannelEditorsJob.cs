@@ -1,5 +1,6 @@
 ﻿using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Models;
 using Fumo.ThirdParty.Emotes.SevenTV;
 using Fumo.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.ThirdParty.Exceptions;
@@ -25,7 +26,7 @@ internal class FetchChannelEditorsJob : IJob
         ILogger logger,
         IDatabase redis,
         ISevenTVService sevenTVService,
-        IConfiguration configuration,
+        AppSettings settings,
         IChannelRepository channelRepository,
         IUserRepository userRepository,
         IThreeLetterAPI threeLetterAPI)
@@ -37,7 +38,7 @@ internal class FetchChannelEditorsJob : IJob
         UserRepository = userRepository;
         ThreeLetterAPI = threeLetterAPI;
 
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     public async Task Execute(IJobExecutionContext context)

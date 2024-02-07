@@ -26,11 +26,11 @@ public class SevenTVAddCommand : ChatCommand
         AddParameter(new(typeof(bool), "exact"));
     }
 
-    public SevenTVAddCommand(ISevenTVService sevenTVService, IConfiguration configuration, IDatabase redis) : this()
+    public SevenTVAddCommand(ISevenTVService sevenTVService, AppSettings settings, IDatabase redis) : this()
     {
         SevenTVService = sevenTVService;
         Redis = redis;
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<SevenTVBasicEmote> ResolveEmote(string search, CancellationToken ct)

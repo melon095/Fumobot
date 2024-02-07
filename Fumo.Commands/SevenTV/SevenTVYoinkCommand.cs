@@ -38,15 +38,14 @@ public class SevenTVYoinkCommand : ChatCommand
         ISevenTVService sevenTVService,
         IDatabase redis,
         IMessageSenderHandler messageSender,
-        IConfiguration configuration,
+        AppSettings settings,
         IUserRepository userRepository) : this()
     {
         SevenTVService = sevenTVService;
         Redis = redis;
         MessageSender = messageSender;
         UserRepository = userRepository;
-
-        BotID = configuration["Twitch:UserID"]!;
+        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<string> ConvertToEmoteSet(string channel, CancellationToken ct)

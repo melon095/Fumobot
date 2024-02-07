@@ -9,8 +9,8 @@ public record AppSettings(
     SevenTVSettings SevenTV,
     MetricsSettings Metrics,
     WebsiteSettings Website,
-    string GlobalPrefix,
-    bool DebugTMI
+    bool DebugTMI,
+    string? GlobalPrefix = "!"
 );
 
 public record ConnectionsSettings(

@@ -31,7 +31,7 @@ public class JoinCommand : ChatCommand
 
     public JoinCommand(
         ILogger logger,
-        IConfiguration config,
+        AppSettings settings,
         IrcClient irc,
         IChannelRepository channelRepository,
         IThreeLetterAPI threeLetterAPI,
@@ -42,7 +42,7 @@ public class JoinCommand : ChatCommand
         ChannelRepository = channelRepository;
         ThreeLetterAPI = threeLetterAPI;
         UserRepository = userRepository;
-        BotID = config["Twitch:UserID"] ?? throw new ArgumentException("missing Twitch:UserID config");
+        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<bool> IsMod(UserDTO user, string channelName, CancellationToken ct)

@@ -11,14 +11,14 @@ namespace Fumo.WebService.Controllers;
 public class CommandsController : ControllerBase
 {
     private readonly CommandRepository CommandRepository;
-    private readonly IConfiguration Config;
     private readonly DescriptionService DescriptionService;
+    private readonly string GlobalPrefix;
 
-    public CommandsController(CommandRepository commandRepository, IConfiguration config, DescriptionService descriptionService)
+    public CommandsController(CommandRepository commandRepository, AppSettings config, DescriptionService descriptionService)
     {
         CommandRepository = commandRepository;
-        Config = config;
         DescriptionService = descriptionService;
+        GlobalPrefix = config.GlobalPrefix;
     }
 
     [HttpGet]
@@ -48,15 +48,13 @@ public class CommandsController : ControllerBase
     [HttpGet("{name}")]
     public async ValueTask<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
     {
-        var prefix = Config["GlobalPrefix"] ?? "!";
-
         var command = await DescriptionService.GetCommandByID(name, ct);
         if (command is null)
         {
             return NotFound();
         }
 
-        var description = await DescriptionService.CompileDescription(name, prefix, ct);
+        var description = await DescriptionService.CompileDescription(name, GlobalPrefix, ct);
 
         return Ok(new IndepthCommandDTO
         {
