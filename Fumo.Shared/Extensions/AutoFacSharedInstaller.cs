@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System.Reflection;
+using Autofac;
 using Fumo.Database;
 using Fumo.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +26,8 @@ public static class AutoFacSharedInstaller
 
         var logFileFormat = config["FUMO_PROG_TYPE"] switch
         {
-            "bot" => "logs_bot.txt",
-            "web" => "logs_web.txt",
-            _ => "logs.txt"
+            string type => $"logs_{type.ToLower()}.txt",
+            null => $"logs_{Assembly.GetEntryAssembly()?.GetName().Name}.txt"
         };
 
         Log.Logger = new LoggerConfiguration()
