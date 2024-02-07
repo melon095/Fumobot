@@ -17,30 +17,26 @@ namespace Fumo.Extensions.AutoFacInstallers;
 
 public static class AutoFacSingletonInstaller
 {
-    public static ContainerBuilder InstallSingletons(this ContainerBuilder builder, IConfiguration config)
+    public static ContainerBuilder InstallSingletons(this ContainerBuilder builder, AppSettings settings)
     {
         builder.Register(x =>
         {
             var ircClient = new IrcClient(x =>
             {
-                x.Username = config["Twitch:Username"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
-                x.OAuth = config["Twitch:Token"] ?? throw new ArgumentException($"{typeof(IrcClient)}");
+                x.Username = settings.Twitch.Username;
+                x.OAuth = settings.Twitch.Token;
                 x.Logger = new LoggerFactory().AddSerilog(Log.Logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
 
                 // https://dev.twitch.tv/docs/irc/#rate-limits
-                if (config.GetValue<bool>("Twitch:Verified"))
-                {
+                if (settings.Twitch.Verified)
                     x.JoinRateLimit = 2000;
-                }
             });
 
             return ircClient;
         }).SingleInstance();
 
-        // Register Multiplexer
-        builder.RegisterInstance(ConnectionMultiplexer.Connect(config["Connections:Redis"]!)).SingleInstance();
+        builder.RegisterInstance(ConnectionMultiplexer.Connect(settings.Connections.Redis)).SingleInstance();
 
-        // Register redis IDatabase with key prefix
         builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot:"));
 
         builder

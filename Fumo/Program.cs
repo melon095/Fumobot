@@ -21,21 +21,15 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var cwd = Directory.GetCurrentDirectory();
-        var configPath = args.Length > 0 ? args[0] : "config.json";
-
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(cwd)
-            .AddJsonFile(configPath, optional: false, reloadOnChange: true)
-            .AddEnvironmentVariables()
-            .Build();
+        var config = SetupInstaller.PrepareConfig(args);
 
         var container = new ContainerBuilder()
-            .InstallGlobalCancellationToken(configuration)
-            .InstallShared(configuration)
-            .InstallScoped(configuration)
-            .InstallSingletons(configuration)
-            .InstallQuartz(configuration)
+            .InstallGlobalCancellationToken()
+            .InstallAppSettings(config, out var settings)
+            .InstallShared(settings)
+            .InstallScoped()
+            .InstallSingletons(settings)
+            .InstallQuartz(settings)
             .Build();
 
         Log.Information("Starting up");
@@ -46,7 +40,6 @@ internal class Program
             commandRepo.LoadAssemblyCommands();
 
             // The simplest way of handling the bot's channel/user is just initializing it here.
-            var config = scope.Resolve<IConfiguration>();
             var tlp = scope.Resolve<IThreeLetterAPI>();
             var db = scope.Resolve<DatabaseContext>();
             var ctoken = scope.Resolve<CancellationTokenSource>().Token;
@@ -57,11 +50,12 @@ internal class Program
 
             var scheduler = scope.Resolve<IScheduler>();
 
-            var botChannel = channelRepo.GetByID(config["Twitch:UserID"]!);
+            var botID = settings.Twitch.UserID;
+            var botChannel = channelRepo.GetByID(botID);
 
             if (botChannel is null)
             {
-                var response = await tlp.Send<BasicUserResponse>(new BasicUserInstruction(id: config["Twitch:UserID"]), ctoken);
+                var response = await tlp.Send<BasicUserResponse>(new BasicUserInstruction(id: botID), ctoken);
 
                 UserDTO user = new()
                 {

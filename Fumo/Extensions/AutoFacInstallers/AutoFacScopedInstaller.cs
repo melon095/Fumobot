@@ -7,7 +7,7 @@ namespace Fumo.Extensions.AutoFacInstallers;
 
 public static class AutoFacScopedInstaller
 {
-    public static ContainerBuilder InstallScoped(this ContainerBuilder builder, IConfiguration _)
+    public static ContainerBuilder InstallScoped(this ContainerBuilder builder)
     {
         builder
             .RegisterType<UserRepository>()

@@ -11,27 +11,21 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var cwd = Directory.GetCurrentDirectory();
-        var configPath = args.Length > 0 ? args[0] : "config.json";
-
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(cwd)
-            .AddJsonFile(configPath, optional: false, reloadOnChange: true)
-            .AddEnvironmentVariables()
-            .Build();
+        var config = SetupInstaller.PrepareConfig(args);
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
         {
             Args = args,
-            ContentRootPath = cwd,
-            EnvironmentName = configuration["Environment"] ?? Environments.Production,
+            ContentRootPath = Directory.GetCurrentDirectory(),
+            EnvironmentName = Environment.GetEnvironmentVariable("Environment") ?? Environments.Production,
             WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
         });
 
         builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureContainer<ContainerBuilder>(x =>
             {
-                x.InstallShared(configuration);
+                x.InstallAppSettings(config, out var settings);
+                x.InstallShared(settings);
                 x.RegisterType<DescriptionService>().SingleInstance();
             });
 
