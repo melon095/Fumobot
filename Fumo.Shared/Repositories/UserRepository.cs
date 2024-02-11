@@ -3,9 +3,9 @@ using Fumo.Database.DTO;
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Regexes;
-using Fumo.ThirdParty.ThreeLetterAPI;
-using Fumo.ThirdParty.ThreeLetterAPI.Instructions;
-using Fumo.ThirdParty.ThreeLetterAPI.Response;
+using Fumo.Shared.ThirdParty.ThreeLetterAPI;
+using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
+using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fumo.Shared.Repositories;

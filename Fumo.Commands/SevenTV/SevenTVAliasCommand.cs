@@ -2,18 +2,16 @@
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Extensions;
 using Fumo.Shared.Models;
-using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
-using Fumo.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 
 namespace Fumo.Commands.SevenTV;
 
 public class SevenTVAliasCommand : ChatCommand
 {
     private readonly ISevenTVService SevenTVService;
-    private readonly IDatabase Redis;
-    private readonly string BotID;
 
     public SevenTVAliasCommand()
     {
@@ -22,16 +20,14 @@ public class SevenTVAliasCommand : ChatCommand
         SetFlags(ChatCommandFlags.Reply);
     }
 
-    public SevenTVAliasCommand(ISevenTVService sevenTVService, AppSettings settings, IDatabase redis) : this()
+    public SevenTVAliasCommand(ISevenTVService sevenTVService) : this()
     {
         SevenTVService = sevenTVService;
-        Redis = redis;
-        BotID = settings.Twitch.UserID;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var (EmoteSet, _) = await SevenTVService.EnsureCanModify(BotID, Redis, Channel, User);
+        var (EmoteSet, _) = await SevenTVService.EnsureCanModify(Channel, User);
 
         var input = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Missing source emote");
 

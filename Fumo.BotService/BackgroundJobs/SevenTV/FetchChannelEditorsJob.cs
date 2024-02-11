@@ -1,10 +1,10 @@
 ﻿using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
-using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
-using Fumo.ThirdParty.Exceptions;
-using Fumo.ThirdParty.ThreeLetterAPI;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Exceptions;
+using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Microsoft.Extensions.Configuration;
 using Quartz;
 using Serilog;
@@ -16,7 +16,7 @@ internal class FetchChannelEditorsJob : IJob
 {
     public readonly ILogger Logger;
     public readonly IDatabase Redis;
-    public readonly ISevenTVService SevenTVService;
+    public readonly ISevenTVService SevenTV;
     public readonly IChannelRepository ChannelRepository;
     public readonly IThreeLetterAPI ThreeLetterAPI;
     public readonly IUserRepository UserRepository;
@@ -33,17 +33,16 @@ internal class FetchChannelEditorsJob : IJob
     {
         Logger = logger.ForContext<FetchChannelEditorsJob>();
         Redis = redis;
-        SevenTVService = sevenTVService;
+        SevenTV = sevenTVService;
         ChannelRepository = channelRepository;
         UserRepository = userRepository;
         ThreeLetterAPI = threeLetterAPI;
-
         BotID = settings.Twitch.UserID;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var botEmoteSets = (await SevenTVService.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken))
+        var botEmoteSets = (await SevenTV.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken))
             .EditorOf
             .Where(x => x.User.Connections.GetTwitchConnection() is not null);
 
@@ -55,7 +54,7 @@ internal class FetchChannelEditorsJob : IJob
 
                 var twitchConnection = editorEmoteSet.User.Connections.GetTwitchConnection();
 
-                var current7TVEditors = await SevenTVService.GetEditors(twitchConnection.Id, context.CancellationToken);
+                var current7TVEditors = await SevenTV.GetEditors(twitchConnection.Id, context.CancellationToken);
 
                 var idsToMap = current7TVEditors.Editors
                     .Select(x => x.User.Connections.GetTwitchConnection())

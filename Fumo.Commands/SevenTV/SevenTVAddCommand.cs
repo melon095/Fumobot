@@ -2,20 +2,18 @@
 using Fumo.Shared.Extensions;
 using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
-using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
-using Fumo.ThirdParty.Exceptions;
-using Fumo.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Exceptions;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
 public class SevenTVAddCommand : ChatCommand
 {
     private readonly ISevenTVService SevenTVService;
-    private readonly IDatabase Redis;
-    private readonly string BotID;
 
     public SevenTVAddCommand()
     {
@@ -26,11 +24,9 @@ public class SevenTVAddCommand : ChatCommand
         AddParameter(new(typeof(bool), "exact"));
     }
 
-    public SevenTVAddCommand(ISevenTVService sevenTVService, AppSettings settings, IDatabase redis) : this()
+    public SevenTVAddCommand(ISevenTVService sevenTVService) : this()
     {
         SevenTVService = sevenTVService;
-        Redis = redis;
-        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<SevenTVBasicEmote> ResolveEmote(string search, CancellationToken ct)
@@ -47,20 +43,17 @@ public class SevenTVAddCommand : ChatCommand
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
     {
         var exact = GetArgument<bool>("exact");
-        var index = GetArgument<int>("index"); // Fuck it not writing documentation for this one
 
         var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
 
         if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
 
-        if (index >= emotes.Items.Count) throw new InvalidInputException("Index out of range");
-
-        return emotes.Items.ElementAt(index).AsBasicEmote();
+        return emotes.Items.ElementAt(0).AsBasicEmote();
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var aaaaa = await SevenTVService.EnsureCanModify(BotID, Redis, Channel, User);
+        var aaaaa = await SevenTVService.EnsureCanModify(Channel, User);
 
         if (Input.Count <= 0) throw new InvalidInputException("You need to specify an emote to add");
 

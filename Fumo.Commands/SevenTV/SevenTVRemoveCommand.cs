@@ -2,14 +2,14 @@
 using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
-using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.ThirdParty.Exceptions;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using StackExchange.Redis;
 using System.Text;
-using Fumo.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -17,9 +17,7 @@ public class SevenTVRemoveCommand : ChatCommand
 {
     private readonly ILogger Logger;
     private readonly ISevenTVService SevenTVService;
-    private readonly IDatabase Redis;
     private readonly IMessageSenderHandler MessageSender;
-    private string BotID { get; }
 
     public SevenTVRemoveCommand()
     {
@@ -30,22 +28,18 @@ public class SevenTVRemoveCommand : ChatCommand
     public SevenTVRemoveCommand(
         ILogger logger,
         ISevenTVService sevenTVService,
-        IDatabase redis,
-        AppSettings settings,
         IMessageSenderHandler messageSender) : this()
     {
         Logger = logger.ForContext<SevenTVRemoveCommand>();
         SevenTVService = sevenTVService;
-        Redis = redis;
         MessageSender = messageSender;
-        BotID = settings.Twitch.UserID;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         StringBuilder output = new();
 
-        var aaaa = await SevenTVService.EnsureCanModify(BotID, Redis, Channel, User);
+        var aaaa = await SevenTVService.EnsureCanModify(Channel, User);
 
         if (Input.Count <= 0)
         {

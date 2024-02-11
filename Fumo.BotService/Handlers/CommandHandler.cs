@@ -7,7 +7,7 @@ using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
-using Fumo.ThirdParty.Exceptions;
+using Fumo.Shared.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Diagnostics;

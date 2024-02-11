@@ -2,12 +2,12 @@
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
-using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.Utils;
 using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using System.Text;
 
 namespace Fumo.Commands.SevenTV;

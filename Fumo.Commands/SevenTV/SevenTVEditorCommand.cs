@@ -2,20 +2,20 @@
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Extensions;
 using Fumo.Shared.Models;
-using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.ThirdParty.Exceptions;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Exceptions;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using Fumo.Shared.Interfaces;
-using Fumo.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
 public class SevenTVEditorCommand : ChatCommand
 {
     private readonly IDatabase Redis;
-    private readonly ISevenTVService SevenTVService;
+    private readonly ISevenTVService SevenTV;
     private readonly IUserRepository UserRepository;
     private readonly string BotID;
 
@@ -35,7 +35,7 @@ public class SevenTVEditorCommand : ChatCommand
         IUserRepository userRepository) : this()
     {
         Redis = redis;
-        SevenTVService = sevenTVService;
+        SevenTV = sevenTVService;
         UserRepository = userRepository;
         BotID = settings.Twitch.UserID;
     }
@@ -46,7 +46,7 @@ public class SevenTVEditorCommand : ChatCommand
 
         var user = await UserRepository.SearchName(username, ct);
 
-        return await SevenTVService.GetUserInfo(user.TwitchID, ct);
+        return await SevenTV.GetUserInfo(user.TwitchID, ct);
     }
 
     private static string HumanizeError(GraphQLException ex)
@@ -58,7 +58,7 @@ public class SevenTVEditorCommand : ChatCommand
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var (_, UserID) = await SevenTVService.EnsureCanModify(BotID, Redis, Channel, User);
+        var (_, UserID) = await SevenTV.EnsureCanModify(Channel, User);
 
         var userToMutate = await GetUser(ct);
         var twitchId = userToMutate.Connections.GetTwitchConnection().Id;
@@ -75,7 +75,7 @@ public class SevenTVEditorCommand : ChatCommand
         {
             try
             {
-                await SevenTVService.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.None, ct);
+                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.None, ct);
             }
             catch (GraphQLException ex)
             {
@@ -90,7 +90,7 @@ public class SevenTVEditorCommand : ChatCommand
         {
             try
             {
-                await SevenTVService.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.Default, ct);
+                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.Default, ct);
             }
             catch (GraphQLException ex)
             {

@@ -1,5 +1,5 @@
-﻿using Fumo.ThirdParty.Emotes.SevenTV;
-using Fumo.ThirdParty.Exceptions;
+﻿using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
 using StackExchange.Redis;

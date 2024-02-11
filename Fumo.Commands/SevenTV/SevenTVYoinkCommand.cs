@@ -5,12 +5,12 @@ using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Utils;
-using Fumo.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System.Collections.Immutable;
-using Fumo.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -19,11 +19,8 @@ public class SevenTVYoinkCommand : ChatCommand
     private static readonly char[] ChannelPrefixes = ['@', '#'];
 
     private readonly ISevenTVService SevenTVService;
-    private readonly IDatabase Redis;
     private readonly IMessageSenderHandler MessageSender;
     private readonly IUserRepository UserRepository;
-
-    private string BotID { get; }
 
     public SevenTVYoinkCommand()
     {
@@ -36,16 +33,12 @@ public class SevenTVYoinkCommand : ChatCommand
 
     public SevenTVYoinkCommand(
         ISevenTVService sevenTVService,
-        IDatabase redis,
         IMessageSenderHandler messageSender,
-        AppSettings settings,
         IUserRepository userRepository) : this()
     {
         SevenTVService = sevenTVService;
-        Redis = redis;
         MessageSender = messageSender;
         UserRepository = userRepository;
-        BotID = settings.Twitch.UserID;
     }
 
     private async ValueTask<string> ConvertToEmoteSet(string channel, CancellationToken ct)
@@ -117,7 +110,7 @@ public class SevenTVYoinkCommand : ChatCommand
         }
         else if (Channel.TwitchName == writeChannel)
         {
-            await SevenTVService.EnsureCanModify(BotID, Redis, Channel, User);
+            await SevenTVService.EnsureCanModify(Channel, User);
 
             writeSet = Channel.GetSetting(ChannelSettingKey.SevenTV_EmoteSet);
         }

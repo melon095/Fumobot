@@ -6,7 +6,7 @@ using Fumo.Shared.Regexes;
 using MiniTwitch.Irc;
 using System.Collections.Concurrent;
 using Fumo.Database.Extensions;
-using Fumo.ThirdParty.Pajbot1;
+using Fumo.Shared.ThirdParty.Pajbot1;
 using Serilog;
 
 namespace Fumo.Handlers;

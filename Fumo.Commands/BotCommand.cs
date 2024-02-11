@@ -4,7 +4,7 @@ using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
-using Fumo.ThirdParty.Pajbot1;
+using Fumo.Shared.ThirdParty.Pajbot1;
 
 namespace Fumo.Commands;
 
