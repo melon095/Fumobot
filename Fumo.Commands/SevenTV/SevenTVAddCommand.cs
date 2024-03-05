@@ -75,7 +75,7 @@ public class SevenTVAddCommand : ChatCommand
         {
             if (SevenTVErrorMapper.TryErrorCodeFromGQL(ex, out var errorCode))
             {
-                if (errorCode == SevenTVErrorMapper.ErrorEmoteAlreadyEnabled)
+                if (errorCode == SevenTVErrorCode.EmoteAlreadyEnabled)
                 {
                     return $"Emote {emote.Name} is already enabled";
                 }

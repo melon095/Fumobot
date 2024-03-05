@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Models;
+using Fumo.Shared.ThirdParty.Exceptions;
 
 namespace Fumo.Shared.ThirdParty.Emotes.SevenTV;
 
@@ -141,7 +142,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
     {
         GraphQLRequest request = new()
         {
-            Query = @"query SearchEmotes($query: String! $page: Int $limit: Int $filter: EmoteSearchFilter) {emotes(query: $query page: $page limit: $limit filter: $filter){items{id name owner{username id}}}}",
+            Query = @"query SearchEmotes($query: String! $page: Int $limit: Int $filter: EmoteSearchFilter) {emotes(query: $query page: $page limit: $limit filter: $filter){items{id name owner{username id} tags}}}",
             Variables = new
             {
                 query = name,
@@ -154,7 +155,19 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await Send<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
+        try
+        {
+            return (await Send<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
+        }
+        catch (GraphQLException e)
+        {
+            if (SevenTVErrorMapper.TryErrorCodeFromGQL(e, out var ec))
+            {
+                if (ec == SevenTVErrorCode.SearchNoResult) return new([]);
+            }
+
+            throw;
+        }
     }
 
     public async ValueTask<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)

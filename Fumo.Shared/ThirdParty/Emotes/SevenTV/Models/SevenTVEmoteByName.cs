@@ -9,7 +9,8 @@ public record SevenTVEmoteByName(
 public record SevenTVEmoteByNameItem(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("owner")] SevenTVEmoteByNameOwner Owner
+    [property: JsonPropertyName("owner")] SevenTVEmoteByNameOwner Owner,
+    [property: JsonPropertyName("tags")] List<string> Tags
 )
 {
     public SevenTVBasicEmote AsBasicEmote() => new(Id, Name);

@@ -35,21 +35,26 @@ public class SevenTVSearchCommand : ChatCommand
     {
         var emotes = await SevenTV.SearchEmotesByName(searchTerm, ct);
 
-        if (TryGetArgument<string>("uploader", out var uploader))
-        {
-            await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
-        }
-
         if (emotes.Items.Count == 0)
         {
             return "No emotes found";
         }
 
-        if (emotes.Items.Count == 1)
+        if (TryGetArgument<string>("uploader", out var uploader))
         {
-            var emote = emotes.Items[0];
+            await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
+        }
 
-            return $"{emote.Name} - https://7tv.app/emotes/{emote.Id}";
+        if (CheckSingular() is string result)
+        {
+            return result;
+        }
+
+        FilterTags(searchTerm, emotes.Items);
+
+        if (CheckSingular() is string result2)
+        {
+            return result2;
         }
 
         StringBuilder builder = new();
@@ -67,6 +72,18 @@ public class SevenTVSearchCommand : ChatCommand
         }
 
         return builder.ToString();
+
+        string? CheckSingular()
+        {
+            if (emotes.Items.Count == 1)
+            {
+                var emote = emotes.Items[0];
+
+                return $"{emote.Name} - https://7tv.app/emotes/{emote.Id}";
+            }
+
+            return null;
+        }
     }
 
     private async ValueTask<CommandResult> GetEmoteFromID(string id, CancellationToken ct)
@@ -99,17 +116,41 @@ public class SevenTVSearchCommand : ChatCommand
         emotes.RemoveAll(x => x.Owner.Id != seventvUser.Id);
     }
 
+    private static void FilterTags(string searchTerm, List<SevenTVEmoteByNameItem> emotes)
+    {
+        // FIXME: This should be removed, once 7TV has a propery search.
+        // Filter the "emotes" list such that items that do not have the "searchTerm" in their tags are placed on the top of the list
+        emotes.Sort((x, y) =>
+        {
+            var xTags = x.Tags;
+            var yTags = y.Tags;
+
+            bool xContains = xTags.Contains(searchTerm);
+            bool yContains = yTags.Contains(searchTerm);
+
+            if (xContains && !yContains)
+            {
+                return 1;
+            }
+            else if (!xContains && yContains)
+            {
+                return -1;
+            }
+
+            return 0;
+        });
+    }
+
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var searchTerm = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Missing a search term");
 
         var potentialID = ExtractSevenTVIDRegex.Extract(searchTerm);
 
-        if (potentialID is string id)
+        return potentialID switch
         {
-            return await GetEmoteFromID(id, ct);
-        }
-
-        return await GetEmoteFromName(searchTerm, ct);
+            string id => await GetEmoteFromID(id, ct),
+            null => await GetEmoteFromName(searchTerm, ct),
+        };
     }
 }
