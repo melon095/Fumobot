@@ -138,7 +138,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<EmoteRoot>(request, ct)).Emote;
     }
 
-    public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, CancellationToken ct = default)
+    public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
     {
         GraphQLRequest request = new()
         {
@@ -150,7 +150,8 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
                 limit = 100,
                 filter = new
                 {
-                    exact_match = true
+                    exact_match = exact,
+                    ignore_tags = !exact
                 }
             }
         };

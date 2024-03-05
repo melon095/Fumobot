@@ -42,7 +42,8 @@ public class SevenTVAddCommand : ChatCommand
 
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
     {
-        var emotes = await SevenTVService.SearchEmotesByName(search, ct);
+        var exact = GetArgument<bool>("exact");
+        var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
 
         if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
 
