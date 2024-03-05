@@ -22,7 +22,7 @@ public class SevenTVSearchCommand : ChatCommand
         SetDescription("Search 7TV emotes");
 
         AddParameter(new(typeof(string), "uploader"));
-        AddParameter(new(typeof(bool), "exact"));
+        AddParameter(new(typeof(bool), "exact")); // Keep this here for legacy reasons xd
     }
 
     public SevenTVSearchCommand(ISevenTVService sevenTV, IUserRepository userRepository) : this()
@@ -33,9 +33,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     private async ValueTask<CommandResult> GetEmoteFromName(string searchTerm, CancellationToken ct)
     {
-        var exact = GetArgument<bool>("exact");
-
-        var emotes = await SevenTV.SearchEmotesByName(searchTerm, exact, ct);
+        var emotes = await SevenTV.SearchEmotesByName(searchTerm, ct);
 
         if (TryGetArgument<string>("uploader", out var uploader))
         {
