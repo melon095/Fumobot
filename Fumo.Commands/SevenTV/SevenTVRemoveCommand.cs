@@ -98,7 +98,7 @@ public class SevenTVRemoveCommand : ChatCommand
         }
         else
         {
-            output.Append("All emotes were successfully removed");
+            output.Append("All specified emotes were successfully removed");
         }
 
         return output.ToString();
