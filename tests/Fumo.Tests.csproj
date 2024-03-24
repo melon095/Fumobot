@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
+		<ProjectReference Include="..\src\Fumo.Shared\Fumo.Shared.csproj" />
 	</ItemGroup>
 
 </Project>
