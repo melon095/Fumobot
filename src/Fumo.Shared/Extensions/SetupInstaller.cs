@@ -46,15 +46,15 @@ public static class SetupInstaller
             .As<ILogger>()
             .SingleInstance();
 
+        var dsb = new NpgsqlDataSourceBuilder(settings.Connections.Postgres);
+        dsb.EnableDynamicJson();
+
+        var options = new DbContextOptionsBuilder<DatabaseContext>()
+            .UseNpgsql(dsb.Build())
+            .Options;
+
         builder.Register(x =>
         {
-            var dsb = new NpgsqlDataSourceBuilder(settings.Connections.Postgres);
-            dsb.EnableDynamicJson();
-
-            var options = new DbContextOptionsBuilder<DatabaseContext>()
-                .UseNpgsql(dsb.Build())
-                .Options;
-
             return new DatabaseContext(options);
         }).AsSelf().InstancePerLifetimeScope();
 
