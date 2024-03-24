@@ -2,7 +2,7 @@
 Description=Fumo bot
 
 [Service]
-ExecStart=/usr/bin/dotnet /opt/fumobot/Fumo.BotService/bin/Release/net7.0/Fumo.BotService.dll /etc/fumo_bot.json
+ExecStart=/usr/bin/dotnet /opt/fumobot/Release/Fumo.BotService.dll /etc/fumo_bot.json
 WorkingDirectory=/opt/fumobot/
 SyslogIdentifier=FumoBot
 
