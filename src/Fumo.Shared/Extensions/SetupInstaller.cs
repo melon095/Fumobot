@@ -5,6 +5,7 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 using Serilog;
 using Serilog.Events;
 using Serilog.Templates;
@@ -45,12 +46,15 @@ public static class SetupInstaller
             .As<ILogger>()
             .SingleInstance();
 
-        var options = new DbContextOptionsBuilder<DatabaseContext>()
-            .UseNpgsql(settings.Connections.Postgres)
-            .Options;
-
         builder.Register(x =>
         {
+            var dsb = new NpgsqlDataSourceBuilder(settings.Connections.Postgres);
+            dsb.EnableDynamicJson();
+
+            var options = new DbContextOptionsBuilder<DatabaseContext>()
+                .UseNpgsql(dsb.Build())
+                .Options;
+
             return new DatabaseContext(options);
         }).AsSelf().InstancePerLifetimeScope();
 

@@ -43,11 +43,12 @@ internal class Program
             var tlp = scope.Resolve<IThreeLetterAPI>();
             var db = scope.Resolve<DatabaseContext>();
             var ctoken = scope.Resolve<CancellationTokenSource>().Token;
-            var channelRepo = scope.Resolve<IChannelRepository>();
 
             Log.Information("Checking for Pending migrations");
             await db.Database.MigrateAsync(ctoken);
 
+            // TODO: Race Condition here between IChannelRepository and migration if channel is resovled first.
+            var channelRepo = scope.Resolve<IChannelRepository>();
             var scheduler = scope.Resolve<IScheduler>();
 
             var botID = settings.Twitch.UserID;

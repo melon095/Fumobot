@@ -22,10 +22,10 @@ public class ChannelRepository : IChannelRepository
     {
         Database = database;
 
-        _ = Fill(default);
+        Fill(default).Wait();
     }
 
-    private async ValueTask Fill(CancellationToken cancellationToken)
+    private async Task Fill(CancellationToken cancellationToken)
     {
         if (Channels is not null)
             return;
