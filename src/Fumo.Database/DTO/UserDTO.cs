@@ -11,14 +11,14 @@ public class UserDTO
     public required string TwitchName { get; set; }
 
     [Column(TypeName = "jsonb")]
-    public List<UsernameHistory> UsernameHistory { get; set; } = new();
+    public List<UsernameHistory> UsernameHistory { get; set; } = [];
 
     public DateTime DateSeen { get; set; }
 
     [Column(TypeName = "jsonb")]
-    public List<Setting> Settings { get; set; }
+    public List<Setting> Settings { get; set; } = [];
 
-    public List<string> Permissions { get; set; }
+    public List<string> Permissions { get; set; } = [];
 }
 
 public record UsernameHistory(string Username, DateTime DateChanged);
