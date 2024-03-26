@@ -18,7 +18,7 @@ public class UserDTO
     [Column(TypeName = "jsonb")]
     public List<Setting> Settings { get; set; } = [];
 
-    public List<string> Permissions { get; set; } = [];
+    public List<string> Permissions { get; set; } = ["default"];
 }
 
 public record UsernameHistory(string Username, DateTime DateChanged);
