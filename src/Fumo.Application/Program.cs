@@ -6,15 +6,27 @@ using Fumo.Shared.Models;
 using Quartz;
 using Serilog;
 
-var config = PrepareConfig(args);
+var configPath = args.FirstOrDefault("config.json");
+var config = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile(configPath, optional: false)
+    .Build();
+
 var appsettings = config.Get<AppSettings>()
         ?? throw new InvalidOperationException($"Unable to bind {nameof(AppSettings)} from config");
+
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") switch
+{
+    "Development" => Environments.Development,
+    "Production" => Environments.Production,
+    _ => Environments.Development
+};
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
 {
     Args = args,
     ContentRootPath = Directory.GetCurrentDirectory(),
-    EnvironmentName = GetEnvironment(),
+    EnvironmentName = environment,
     WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
 
 });
@@ -66,28 +78,6 @@ var cts = app.Services.GetRequiredService<CancellationTokenSource>();
 
 await app.StartAsync();
 await OnShutdown();
-
-string GetEnvironment()
-{
-    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-
-    if (string.IsNullOrWhiteSpace(env))
-    {
-        return Environments.Development;
-    }
-
-    return env;
-}
-
-IConfigurationRoot PrepareConfig(string[] args)
-{
-    var configPath = args.Length > 0 ? args[0] : "config.json";
-
-    return new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile(configPath, optional: false, reloadOnChange: true)
-        .Build();
-}
 
 async ValueTask OnShutdown()
 {
