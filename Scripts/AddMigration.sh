@@ -6,4 +6,4 @@ if [ -z "$1" ]
     exit 1
 fi
 
-dotnet ef migrations add $@ --project Fumo.Database --output-dir Migrations
+dotnet ef migrations add $@ --project src/Fumo.Database --output-dir Migrations
