@@ -28,7 +28,6 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
     ContentRootPath = Directory.GetCurrentDirectory(),
     EnvironmentName = environment,
     WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
-
 });
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
@@ -53,10 +52,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-app.UseSerilogRequestLogging();
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseSerilogRequestLogging();
     app.UseDeveloperExceptionPage();
 }
 else
