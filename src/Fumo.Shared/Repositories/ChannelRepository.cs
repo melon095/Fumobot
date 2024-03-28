@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniTwitch.Common.Extensions;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Threading;
 
 namespace Fumo.Shared.Repositories;
 
@@ -21,21 +22,19 @@ public class ChannelRepository : IChannelRepository
     public ChannelRepository(DatabaseContext database)
     {
         Database = database;
-
-        Fill(default).Wait();
     }
 
-    private async Task Fill(CancellationToken cancellationToken)
+    public async ValueTask Prepare(CancellationToken ct = default)
     {
         if (Channels is not null)
             return;
 
         Channels = new();
 
-        var channels = await this.Database.Channels
+        var channels = await Database.Channels
             .Where(x => !x.SetForDeletion)
             .Include(x => x.User)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         foreach (var channel in channels)
         {

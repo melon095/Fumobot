@@ -7,6 +7,8 @@ public interface IChannelRepository
     event Func<ChannelDTO, ValueTask> OnChannelCreated;
     event Func<ChannelDTO, ValueTask> OnChannelDeleted;
 
+    ValueTask Prepare(CancellationToken ct = default);
+
     IEnumerable<ChannelDTO> GetAll();
 
     ChannelDTO? GetByID(string ID);

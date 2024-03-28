@@ -23,6 +23,12 @@ public class CommandRepository
 
     public void LoadAssemblyCommands()
     {
+        if (Commands.Count > 0)
+        {
+            Logger.Warning("Commands already loaded");
+            return;
+        }
+
         Logger.Information("Loading commands");
 
         List<Type> commands = Assembly.Load("Fumo.Commands")

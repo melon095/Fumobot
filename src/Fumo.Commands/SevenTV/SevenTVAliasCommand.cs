@@ -1,10 +1,7 @@
 ﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Extensions;
 using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
-using Microsoft.Extensions.Configuration;
-using StackExchange.Redis;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 
 namespace Fumo.Commands.SevenTV;

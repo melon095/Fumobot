@@ -1,13 +1,10 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Extensions;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Utils;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
-using Microsoft.Extensions.Configuration;
-using StackExchange.Redis;
 using System.Collections.Immutable;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;

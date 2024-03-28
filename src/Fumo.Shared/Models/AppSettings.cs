@@ -10,7 +10,7 @@ public record AppSettings(
     MetricsSettings Metrics,
     WebsiteSettings Website,
     bool DebugTMI,
-    string? GlobalPrefix = "!"
+    string GlobalPrefix = "!"
 );
 
 public record ConnectionsSettings(
