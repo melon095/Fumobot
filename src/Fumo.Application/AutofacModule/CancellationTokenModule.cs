@@ -9,20 +9,16 @@ internal class CancellationTokenModule : Module
     {
         CancellationTokenSource tokenSource = new();
 
-        var AllCleanup = () =>
+        void AllCleanup()
         {
-            tokenSource.Cancel();
-        };
+            if (!tokenSource.IsCancellationRequested)
+            {
+                tokenSource.Cancel();
+            }
+        }
 
-        Console.CancelKeyPress += (sender, e) =>
-        {
-            AllCleanup();
-        };
-
-        AssemblyLoadContext.Default.Unloading += (ctx) =>
-        {
-            AllCleanup.Invoke();
-        };
+        Console.CancelKeyPress += (_, _) => AllCleanup();
+        AssemblyLoadContext.Default.Unloading += (_) => AllCleanup();
 
         builder
             .RegisterInstance(tokenSource)
