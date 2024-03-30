@@ -67,18 +67,6 @@ app.UseAuthorization();
 app.UseRouting();
 app.MapControllers();
 
-var cts = app.Services.GetRequiredService<CancellationTokenSource>();
+var token = app.Services.GetRequiredService<CancellationToken>();
 
-await app.StartAsync();
-await OnShutdown();
-
-async ValueTask OnShutdown()
-{
-    await app.Services.GetRequiredService<IScheduler>().Shutdown(cts.Token);
-
-    while (!cts.IsCancellationRequested)
-    {
-        // Idk, Console.ReadLine doesn't work as a systemctl service
-        await Task.Delay(100);
-    }
-}
+await app.RunAsync(token);
