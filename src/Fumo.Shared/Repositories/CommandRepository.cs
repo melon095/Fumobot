@@ -2,7 +2,6 @@
 using Fumo.Shared.Interfaces.Command;
 using Fumo.Shared.Models;
 using Serilog;
-using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -12,14 +11,9 @@ public class CommandRepository
 {
     public readonly Dictionary<Regex, Type> Commands = new();
 
-    public CommandRepository(ILogger logger, ILifetimeScope lifetimeScope)
-    {
-        Logger = logger.ForContext<CommandRepository>();
-        LifetimeScope = lifetimeScope;
-    }
-
     public ILogger Logger { get; }
-    public ILifetimeScope LifetimeScope { get; }
+
+    public CommandRepository(ILogger logger) => Logger = logger.ForContext<CommandRepository>();
 
     public void LoadAssemblyCommands()
     {
@@ -31,50 +25,41 @@ public class CommandRepository
 
         Logger.Information("Loading commands");
 
-        List<Type> commands = Assembly.Load("Fumo.Commands")
+        Assembly.Load("Fumo.Commands")
             .GetTypes()
             .Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Contains(typeof(IChatCommand)) && x.IsSubclassOf(typeof(ChatCommand)))
-            .ToList();
-
-        foreach (var command in commands)
-        {
-            var instance = Activator.CreateInstance(command) as ChatCommand;
-            if (instance is not null)
+            .ToList()
+            .ForEach(x =>
             {
-                Commands.Add(instance.NameMatcher, instance.GetType());
-            }
-        }
+                var instance = Activator.CreateInstance(x);
+                if (instance is ChatCommand c)
+                {
+                    // Prevents keeping a reference to the local instance variable.
+                    var regexCopy = new Regex(c.NameMatcher.ToString(), c.NameMatcher.Options);
+
+                    Commands.Add(regexCopy, c.GetType());
+                }
+            });
 
         Logger.Debug("Commands loaded {Commands}", Commands.Select(x => x.Key).ToArray());
     }
 
+    private T? Search<T>(string identifier, Func<Type, T> action)
+    {
+        foreach (var command in Commands)
+        {
+            if (command.Key.IsMatch(identifier))
+            {
+                return action(command.Value);
+            }
+        }
+
+        return default;
+    }
+
     public ChatCommand? GetCommand(string identifier)
-    {
-        foreach (var command in Commands)
-        {
-            if (command.Key.IsMatch(identifier))
-            {
-                return Activator.CreateInstance(command.Value) as ChatCommand;
-            }
-        }
+        => Search(identifier, x => Activator.CreateInstance(x) as ChatCommand);
 
-        return null;
-    }
-
-    // FIXME: This class is ugly fix it
-    // FIXME: Yes this would create a memory leak if the one that runs the command doesn't call Dispose. I have no idea how else i should structure this.
-    public ILifetimeScope? CreateCommandScope(string identifier)
-    {
-        // Try to match identifier by regex
-        foreach (var command in Commands)
-        {
-            if (command.Key.IsMatch(identifier))
-            {
-                var scope = LifetimeScope.BeginLifetimeScope(x => x.RegisterType(command.Value).As<ChatCommand>());
-                return scope;
-            }
-        }
-
-        return null;
-    }
+    public ILifetimeScope? CreateCommandScope(string identifier, ILifetimeScope lifetimeScope)
+        => Search(identifier, type => lifetimeScope.BeginLifetimeScope(x => x.RegisterType(type).As<ChatCommand>()));
 }

@@ -16,8 +16,9 @@ internal class CommandHandler : ICommandHandler
 {
     private readonly Serilog.ILogger Logger;
     private readonly ICooldownHandler CooldownHandler;
-    private readonly CommandRepository CommandRepository;
     private readonly IMessageSenderHandler MessageSenderHandler;
+    private readonly ILifetimeScope Scope;
+    private readonly CommandRepository CommandRepository;
     private readonly DatabaseContext DatabaseContext;
     private readonly string GlobalPrefix;
 
@@ -25,15 +26,17 @@ internal class CommandHandler : ICommandHandler
         IrcHandler irc,
         Serilog.ILogger logger,
         ICooldownHandler cooldownHandler,
+        IMessageSenderHandler messageSenderHandler,
+        ILifetimeScope scope,
         AppSettings settings,
         CommandRepository commandRepository,
-        IMessageSenderHandler messageSenderHandler,
         DatabaseContext databaseContext)
     {
         Logger = logger.ForContext<CommandHandler>();
         CooldownHandler = cooldownHandler;
         CommandRepository = commandRepository;
         MessageSenderHandler = messageSenderHandler;
+        Scope = scope;
         DatabaseContext = databaseContext;
         GlobalPrefix = settings.GlobalPrefix;
 
@@ -112,8 +115,9 @@ internal class CommandHandler : ICommandHandler
 
     public async ValueTask<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
-        using var commandScope = CommandRepository.CreateCommandScope(commandName);
+        var commandScope = CommandRepository.CreateCommandScope(commandName, Scope);
         if (commandScope is null) return null;
+
         var command = commandScope.Resolve<ChatCommand>();
 
         var stopwatch = Stopwatch.StartNew();
