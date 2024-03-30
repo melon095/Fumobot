@@ -15,12 +15,7 @@ var config = new ConfigurationBuilder()
 var appsettings = config.Get<AppSettings>()
         ?? throw new InvalidOperationException($"Unable to bind {nameof(AppSettings)} from config");
 
-var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") switch
-{
-    "Development" => Environments.Development,
-    "Production" => Environments.Production,
-    _ => Environments.Development
-};
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
 {
