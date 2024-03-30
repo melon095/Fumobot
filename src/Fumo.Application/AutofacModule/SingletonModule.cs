@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Fumo.Application.Bot;
-using Fumo.Application.Bot.Handlers;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
@@ -54,7 +53,7 @@ internal class SingletonModule(AppSettings settings) : Module
             .SingleInstance();
 
         builder
-            .RegisterType<BotApplication>()
+            .RegisterType<IrcHandler>()
             .AsSelf()
             .SingleInstance();
 

@@ -7,21 +7,21 @@ namespace Fumo.Application.Startable;
 internal class IrcStarter
 {
     private readonly MetricsTracker MetricsTracker;
-    private readonly BotApplication BotApplication;
+    private readonly IrcHandler IrcHandler;
 
-    public IrcStarter(ICommandHandler commandHandler, ICooldownHandler cooldownHandler, IMessageSenderHandler messageSenderHandler, MetricsTracker metricsTracker, BotApplication botApplication)
+    public IrcStarter(ICommandHandler commandHandler, ICooldownHandler cooldownHandler, IMessageSenderHandler messageSenderHandler, MetricsTracker metricsTracker, IrcHandler ircHandler)
     {
         // TODO: Can we use AutoActivate here?
         _ = commandHandler;
         _ = cooldownHandler;
         _ = messageSenderHandler;
         MetricsTracker = metricsTracker;
-        BotApplication = botApplication;
+        IrcHandler = ircHandler;
     }
 
     public async ValueTask Start()
     {
         MetricsTracker.Start();
-        await BotApplication.Start();
+        await IrcHandler.Start();
     }
 }
