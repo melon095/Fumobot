@@ -2,7 +2,7 @@ function service {
     sudo systemctl $1 fumo_bot.service
 }
 
-$OutDir="./Release"
+OutDir="Release"
 
 git pull
 
