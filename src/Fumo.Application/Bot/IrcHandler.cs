@@ -87,7 +87,8 @@ public class IrcHandler
         {
             CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken).Token;
 
-            var userRepo = Scope.Resolve<IUserRepository>();
+            var messageScope = Scope.BeginLifetimeScope();
+            var userRepo = messageScope.Resolve<IUserRepository>();
 
             var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
@@ -111,7 +112,16 @@ public class IrcHandler
             bool isBroadcaster = user.TwitchID == channel.TwitchID;
             bool isMod = privmsg.Author.IsMod || isBroadcaster;
 
-            ChatMessage message = new(channel, user, input, isBroadcaster, isMod, privmsg.Id);
+            ChatMessage message = new()
+            {
+                Channel = channel,
+                User = user,
+                Input = input,
+                IsBroadcaster = isBroadcaster,
+                IsMod = isMod,
+                Scope = messageScope,
+                ReplyID = privmsg.Id
+            };
 
             await (OnMessage?.Invoke(message, token) ?? ValueTask.CompletedTask);
         }
