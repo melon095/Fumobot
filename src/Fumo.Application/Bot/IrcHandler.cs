@@ -87,8 +87,7 @@ public class IrcHandler
         {
             CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken).Token;
 
-            using var scope = Scope.BeginLifetimeScope();
-            var userRepo = scope.Resolve<IUserRepository>();
+            var userRepo = Scope.Resolve<IUserRepository>();
 
             var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
