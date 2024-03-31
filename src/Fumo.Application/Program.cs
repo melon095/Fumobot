@@ -1,9 +1,17 @@
+using System.Security.Claims;
+using AspNet.Security.OAuth.Twitch;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
+using Fumo.Database.DTO;
+using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
+using Fumo.Shared.OAuth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Quartz;
+using Quartz.Impl.AdoJobStore.Common;
 using Serilog;
 
 var configPath = args.FirstOrDefault("config.json");
@@ -45,6 +53,81 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
+builder.Services
+    .AddAuthentication(x =>
+    {
+        x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        x.DefaultChallengeScheme = TwitchAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(x =>
+    {
+        x.LoginPath = "/Account/Login";
+        x.LogoutPath = "/Account/Logout";
+        x.Cookie.Name = "Fumo.Token";
+        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        x.Cookie.SameSite = SameSiteMode.Strict;
+        x.Cookie.HttpOnly = true;
+        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        x.ExpireTimeSpan = TimeSpan.FromDays(30);
+    })
+    .AddTwitch(x =>
+    {
+        x.ForceVerify = false;
+        x.ClientId = appsettings.Twitch.ClientID;
+        x.ClientSecret = appsettings.Twitch.ClientSecret;
+        x.SaveTokens = true;
+        x.Scope.Add("openid");
+        x.Scope.Add("user:read:email");
+        x.Scope.Add("channel:bot");
+
+        x.Events.OnCreatingTicket = async (context) =>
+            {
+                var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var oauthRepo = context.HttpContext.RequestServices.GetRequiredService<IUserOAuthRepository>();
+
+                var userId = context.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ?? throw new InvalidOperationException("Unable to find user ID in claims");
+
+                if (!DateTime.TryParse(context.Properties.GetTokenValue("expires_at"), out DateTime expiresAt))
+                {
+                    return;
+                }
+
+                expiresAt = expiresAt.ToUniversalTime();
+
+                var user = await userRepo.SearchID(userId);
+
+                if (user is null)
+                {
+                    return;
+                }
+
+                var existing = await oauthRepo.Get(user.TwitchID, TwitchAuthenticationDefaults.Issuer);
+
+                if (existing is not null)
+                {
+                    existing.AccessToken = context.AccessToken!;
+                    existing.RefreshToken = context.RefreshToken!;
+                    existing.ExpiresAt = expiresAt;
+
+                    await oauthRepo.CreateOrUpdate(existing);
+                }
+                else
+                {
+                    var oauth = new UserOauthDTO
+                    {
+                        TwitchID = user.TwitchID,
+                        Provider = TwitchAuthenticationDefaults.Issuer,
+                        AccessToken = context.AccessToken!,
+                        RefreshToken = context.RefreshToken!,
+                        ExpiresAt = expiresAt
+                    };
+
+                    await oauthRepo.CreateOrUpdate(oauth);
+                }
+            };
+    });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -62,9 +145,11 @@ else
     app.UseStaticFiles();
 }
 
-app.UseAuthorization();
 
-app.UseRouting();
+app.UseRouting()
+    .UseAuthentication()
+    .UseAuthorization();
+
 app.MapControllers();
 
 var token = app.Services.GetRequiredService<CancellationToken>();

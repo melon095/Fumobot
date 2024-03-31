@@ -4,5 +4,7 @@
     <View_SelectedScaffolderID>MvcLayoutScaffolder</View_SelectedScaffolderID>
     <View_SelectedScaffolderCategoryPath>root/Layouts</View_SelectedScaffolderCategoryPath>
     <WebStackScaffolding_EnablerDialogWidth>650</WebStackScaffolding_EnablerDialogWidth>
+    <Controller_SelectedScaffolderID>ApiControllerEmptyScaffolder</Controller_SelectedScaffolderID>
+    <Controller_SelectedScaffolderCategoryPath>root/Common/Api</Controller_SelectedScaffolderCategoryPath>
   </PropertyGroup>
 </Project>

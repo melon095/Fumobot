@@ -37,6 +37,8 @@ public record TwitchSettings(
     string UserID,
     string Token,
     string ThreeLetterAPI,
+    string ClientID,
+    string ClientSecret,
     bool Verified
 );
 
