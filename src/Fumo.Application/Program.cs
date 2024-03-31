@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using AspNet.Security.OAuth.Twitch;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -10,9 +11,9 @@ using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Quartz;
-using Quartz.Impl.AdoJobStore.Common;
+using Microsoft.AspNetCore.DataProtection;
 using Serilog;
+using StackExchange.Redis;
 
 var configPath = args.FirstOrDefault("config.json");
 var config = new ConfigurationBuilder()
@@ -50,6 +51,10 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
+builder.Services.AddDataProtection()
+    .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(appsettings.Connections.Redis), $"fumobot:{appsettings.Website.DataProtection.RedisKey}")
+    .ProtectKeysWithCertificate(new X509Certificate2(appsettings.Website.DataProtection.CertificateFile, appsettings.Website.DataProtection.CertificatePass));
+
 builder.Services
     .AddAuthentication(x =>
     {
@@ -58,10 +63,9 @@ builder.Services
     })
     .AddCookie(x =>
     {
-        x.LoginPath = "/Account/Login";
-        x.LogoutPath = "/Account/Logout";
+        x.LoginPath = "/api/Account/Login";
+        x.LogoutPath = "/api/Account/Logout";
         x.Cookie.Name = "Fumo.Token";
-        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         x.Cookie.SameSite = SameSiteMode.Strict;
         x.Cookie.HttpOnly = true;
         x.Cookie.SecurePolicy = CookieSecurePolicy.Always;

@@ -1,4 +1,5 @@
-﻿using AspNet.Security.OAuth.Twitch;
+﻿using System.Security.Claims;
+using AspNet.Security.OAuth.Twitch;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -25,5 +26,14 @@ public class AccountController : ControllerBase
     [Authorize]
     [HttpGet("logout")]
     public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
-    
+
+    [Authorize]
+    [HttpGet("user")]
+    public IActionResult GetUser()
+    {
+        var name = User.FindFirst(TwitchAuthenticationConstants.Claims.DisplayName)?.Value;
+        var picture = User.FindFirst(TwitchAuthenticationConstants.Claims.ProfileImageUrl)?.Value;
+
+        return Ok(new { name, picture });
+    }
 }

@@ -43,6 +43,12 @@ public record TwitchSettings(
 );
 
 public record WebsiteSettings(
-    string PublicURL
+    string PublicURL,
+    DataProtectionSettings DataProtection
 );
 
+public record DataProtectionSettings(
+    string RedisKey,
+    string CertificateFile,
+    string CertificatePass
+);
