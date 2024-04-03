@@ -27,10 +27,11 @@ public class AccountController : ControllerBase
     [HttpGet("logout")]
     public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
 
-    [Authorize]
     [HttpGet("user")]
     public IActionResult GetUser()
     {
+        if (!User.Identity?.IsAuthenticated ?? true) return Unauthorized();
+
         var name = User.FindFirst(TwitchAuthenticationConstants.Claims.DisplayName)?.Value;
         var picture = User.FindFirst(TwitchAuthenticationConstants.Claims.ProfileImageUrl)?.Value;
 

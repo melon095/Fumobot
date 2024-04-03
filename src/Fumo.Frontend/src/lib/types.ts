@@ -9,3 +9,8 @@ export type CommandModal = {
 	permission: string;
 	description: string;
 };
+
+export type UserInfo = {
+	name: string;
+	picture: string;
+};
