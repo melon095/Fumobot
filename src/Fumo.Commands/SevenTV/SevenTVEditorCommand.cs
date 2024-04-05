@@ -100,4 +100,13 @@ public class SevenTVEditorCommand : ChatCommand
             return $"{userToMutate.Username} is now an editor";
         }
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("editor")
+            .WithDescription("Add and Remove 7TV editors from your channel")
+            .WithUsage((x) => x.Required("username"))
+            .WithExample("forsen")
+            .Finish;
 }

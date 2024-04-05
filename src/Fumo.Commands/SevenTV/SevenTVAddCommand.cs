@@ -82,4 +82,23 @@ public class SevenTVAddCommand : ChatCommand
             return ex.Message;
         }
     }
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("add")
+            .WithDescription("Add a 7TV emote")
+            .WithUsage((x) => x.Required("emote"))
+            .WithExample("FloppaL", $"Finds the most popular emote called FloppaL")
+            .WithExample("60aeab8df6a2c3b332d21139", "Emotes can be added with ID")
+            .WithExample("https://7tv.app/emotes/60aeab8df6a2c3b332d21139", "They can also be added by URL")
+            .WithArgument("alias", (x) =>
+            {
+                x.Description = "Assign an alias to this emote";
+                x.Required("alias");
+            })
+            .WithArgument("exact", (e) =>
+            {
+                e.Description = SevenTVConstants.Description.ExactFlag;
+            })
+            .Finish;
 }

@@ -9,7 +9,7 @@ namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {
-    public readonly Dictionary<Regex, Type> Commands = new();
+    public readonly Dictionary<Regex, ChatCommand> Commands = new();
 
     public ILogger Logger { get; }
 
@@ -31,14 +31,8 @@ public class CommandRepository
             .ToList()
             .ForEach(x =>
             {
-                var instance = Activator.CreateInstance(x);
-                if (instance is ChatCommand c)
-                {
-                    // Prevents keeping a reference to the local instance variable.
-                    var regexCopy = new Regex(c.NameMatcher.ToString(), c.NameMatcher.Options);
-
-                    Commands.Add(regexCopy, c.GetType());
-                }
+                if (Activator.CreateInstance(x) is ChatCommand c)
+                    Commands.Add(c.NameMatcher, c);
             });
 
         Logger.Debug("Commands loaded {Commands}", Commands.Select(x => x.Key).ToArray());
@@ -50,7 +44,7 @@ public class CommandRepository
         {
             if (command.Key.IsMatch(identifier))
             {
-                return action(command.Value);
+                return action(command.Value.GetType());
             }
         }
 

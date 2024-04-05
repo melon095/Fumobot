@@ -12,4 +12,6 @@ public interface IChatCommand
     /// A string that is outputted in chat
     /// </returns>
     public ValueTask<CommandResult> Execute(CancellationToken ct);
+
+    public ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct);
 }

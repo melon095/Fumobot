@@ -48,4 +48,14 @@ public class SevenTVAliasCommand : ChatCommand
 
         return $"I set the alias of {srcEmote.Name} to {dstEmoteName}";
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("alias")
+            .WithDescription("Set or reset the alias of an emote")
+            .WithUsage((x) => x.Required("current_emote_name").Optional("alias"))
+            .WithExample("FloppaL xqcL", "Assigns a new alias")
+            .WithExample("FloppaL", "Removes the alias, if it exists")
+            .Finish;
 }

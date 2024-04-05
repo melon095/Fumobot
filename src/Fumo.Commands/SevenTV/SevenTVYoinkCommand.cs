@@ -153,4 +153,28 @@ public class SevenTVYoinkCommand : ChatCommand
 
         return string.Empty;
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("yoink")
+            .WithDescription(@"
+Steal emotes from another channel
+
+The 'yoink' command offers bidirectional emote addition. 
+Without specifying a channel, it transfers emotes from the current channel to your own. 
+Conversely, specifying a channel (e.g., @forsen) retrieves emotes from 'forsen' and adds them to the current channel.")
+            .WithUsage(x => x.Required("#channel").Required("emote_names..."))
+            .WithExample("#forsen DankG")
+            .WithExample("FloppaDank FloppaL #forsen")
+            .WithExample("peepoDank", "Copies the emotes provided in the current channel into your own channel.")
+            .WithArgument("alias", x =>
+            {
+                x.Description = "Preserve the original emote name as an alias";
+            })
+            .WithArgument("case", x =>
+            {
+                x.Description = "Takes emotes with case sensitivity in mind";
+            })
+            .Finish;
 }

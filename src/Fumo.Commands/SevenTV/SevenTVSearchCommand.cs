@@ -155,4 +155,23 @@ public class SevenTVSearchCommand : ChatCommand
             null => await GetEmoteFromName(searchTerm, ct),
         };
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("search")
+            .WithDescription("Search 7TV emotes")
+            .WithUsage((x) => x.Required("search_term"))
+            .WithExample("Apu")
+            .WithExample("60aeab8df6a2c3b332d21139")
+            .WithArgument("exact", (x) =>
+            {
+                x.Description = SevenTVConstants.Description.ExactFlag;
+            })
+            .WithArgument("uploader", (x) =>
+            {
+                x.Description = "Search based on uploader. Uses the current Twitch username!";
+                x.Required("twitch_name");
+            })
+            .Finish;
 }

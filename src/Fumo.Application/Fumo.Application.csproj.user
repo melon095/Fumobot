@@ -4,5 +4,9 @@
     <View_SelectedScaffolderID>MvcLayoutScaffolder</View_SelectedScaffolderID>
     <View_SelectedScaffolderCategoryPath>root/Layouts</View_SelectedScaffolderCategoryPath>
     <WebStackScaffolding_EnablerDialogWidth>650</WebStackScaffolding_EnablerDialogWidth>
+    <ActiveDebugProfile>FakeTMI</ActiveDebugProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

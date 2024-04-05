@@ -38,7 +38,6 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterModule(new QuartzModule(appsettings));
         x.RegisterModule(new StartableModule());
 
-        // TODO: Don't use AutoFac for this.
         x.RegisterType<ChainStarter>().As<IStartable>().SingleInstance();
     }));
 

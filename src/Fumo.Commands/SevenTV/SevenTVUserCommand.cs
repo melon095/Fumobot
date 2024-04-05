@@ -76,4 +76,12 @@ public partial class SevenTVUserCommand : ChatCommand
             .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")
             .ToString();
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("user")
+            .WithDescription("Display information about you or another 7TV user")
+            .WithUsage((x) => x.Optional("username"))
+            .Finish;
 }

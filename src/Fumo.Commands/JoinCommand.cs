@@ -158,4 +158,9 @@ public class JoinCommand : ChatCommand
             return "An error occured joining that channel";
         }
     }
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("join")
+            .Finish;
 }
