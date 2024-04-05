@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 
 namespace Fumo.Application.Startable;
 
-internal class BackgroundJobStarter
+internal class BackgroundJobStarter : IAsyncStartable
 {
     private static readonly ReadOnlyCollection<Func<(IJobDetail, List<ITrigger>)>> _jobFactories = new(new Func<(IJobDetail, List<ITrigger>)>[]
     {
@@ -19,23 +19,21 @@ internal class BackgroundJobStarter
 
     private readonly Serilog.ILogger Logger;
     private readonly IScheduler Scheduler;
-    private readonly CancellationToken CToken;
 
-    public BackgroundJobStarter(Serilog.ILogger logger, IScheduler scheduler, CancellationToken cancellationToken)
+    public BackgroundJobStarter(Serilog.ILogger logger, IScheduler scheduler)
     {
         Logger = logger;
         Scheduler = scheduler;
-        CToken = cancellationToken;
     }
 
-    public async ValueTask RegisterJobs()
+    public async ValueTask Start(CancellationToken ct)
     {
         Logger.Information("Registering Quartz jobs");
 
         foreach (var jobFactory in _jobFactories)
         {
             var (job, triggers) = jobFactory();
-            await Scheduler.ScheduleJob(job, triggers, replace: true, cancellationToken: CToken);
+            await Scheduler.ScheduleJob(job, triggers, replace: true, cancellationToken: ct);
         }
     }
 

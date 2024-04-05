@@ -5,10 +5,17 @@ namespace Fumo.Application.AutofacModule;
 
 public class StartableModule : Module
 {
+    public static readonly IReadOnlyList<Type> Order =
+    [
+        typeof(InitialDataStarter),
+        typeof(CreateBotMetadataStarter),
+        typeof(BackgroundJobStarter),
+        typeof(IrcStarter)
+    ];
+
     protected override void Load(ContainerBuilder builder)
     {
-        builder.RegisterType<BackgroundJobStarter>().SingleInstance();
-        builder.RegisterType<CreateBotMetadataStarter>().SingleInstance();
-        builder.RegisterType<IrcStarter>().SingleInstance();
+        foreach (var type in Order)
+            builder.RegisterType(type).SingleInstance();
     }
 }

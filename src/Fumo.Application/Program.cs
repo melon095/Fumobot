@@ -3,7 +3,6 @@ using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
 using Fumo.Shared.Models;
-using Quartz;
 using Serilog;
 
 var configPath = args.FirstOrDefault("config.json");
@@ -37,8 +36,6 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterModule(new ScopedModule(appsettings));
         x.RegisterModule(new QuartzModule(appsettings));
         x.RegisterModule(new StartableModule());
-
-        x.RegisterType<ChainStarter>().As<IStartable>().SingleInstance();
     }));
 
 builder.Host.UseSerilog();
@@ -68,4 +65,31 @@ app.MapControllers();
 
 var token = app.Services.GetRequiredService<CancellationToken>();
 
+await RunStartup(app, token);
 await app.RunAsync(token);
+
+static async Task RunStartup(WebApplication app, CancellationToken ct)
+{
+    // Starts everything in order.
+
+    using var scope = app.Services.CreateScope();
+
+    foreach (var startup in StartableModule.Order)
+    {
+        try
+        {
+            var service = scope.ServiceProvider.GetRequiredService(startup);
+
+            if (service is IAsyncStartable startable)
+            {
+                app.Logger.LogInformation("Starting {ClassName}", startup.Name);
+
+                await startable.Start(ct);
+            }
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Error starting {ClassName}", startup.Name);
+        }
+    }
+}
