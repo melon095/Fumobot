@@ -29,4 +29,10 @@ public class HelpCommand : ChatCommand
             Message = url.ToString()
         });
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("help")
+            .Finish;
 }

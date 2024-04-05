@@ -100,4 +100,12 @@ public class SevenTVRemoveCommand : ChatCommand
 
         return output.ToString();
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("remove")
+            .WithDescription("Remove 7TV emotes")
+            .WithUsage((x) => x.Required("emotes..."))
+            .Finish;
 }

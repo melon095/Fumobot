@@ -22,10 +22,9 @@ internal class SingletonModule(AppSettings settings) : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder
-        .RegisterType<CommandRepository>()
+            .RegisterType<CommandRepository>()
             .AsSelf()
-            .SingleInstance()
-            .OnActivated(x => x.Instance.LoadAssemblyCommands());
+            .SingleInstance();
 
         builder.Register(x =>
         {

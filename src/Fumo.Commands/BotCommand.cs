@@ -129,4 +129,26 @@ public class BotCommand : ChatCommand
 
 #pragma warning restore format
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("bot")
+            .WithDescription("Set various data related to you or your channel within the bot")
+            .WithUsage((x) => x.Required("subcommand").Required("args"))
+            .WithArgument("remove", (x) => x.Description = "Add this flag to remove the data, rather than inserting")
+            .WithSubcommand("prefix", (x) =>
+            {
+                x.WithUsage((y) => y.Required("prefix"));
+                x.WithDescription($"Set the prefix used in the channel. The global prefix will {MarkdownHelper.Bold("NOT")} work during this.");
+            })
+            .WithSubcommand("pajbot", (x) =>
+            {
+                x.WithUsage((y) => y.Required("domain"));
+                x.WithDescription($@"
+Tell the bot to check against your pajbot instance.
+The input should be the {MarkdownHelper.Italic("Domain name")}. E.g. `pajbot.example.com`.
+The remote server has to be served with TLS.");
+            })
+            .Finish;
 }

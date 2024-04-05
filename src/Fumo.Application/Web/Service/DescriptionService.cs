@@ -1,100 +1,70 @@
 ﻿using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using System.Collections.Concurrent;
-using System.Reflection;
-using System.Text.Json;
 
 namespace Fumo.Application.Web.Service;
 
-public record DocumentationFileRep(string Class, string? Doc);
+using HelpStoreDictionary = ConcurrentDictionary<string, DescriptionService.HelpEntry>;
 
 public class DescriptionService
 {
-    private readonly ConcurrentDictionary<string, DocumentationFileRep> Dictionary = new();
-    private readonly string DocumentationPath;
+    private readonly HelpStoreDictionary HelpStore = [];
     private readonly CommandRepository CommandRepository;
-    private bool Ready = false;
+    private readonly string GlobalPrefix;
 
-    public DescriptionService(CommandRepository commandRepository)
+    public DescriptionService(CommandRepository commandRepository, AppSettings settings)
     {
-        // Very nice
-        var domain = AppDomain.CurrentDomain.BaseDirectory.Replace(nameof(Application), nameof(Commands));
-
-        Assembly.Load("Fumo.Commands");
-        DocumentationPath = $"{domain}/Data/Documentation.json"; ;
-
         CommandRepository = commandRepository;
+        GlobalPrefix = settings.GlobalPrefix;
     }
 
-    private async ValueTask Load(CancellationToken ct)
+    public async Task Prepare(CancellationToken ct)
     {
-        if (Ready) return;
-
-        using var stream = File.Open(DocumentationPath, FileMode.Open);
-
-        var root = await JsonSerializer.DeserializeAsync<Dictionary<string, DocumentationFileRep>>(stream, cancellationToken: ct)
-            ?? throw new NullReferenceException("Failed to deserialize documentation file.");
-
-        foreach (var (key, value) in root)
-        {
-            Dictionary.TryAdd(key, value);
-        }
-
-        Ready = true;
-    }
-
-    public async ValueTask<ChatCommand?> GetCommandByID(string name, CancellationToken ct)
-    {
-        await Load(ct);
-
-        if (!Dictionary.TryGetValue(name, out var doc))
-        {
-            return null;
-        }
-
         foreach (var command in CommandRepository.Commands)
         {
-            if (doc.Class == command.Value.FullName)
-            {
-                return Activator.CreateInstance(command.Value) as ChatCommand;
-            }
-        }
+            HelpEntry entry = new(null, command.Value);
 
-        return null;
+            ChatCommandHelpBuilder helpBuilder = new(GlobalPrefix);
+
+            await command.Value.BuildHelp(helpBuilder, ct);
+
+            var markdown = helpBuilder.BuildMarkdown();
+
+            if (helpBuilder.ShouldBeCached)
+                entry.CachedHelp = markdown;
+
+            HelpStore.TryAdd(helpBuilder.DisplayName, entry);
+        }
     }
 
-    public async ValueTask<string> GetMatchingName(Type command, CancellationToken ct)
+    public HelpStoreDictionary GetAll() => HelpStore;
+
+    public ChatCommand? GetByDisplayName(string name) => HelpStore.GetValueOrDefault(name)?.Instance ?? null;
+
+    public async ValueTask<string> CreateHelp(string name, CancellationToken ct)
     {
-        await Load(ct);
+        if (!HelpStore.TryGetValue(name, out var entry))
+            throw new NullReferenceException("Failed to find command.");
 
-        foreach (var (key, value) in Dictionary)
-        {
-            if (value.Class == command.FullName)
-            {
-                return key;
-            }
-        }
+        if (entry.CachedHelp is not null)
+            return entry.CachedHelp;
 
-        throw new NullReferenceException("Failed to find matching ID.");
+        ChatCommandHelpBuilder helpBuilder = new(GlobalPrefix);
+
+        await entry.Instance.BuildHelp(helpBuilder, ct);
+
+        return helpBuilder.BuildMarkdown();
     }
 
-    public async ValueTask<string> CompileDescription(string name, string prefix, CancellationToken ct)
+    public class HelpEntry(string? cachedHelp, ChatCommand instance)
     {
-        await Load(ct);
-
-        if (!Dictionary.TryGetValue(name, out var doc))
-        {
-            return string.Empty;
-        }
-
-        if (doc.Doc is null) return string.Empty;
-
-        return CleanDescription(doc.Doc, prefix);
+        public string? CachedHelp = cachedHelp;
+        public ChatCommand Instance = instance;
     }
-
-    private static string CleanDescription(string dirt, string prefix)
-        => dirt
-            .Replace("%PREFIX%", prefix)
-            .Replace("<", "&lt;")
-            .Replace(">", "&gt;");
 }
+
+//    private static string CleanDescription(string dirt, string prefix)
+//        => dirt
+//            .Replace("%PREFIX%", prefix)
+//            .Replace("<", "&lt;")
+//            .Replace(">", "&gt;");

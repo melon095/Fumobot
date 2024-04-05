@@ -51,6 +51,9 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
     public virtual ValueTask<CommandResult> Execute(CancellationToken ct)
         => throw new NotImplementedException();
 
+    public virtual ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => throw new NotImplementedException();
+
     #region Setters
 
     protected void SetName([StringSyntax(StringSyntaxAttribute.Regex)] string regex)

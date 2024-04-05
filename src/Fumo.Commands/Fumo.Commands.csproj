@@ -16,8 +16,4 @@
 		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
 	</ItemGroup>
 
-	<Target Name="CompileDocumentation" BeforeTargets="BeforeBuild">
-		<Exec Command="jsonnet -o $(OutputPath)/Data/Documentation.json $(ProjectDir)/Data/Documentation.jsonnet -c" />
-	</Target>
-
 </Project>

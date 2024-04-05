@@ -41,4 +41,10 @@ public class LeaveCommand : ChatCommand
 
         return "👍";
     }
+
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("leave")
+            .Finish;
 }

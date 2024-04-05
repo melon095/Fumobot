@@ -29,4 +29,9 @@ public class PingCommand : ChatCommand
             Message = $"🕴️ Uptime: {time}",
         });
     }
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+        => builder
+            .WithCache()
+            .WithDisplayName("ping")
+            .Finish;
 }

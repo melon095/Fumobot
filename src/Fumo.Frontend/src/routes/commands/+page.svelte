@@ -1,5 +1,7 @@
 <script lang="ts">
 	import {
+		Button,
+		Modal,
 		Table,
 		TableBody,
 		TableBodyCell,
@@ -13,6 +15,7 @@
 	import Markdown from '$lib/markdown.svelte';
 	import type { PageData } from './$types';
 	import type { CommandModal } from '$lib/types';
+	import { QuestionCircleOutline } from 'flowbite-svelte-icons';
 
 	export let data: PageData;
 
@@ -22,6 +25,7 @@
 	let openRow = -1;
 	let details: CommandModal | undefined;
 	let searchTerm = '';
+	let glossaryModal = false;
 
 	async function toggleRow(i: number) {
 		if (openRow == i) {
@@ -72,13 +76,11 @@
 		: commands.filter((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 </script>
 
-<!-- Note: I know TableSearch exists. :) -->
-
 <section id="cmd-sct">
 	<div class="relative overflow-x-auto shadow-md">
 		<div class="p-4">
 			<label for="cmd-search" class="sr-only">Search</label>
-			<div class="relative mt-1">
+			<div class="relative mt-1 flex justify-between">
 				<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
 					<slot name="svgSearch">
 						<svg
@@ -101,6 +103,9 @@
 					placeholder="Search by name"
 					class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-80 p-2.5 ps-10"
 				/>
+				<button on:click={() => (glossaryModal = true)} class="absolute inset-y-0 end-0">
+					<QuestionCircleOutline size="lg" />
+				</button>
 			</div>
 		</div>
 	</div>
@@ -144,6 +149,36 @@
 		</TableBody>
 	</Table>
 </section>
+
+<Modal title="Glossary" bind:open={glossaryModal} autoclose outsideclose>
+	<dl>
+		<div class="mt-2">
+			<dt class="text-sm font-medium text-gray-500">[ ]</dt>
+			<dd class="mt-1 text-sm text-gray-900">
+				Square brackets are used to denote optional parameters or placeholders. For example, [file]
+				indicates that the 'file' parameter is optional.
+			</dd>
+		</div>
+		<div class="mt-5">
+			<dt class="text-sm font-medium text-gray-500">&lt;&gt;</dt>
+			<dd class="mt-1 text-sm text-gray-900">
+				Angle brackets are used to denote required parameters. For example, &lt;file&gt; indicates
+				that the 'file' parameter is required.
+			</dd>
+		</div>
+		<div class="mt-5">
+			<dt class="text-sm font-medium text-gray-500">&lt;...&gt;</dt>
+			<dd class="mt-1 text-sm text-gray-900">
+				Angle brackets with three dots are used to denote a variable number of parameters. For
+				example, &lt;file...&gt; indicates that the 'file' parameter can be repeated multiple times.
+			</dd>
+		</div>
+	</dl>
+
+	<svelte:fragment slot="footer">
+		<Button color="alternative">Close</Button>
+	</svelte:fragment>
+</Modal>
 
 <style>
 	:global(#cmd-sct) {
