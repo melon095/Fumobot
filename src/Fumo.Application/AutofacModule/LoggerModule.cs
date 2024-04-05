@@ -4,12 +4,13 @@ using Fumo.Shared.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Templates;
+using Serilog.Templates.Themes;
 
 namespace Fumo.Application.AutofacModule;
 
 internal class LoggerModule(AppSettings settings) : Autofac.Module
 {
-    private static readonly ExpressionTemplate LoggingFormat = new("[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}");
+    private static readonly ExpressionTemplate LoggingFormat = new("[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}", theme: TemplateTheme.Code);
 
     protected override void Load(ContainerBuilder builder)
     {
