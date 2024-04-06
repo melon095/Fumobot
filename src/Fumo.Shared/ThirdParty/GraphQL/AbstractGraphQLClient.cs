@@ -10,17 +10,18 @@ public abstract class AbstractGraphQLClient : IDisposable
     private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
+    protected abstract Uri URI { get; }
+
     protected HttpClient HttpClient { get; set; }
 
     private bool disposed = false;
 
-    public AbstractGraphQLClient(string gqlAddress, HttpClient? httpClient = null)
+    public AbstractGraphQLClient(HttpClient? httpClient = null)
     {
         HttpClient = httpClient ?? new HttpClient();
 
         this.HttpClient.Timeout = Timeout;
-
-        this.HttpClient.BaseAddress = new(gqlAddress);
+        this.HttpClient.BaseAddress = URI;
     }
 
     public void Dispose()

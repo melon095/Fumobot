@@ -1,18 +1,16 @@
-﻿using Fumo.Shared.ThirdParty.GraphQL;
+﻿using Fumo.Shared.Models;
+using Fumo.Shared.ThirdParty.GraphQL;
 using Microsoft.Extensions.Configuration;
 
 namespace Fumo.Shared.ThirdParty.ThreeLetterAPI;
 
 public class ThreeLetterAPI : AbstractGraphQLClient, IThreeLetterAPI
 {
-    public IConfiguration Config { get; }
+    protected override Uri URI { get; } = new("https://gql.twitch.tv/gql");
 
-    public ThreeLetterAPI(IConfiguration config)
-        : base("https://gql.twitch.tv/gql")
+    public ThreeLetterAPI(AppSettings config)
     {
-        Config = config;
-
-        HttpClient.DefaultRequestHeaders.Add("Client-ID", Config["Twitch:ThreeLetterAPI"]);
+        HttpClient.DefaultRequestHeaders.Add("Client-ID", config.Twitch.ThreeLetterAPI);
 
         WithBrowserUA();
     }
