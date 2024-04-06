@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using AspNet.Security.OAuth.Twitch;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -11,7 +10,8 @@ using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.DataProtection;
+using Quartz;
+using Quartz.Impl.AdoJobStore.Common;
 using Serilog;
 using StackExchange.Redis;
 
@@ -66,6 +66,7 @@ builder.Services
         x.LoginPath = "/api/Account/Login";
         x.LogoutPath = "/api/Account/Logout";
         x.Cookie.Name = "Fumo.Token";
+        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         x.Cookie.SameSite = SameSiteMode.Strict;
         x.Cookie.HttpOnly = true;
         x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
