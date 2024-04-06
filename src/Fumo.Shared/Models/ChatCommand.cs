@@ -1,13 +1,11 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Shared.Enums;
-using Fumo.Shared.Interfaces.Command;
-using MiniTwitch.Irc.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Shared.Models;
 
-public abstract class ChatCommand : ChatCommandArguments, IChatCommand
+public abstract class ChatCommand : ChatCommandArguments
 {
     #region Properties
 
@@ -48,11 +46,9 @@ public abstract class ChatCommand : ChatCommandArguments, IChatCommand
 
     #endregion
 
-    public virtual ValueTask<CommandResult> Execute(CancellationToken ct)
-        => throw new NotImplementedException();
+    public abstract ValueTask<CommandResult> Execute(CancellationToken ct);
 
-    public virtual ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
-        => throw new NotImplementedException();
+    public abstract ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct);
 
     #region Setters
 

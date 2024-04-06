@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Fumo.Shared.Interfaces.Command;
 using Fumo.Shared.Models;
 using Serilog;
 using System.Reflection;
@@ -27,7 +26,7 @@ public class CommandRepository
 
         Assembly.Load("Fumo.Commands")
             .GetTypes()
-            .Where(x => x.IsClass && !x.IsAbstract && x.GetInterfaces().Contains(typeof(IChatCommand)) && x.IsSubclassOf(typeof(ChatCommand)))
+            .Where(x => x.IsClass && !x.IsAbstract && x.IsSubclassOf(typeof(ChatCommand)))
             .ToList()
             .ForEach(x =>
             {
