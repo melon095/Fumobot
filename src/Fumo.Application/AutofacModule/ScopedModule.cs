@@ -2,6 +2,7 @@
 using Fumo.Database;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
+using Fumo.Shared.OAuth;
 using Fumo.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -28,6 +29,11 @@ internal class ScopedModule(AppSettings settings) : Module
         builder
             .RegisterType<UserRepository>()
             .As<IUserRepository>()
+            .InstancePerLifetimeScope();
+
+        builder
+            .RegisterType<UserOAuthRepository>()
+            .As<IUserOAuthRepository>()
             .InstancePerLifetimeScope();
     }
 }

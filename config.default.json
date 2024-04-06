@@ -12,6 +12,8 @@
         "UserID": "",
         "Token": "",
         "ThreeLetterAPI": "",
+        "ClientID": "",
+        "ClientSecret": "",
         "Verified": false
     },
     "SevenTV": {
