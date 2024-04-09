@@ -152,11 +152,10 @@ internal class CommandHandler : ICommandHandler
             Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 
             var result = await command.Execute(cancellationToken);
+            if (string.IsNullOrEmpty(result.Message)) result.Message = "(No Response)";
 
             commandExecutionLogs.Success = true;
-            commandExecutionLogs.Result = result.Message.Length > 0
-                ? result.Message
-                : "(No Response)";
+            commandExecutionLogs.Result = result.Message;
 
             result.IgnoreBanphrase = command.Flags.HasFlag(ChatCommandFlags.IgnoreBanphrase);
 
