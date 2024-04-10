@@ -84,7 +84,7 @@ public class SevenTVSearchCommand : ChatCommand
                 return $"{emote.Name} - https://7tv.app/emotes/{emote.Id}";
             }
 
-            return null;
+            return "No emotes found";
         }
     }
 
