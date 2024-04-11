@@ -1,9 +1,6 @@
-﻿
-using System.Text.Json.Serialization;
+﻿using Fumo.Shared.ThirdParty.ThreeLetterAPI.Models;
 
 namespace Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 
-public record BasicBatchUserResponse(
-    [property: JsonPropertyName("users")] IReadOnlyList<InnerUser> Users
-    );
+public record BasicBatchUserResponse(IReadOnlyList<BasicUser> Users);
 

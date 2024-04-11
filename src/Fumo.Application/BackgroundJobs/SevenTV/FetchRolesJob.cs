@@ -1,4 +1,5 @@
-﻿using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+﻿using Fumo.Shared.Models;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
@@ -26,7 +27,7 @@ internal class FetchRolesJob : IJob
         {
             var roles = await SevenTV.GetGlobalRoles(context.CancellationToken);
 
-            var json = JsonSerializer.Serialize(roles);
+            var json = JsonSerializer.Serialize(roles, FumoJson.CamelCase);
 
             await Redis.StringSetAsync("seventv:roles", json);
         }

@@ -59,7 +59,7 @@ public class SevenTVEditorCommand : ChatCommand
         var (_, UserID) = await SevenTV.EnsureCanModify(Channel, User);
 
         var userToMutate = await GetUser(ct);
-        var twitchId = userToMutate.Connections.GetTwitchConnection().Id;
+        var twitchId = userToMutate.Connections.GetTwitchConnection().ID;
 
         if (twitchId == BotID)
         {
@@ -73,7 +73,7 @@ public class SevenTVEditorCommand : ChatCommand
         {
             try
             {
-                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.None, ct);
+                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.ID, UserEditorPermissions.None, ct);
             }
             catch (GraphQLException ex)
             {
@@ -88,7 +88,7 @@ public class SevenTVEditorCommand : ChatCommand
         {
             try
             {
-                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.Id, UserEditorPermissions.Default, ct);
+                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.ID, UserEditorPermissions.Default, ct);
             }
             catch (GraphQLException ex)
             {

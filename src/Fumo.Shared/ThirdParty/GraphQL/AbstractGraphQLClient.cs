@@ -1,7 +1,7 @@
 ﻿using Fumo.Shared.ThirdParty.Exceptions;
-using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Fumo.Shared.ThirdParty.GraphQL;
 
@@ -9,31 +9,38 @@ public abstract class AbstractGraphQLClient : IDisposable
 {
     private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+    private static readonly JsonSerializerOptions DefaultSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     protected abstract Uri URI { get; }
 
     protected HttpClient HttpClient { get; set; }
 
-    private bool disposed = false;
+    private bool Disposed = false;
+    private JsonSerializerOptions SerializerOptions = DefaultSerializerOptions;
 
     public AbstractGraphQLClient(HttpClient? httpClient = null)
     {
         HttpClient = httpClient ?? new HttpClient();
 
-        this.HttpClient.Timeout = Timeout;
-        this.HttpClient.BaseAddress = URI;
+        HttpClient.Timeout = Timeout;
+        HttpClient.BaseAddress = URI;
     }
 
     public void Dispose()
     {
-        if (!disposed)
+        if (!Disposed)
         {
             GC.SuppressFinalize(this);
 
             HttpClient.Dispose();
         }
 
-        disposed = true;
+        Disposed = true;
     }
 
     protected void WithBrowserUA()
@@ -42,11 +49,15 @@ public abstract class AbstractGraphQLClient : IDisposable
         HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
     }
 
+    protected void WithSerializerOptions(JsonSerializerOptions options)
+    {
+        SerializerOptions = options;
+    }
+
     protected ValueTask<TResponse> Send<TResponse>(IGraphQLInstruction instructions, CancellationToken ct)
         => Send<TResponse>(instructions.Create(), ct);
 
-    // FIXME: Maybe change that "object" constraint to something better
-    protected async ValueTask<TResponse> Send<TResponse>(object request, CancellationToken cancellationToken)
+    protected async ValueTask<TResponse> Send<TResponse>(GraphQLRequest request, CancellationToken cancellationToken)
     {
         var response = await HttpClient.PostAsJsonAsync(string.Empty, request, cancellationToken);
 
@@ -55,11 +66,11 @@ public abstract class AbstractGraphQLClient : IDisposable
             throw new GraphQLException($"Bad Response StatusCode ({response.StatusCode})", response.StatusCode);
         }
 
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseJson = await response.Content.ReadFromJsonAsync<GraphQLBaseResponse<TResponse>>(SerializerOptions, cancellationToken)
+            ?? throw new GraphQLException("Failed to deserialize response");
 
-        var responseJson = JsonSerializer.Deserialize<RawThreeLetterResponse<TResponse>>(responseBody);
 
-        if (responseJson!.Errors is not null)
+        if (responseJson.Errors is not null)
         {
             // Really only need the first one
 

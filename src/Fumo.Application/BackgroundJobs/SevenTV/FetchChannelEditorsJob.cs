@@ -51,19 +51,19 @@ internal class FetchChannelEditorsJob : IJob
 
                 var twitchConnection = editorEmoteSet.User.Connections.GetTwitchConnection();
 
-                var current7TVEditors = await SevenTV.GetEditors(twitchConnection.Id, context.CancellationToken);
+                var current7TVEditors = await SevenTV.GetEditors(twitchConnection.ID, context.CancellationToken);
 
                 var idsToMap = current7TVEditors.Editors
                     .Select(x => x.User.Connections.GetTwitchConnection())
                     .Where(x => x is not null)
-                    .Select(x => x!.Id)
+                    .Select(x => x!.ID)
                     .ToArray();
 
                 var mappedUsers = (await UserRepository.SearchMultipleByID(idsToMap, context.CancellationToken))
                     .Select(x => x.TwitchID)
                     .ToArray();
 
-                var key = SevenTVService.EditorKey(twitchConnection.Id);
+                var key = SevenTVService.EditorKey(twitchConnection.ID);
                 RedisValue[] items = Array.ConvertAll(mappedUsers, value => new RedisValue(value));
 
                 await Redis.KeyDeleteAsync(key);

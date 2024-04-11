@@ -1,32 +1,20 @@
-﻿using System.Text.Json.Serialization;
+﻿using Fumo.Shared.ThirdParty.ThreeLetterAPI.Models;
 
 namespace Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 
 public record ChannelModsEdge(
-[property: JsonPropertyName("cursor")] string Cursor,
-[property: JsonPropertyName("grantedAt")] object GrantedAt,
-[property: JsonPropertyName("isActive")] bool IsActive,
-[property: JsonPropertyName("node")] ChannelModsUser Node
+    string Cursor,
+    object GrantedAt,
+    bool IsActive,
+    BasicUser Node
 );
 
-public record ChannelMods(
-[property: JsonPropertyName("edges")] IReadOnlyList<ChannelModsEdge> Edges,
-[property: JsonPropertyName("pageInfo")] PageInfo PageInfo
-);
+public record ChannelMods(IReadOnlyList<ChannelModsEdge> Edges, PageInfo PageInfo);
 
-public record ChannelModsUser(
-[property: JsonPropertyName("id")] string Id,
-[property: JsonPropertyName("login")] string Login
-);
+public record ChannelModsUser(string Id, string Login);
 
-public record PageInfo(
-[property: JsonPropertyName("hasNextPage")] bool HasNextPage
-);
+public record PageInfo(bool HasNextPage);
 
-public record ChannelModsList(
-[property: JsonPropertyName("mods")] ChannelMods Mods
-);
+public record ChannelModsList(ChannelMods Mods);
 
-public record ChannelModsResponse(
-    [property: JsonPropertyName("user")] ChannelModsList User
-);
+public record ChannelModsResponse(ChannelModsList User);

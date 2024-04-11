@@ -196,7 +196,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         var response = await Send<SevenTVModifyEmoteSetRoot>(request, ct);
 
-        return response.EmoteSet.Emote.Where(x => x.Id == emoteID).FirstOrDefault()?.Name ?? default;
+        return response.EmoteSet.Emotes.Where(x => x.ID == emoteID).FirstOrDefault()?.Name ?? default;
     }
 
     public async ValueTask<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
@@ -239,23 +239,14 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
     }
 }
 
-file record EmoteRoot([property: JsonPropertyName("emote")] SevenTVBasicEmote Emote);
+file record EmoteRoot(SevenTVBasicEmote Emote);
 
-file record SevenTVEditorsRoot(
-    [property: JsonPropertyName("userByConnection")] SevenTVEditors UserByConnection
-);
+file record SevenTVEditorsRoot(SevenTVEditors UserByConnection);
 
-file record SevenTVEditorEmoteSetsRoot(
-    [property: JsonPropertyName("userByConnection")] SevenTVEditorEmoteSets UserByConnection
-);
+file record SevenTVEditorEmoteSetsRoot(SevenTVEditorEmoteSets UserByConnection);
 
-file record SevenTVEmoteByNameRoot(
-    [property: JsonPropertyName("emotes")] SevenTVEmoteByName Emotes
-);
+file record SevenTVEmoteByNameRoot(SevenTVEmoteByName Emotes);
 
-file record SevenTVModifyEmoteSetRoot(
-    [property: JsonPropertyName("emoteSet")] SevenTVModifyEmoteSet EmoteSet);
+file record SevenTVModifyEmoteSetRoot(SevenTVModifyEmoteSet EmoteSet);
 
-file record SevenTVModifyEmoteSet(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("emotes")] IReadOnlyList<SevenTVBasicEmote> Emote);
+file record SevenTVModifyEmoteSet(string ID, IReadOnlyList<SevenTVBasicEmote> Emotes);

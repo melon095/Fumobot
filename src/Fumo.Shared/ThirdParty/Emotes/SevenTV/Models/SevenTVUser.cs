@@ -2,35 +2,27 @@
 
 namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
-public record OuterSevenTVUser(
-[property: JsonPropertyName("userByConnection")] SevenTVUser UserByConnection
-);
+public record OuterSevenTVUser(SevenTVUser UserByConnection);
 
-public record SevenTVUserEmote(
-[property: JsonPropertyName("id")] string Id
-);
+public record SevenTVUserEmote(string ID);
 
-public record SevenTVUserEmoteSet(
-[property: JsonPropertyName("id")] string Id,
-[property: JsonPropertyName("emotes")] IReadOnlyList<SevenTVUserEmote> Emotes,
-[property: JsonPropertyName("capacity")] int Capacity
-);
+public record SevenTVUserEmoteSet(string ID, IReadOnlyList<SevenTVUserEmote> Emotes, int Capacity);
 
 public record SevenTVUser(
-[property: JsonPropertyName("id")] string Id,
-[property: JsonPropertyName("type")] string Type,
-[property: JsonPropertyName("username")] string Username,
-[property: JsonPropertyName("roles")] IReadOnlyList<string> Roles,
-[property: JsonPropertyName("created_at")] DateTime CreatedAt,
-[property: JsonPropertyName("connections")] IReadOnlyList<SevenTVConnection> Connections,
-[property: JsonPropertyName("emote_sets")] IReadOnlyList<SevenTVUserEmoteSet> EmoteSets
+    string ID,
+    string Type,
+    string Username,
+    IReadOnlyList<string> Roles,
+    [property: JsonPropertyName("created_at")] DateTime CreatedAt,
+    IReadOnlyList<SevenTVConnection> Connections,
+    [property: JsonPropertyName("emote_sets")] IReadOnlyList<SevenTVUserEmoteSet> EmoteSets
 )
 {
     public SevenTVUserEmoteSet? DefaultEmoteSet()
     {
         var id = Connections.First(x => x.Platform == "TWITCH").EmoteSetId;
 
-        return EmoteSets.FirstOrDefault(x => x.Id == id);
+        return EmoteSets.FirstOrDefault(x => x.ID == id);
     }
 
     public bool TryDefaultEmoteSet(out SevenTVUserEmoteSet result)
@@ -42,7 +34,7 @@ public record SevenTVUser(
             return false;
         }
 
-        var emoteSet = EmoteSets.FirstOrDefault(x => x.Id == id);
+        var emoteSet = EmoteSets.FirstOrDefault(x => x.ID == id);
         if (emoteSet is null)
         {
             result = null!;
@@ -53,4 +45,3 @@ public record SevenTVUser(
         return true;
     }
 }
-
