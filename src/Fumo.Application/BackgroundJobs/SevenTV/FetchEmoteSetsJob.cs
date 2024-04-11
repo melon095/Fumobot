@@ -38,14 +38,14 @@ internal class FetchEmoteSetsJob : IJob
                     continue;
                 }
 
-                if (currentEmoteSetId == emoteSet.Id) continue;
+                if (currentEmoteSetId == emoteSet.ID) continue;
 
-                channel.SetSetting(ChannelSettingKey.SevenTV_EmoteSet, emoteSet.Id);
-                channel.SetSetting(ChannelSettingKey.SevenTV_UserID, sevenTvUser.Id);
+                channel.SetSetting(ChannelSettingKey.SevenTV_EmoteSet, emoteSet.ID);
+                channel.SetSetting(ChannelSettingKey.SevenTV_UserID, sevenTvUser.ID);
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
-                Logger.Information("Channel {ChannelName} Emote Set update {EmoteSet}", channel.TwitchName, emoteSet.Id);
+                Logger.Information("Channel {ChannelName} Emote Set update {EmoteSet}", channel.TwitchName, emoteSet.ID);
             }
             catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
             {

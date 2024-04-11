@@ -1,19 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
-namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
+public record SevenTVEditorsEditor(string ID, SevenTVEditorsUser User);
 
-public record SevenTVEditorsEditor(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("user")] SevenTVEditorsUser User
-);
+public record SevenTVEditorsUser(string Username, IReadOnlyList<SevenTVConnection> Connections);
 
-public record SevenTVEditorsUser(
-    [property: JsonPropertyName("username")] string Username,
-    [property: JsonPropertyName("connections")] IReadOnlyList<SevenTVConnection> Connections
-);
-
-public record SevenTVEditors(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("username")] string Username,
-    [property: JsonPropertyName("editors")] IReadOnlyList<SevenTVEditorsEditor> Editors
-);
+public record SevenTVEditors(string ID, string Username, IReadOnlyList<SevenTVEditorsEditor> Editors);

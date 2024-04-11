@@ -65,7 +65,7 @@ public class JoinCommand : ChatCommand
         }, ct);
 
         // Sure it might be slow on a big channel but who cares
-        var isMod = list.Any(x => x.User.Mods.Edges.Any(x => x.Node.Id == user.TwitchID));
+        var isMod = list.Any(x => x.User.Mods.Edges.Any(x => x.Node.ID == user.TwitchID));
 
         return isMod;
     }

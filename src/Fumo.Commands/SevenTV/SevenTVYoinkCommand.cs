@@ -135,7 +135,7 @@ public class SevenTVYoinkCommand : ChatCommand
             {
                 var aliasName = keepAlias ? emote.Name : null;
 
-                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.Id, aliasName, ct) ?? throw new Exception("Idk what happened");
+                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.ID, aliasName, ct) ?? throw new Exception("Idk what happened");
 
                 MessageSender.ScheduleMessage(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}");
             }

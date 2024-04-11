@@ -66,7 +66,7 @@ public class SevenTVAddCommand : ChatCommand
 
         try
         {
-            var newEmote = await SevenTVService.ModifyEmoteSet(aaaaa.EmoteSet, ListItemAction.Add, emote.Id, emoteName, ct);
+            var newEmote = await SevenTVService.ModifyEmoteSet(aaaaa.EmoteSet, ListItemAction.Add, emote.ID, emoteName, ct);
             return $"Added emote {newEmote}";
         }
         catch (GraphQLException ex)

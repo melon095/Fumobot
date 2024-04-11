@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Fumo.Shared.Models;
 
 namespace Fumo.Shared.ThirdParty.Pajbot1;
 
@@ -41,9 +42,9 @@ public class PajbotClient
     {
         try
         {
-            var result = await HttpClient.GetAsync(url, ct);
+            await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), ct);
 
-            return result.IsSuccessStatusCode;
+            return true;
         }
         catch
         {
@@ -73,7 +74,7 @@ public class PajbotClient
             return (true, $"bad Status Code: {result.StatusCode}");
         }
 
-        var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(cancellationToken: cancellationToken);
+        var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(FumoJson.SnakeCase, cancellationToken: cancellationToken);
 
         return response is null
             ? (true, "FeelsOkayMan blocked by Pajbot")

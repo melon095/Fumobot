@@ -99,7 +99,7 @@ public class SevenTVSearchCommand : ChatCommand
                 return $"No emote with the ID of {id} found";
             }
 
-            return $"{emote.Name} - https://7tv.app/emotes/{emote.Id}";
+            return $"{emote.Name} - https://7tv.app/emotes/{emote.ID}";
         }
         catch (GraphQLException ex)
         {
@@ -115,7 +115,7 @@ public class SevenTVSearchCommand : ChatCommand
         var user = await UserRepository.SearchName(uploader, ct);
         var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
-        emotes.RemoveAll(x => x.Owner.Id != seventvUser.Id);
+        emotes.RemoveAll(x => x.Owner.ID != seventvUser.ID);
     }
 
     private static void FilterTags(string searchTerm, List<SevenTVEmoteByNameItem> emotes)

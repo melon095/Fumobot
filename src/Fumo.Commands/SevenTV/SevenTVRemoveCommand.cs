@@ -77,7 +77,7 @@ public class SevenTVRemoveCommand : ChatCommand
         {
             try
             {
-                await SevenTVService.ModifyEmoteSet(aaaa.EmoteSet, ListItemAction.Remove, emote.Id, ct: ct);
+                await SevenTVService.ModifyEmoteSet(aaaa.EmoteSet, ListItemAction.Remove, emote.ID, ct: ct);
             }
             catch (GraphQLException ex)
             {

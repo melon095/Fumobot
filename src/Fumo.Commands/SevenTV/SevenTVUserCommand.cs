@@ -40,7 +40,7 @@ public partial class SevenTVUserCommand : ChatCommand
     {
         var roles = await Redis.StringGetAsync("seventv:roles");
 
-        return JsonSerializer.Deserialize<SevenTVRoles>(roles!)!
+        return JsonSerializer.Deserialize<SevenTVRoles>(roles!, FumoJson.CamelCase)!
             .Roles
             .Where(x => userRoles.Contains(x.ID) && x.Name != "Default")
             .Select(x => x.Name);
@@ -70,7 +70,7 @@ public partial class SevenTVUserCommand : ChatCommand
 
         return new StringBuilder()
             .Append($"{seventvUser.Username} ({user.TwitchID}) | ")
-            .Append($"https://7tv.app/users/{seventvUser.Id} | ")
+            .Append($"https://7tv.app/users/{seventvUser.ID} | ")
             .Append(string.IsNullOrEmpty(roles) ? "(No roles) | " : $"{roles} | ")
             .Append($"Joined {joinTime} ago | ")
             .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")
