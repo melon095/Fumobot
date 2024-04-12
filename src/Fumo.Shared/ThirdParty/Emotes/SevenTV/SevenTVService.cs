@@ -216,7 +216,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             .RootElement
             .GetProperty("emoteSet")
             .GetProperty("emotes")
-            .Deserialize<List<SevenTVEnabledEmote>>() ?? [];
+            .Deserialize<List<SevenTVEnabledEmote>>(SerializerOptions) ?? [];
     }
 
     public async ValueTask ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)

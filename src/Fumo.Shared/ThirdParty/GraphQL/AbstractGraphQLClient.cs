@@ -20,8 +20,9 @@ public abstract class AbstractGraphQLClient : IDisposable
 
     protected HttpClient HttpClient { get; set; }
 
+    protected JsonSerializerOptions SerializerOptions = DefaultSerializerOptions;
+
     private bool Disposed = false;
-    private JsonSerializerOptions SerializerOptions = DefaultSerializerOptions;
 
     public AbstractGraphQLClient(HttpClient? httpClient = null)
     {
