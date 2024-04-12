@@ -37,26 +37,30 @@ public class SevenTVSearchCommand : ChatCommand
 
         var emotes = await SevenTV.SearchEmotesByName(searchTerm, exact, ct);
 
-        if (emotes.Items.Count == 0)
-        {
-            return "No emotes found";
-        }
-
-        if (TryGetArgument<string>("uploader", out var uploader))
-        {
-            await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
-        }
-
-        if (CheckSingular() is string result)
+        if (Check() is string result)
         {
             return result;
         }
 
-        if (!exact) FilterTags(searchTerm, emotes.Items);
-
-        if (CheckSingular() is string result2)
         {
-            return result2;
+            if (TryGetArgument<string>("uploader", out var uploader))
+            {
+                await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
+            }
+
+            if (Check() is string result2)
+            {
+                return result2;
+            }
+        }
+
+        {
+            if (!exact) FilterTags(searchTerm, emotes.Items);
+
+            if (Check() is string result2)
+            {
+                return result2;
+            }
         }
 
         StringBuilder builder = new();
@@ -75,17 +79,13 @@ public class SevenTVSearchCommand : ChatCommand
 
         return builder.ToString();
 
-        string? CheckSingular()
-        {
-            if (emotes.Items.Count == 1)
+        string? Check()
+            => (emotes.Items.Count) switch
             {
-                var emote = emotes.Items[0];
-
-                return $"{emote.Name} - https://7tv.app/emotes/{emote.ID}";
-            }
-
-            return "No emotes found";
-        }
+                1 => $"{emotes.Items[0].Name} - https://7tv.app/emotes/{emotes.Items[0].ID}",
+                0 => "No emotes found",
+                _ => null,
+            };
     }
 
     private async ValueTask<CommandResult> GetEmoteFromID(string id, CancellationToken ct)
