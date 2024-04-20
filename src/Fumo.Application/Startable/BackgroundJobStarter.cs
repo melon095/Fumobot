@@ -35,6 +35,8 @@ internal class BackgroundJobStarter : IAsyncStartable
             var (job, triggers) = jobFactory();
             await Scheduler.ScheduleJob(job, triggers, replace: true, cancellationToken: ct);
         }
+
+        await Scheduler.Start(ct);
     }
 
     private static (IJobDetail, List<ITrigger>) CreateChannelRemover()
