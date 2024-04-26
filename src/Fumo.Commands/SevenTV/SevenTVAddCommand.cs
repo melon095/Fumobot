@@ -53,7 +53,7 @@ public class SevenTVAddCommand : ChatCommand
 
         if (Input.Count <= 0) throw new InvalidInputException("You need to specify an emote to add");
 
-        var search = Input[0].ToLowerInvariant();
+        var search = Input[0];
 
         var emote = await ResolveEmote(search, ct);
 
@@ -82,6 +82,7 @@ public class SevenTVAddCommand : ChatCommand
             return ex.Message;
         }
     }
+
     public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
         => builder
             .WithCache()
