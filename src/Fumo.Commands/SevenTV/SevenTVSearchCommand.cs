@@ -54,8 +54,9 @@ public class SevenTVSearchCommand : ChatCommand
             }
         }
 
+        if (!exact)
         {
-            if (!exact) FilterTags(searchTerm, emotes.Items);
+            SevenTVFilter.ByTags(searchTerm, emotes.Items);
 
             if (Check() is string result2)
             {
@@ -118,30 +119,6 @@ public class SevenTVSearchCommand : ChatCommand
         emotes.RemoveAll(x => x.Owner.ID != seventvUser.ID);
     }
 
-    private static void FilterTags(string searchTerm, List<SevenTVEmoteByNameItem> emotes)
-    {
-        // FIXME: This should be removed, once 7TV has a propery search.
-        // Filter the "emotes" list such that items that do not have the "searchTerm" in their tags are placed on the top of the list
-        emotes.Sort((x, y) =>
-        {
-            var xTags = x.Tags;
-            var yTags = y.Tags;
-
-            bool xContains = xTags.Contains(searchTerm);
-            bool yContains = yTags.Contains(searchTerm);
-
-            if (xContains && !yContains)
-            {
-                return 1;
-            }
-            else if (!xContains && yContains)
-            {
-                return -1;
-            }
-
-            return 0;
-        });
-    }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {

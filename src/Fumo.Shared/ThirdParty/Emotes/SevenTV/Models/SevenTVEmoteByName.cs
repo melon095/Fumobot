@@ -2,14 +2,18 @@
 
 public record SevenTVEmoteByName(List<SevenTVEmoteByNameItem> Items);
 
-public record SevenTVEmoteByNameItem(
-    string ID,
-    string Name,
-    SevenTVEmoteByNameOwner Owner,
-    List<string> Tags
-)
+public class SevenTVEmoteByNameItem : SevenTVBaseTag
 {
+    public string ID { get; init; }
+    public string Name { get; init; }
+    public SevenTVEmoteByNameOwner Owner { get; init; }
+
     public SevenTVBasicEmote AsBasicEmote() => new(ID, Name);
 }
 
 public record SevenTVEmoteByNameOwner(string Username, string ID);
+
+public class SevenTVBaseTag
+{
+    public List<string> Tags { get; }
+}

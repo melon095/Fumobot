@@ -70,6 +70,8 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return result;
     }
 
+    #region Requests
+
     public async ValueTask<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default)
     {
         GraphQLRequest request = new()
@@ -237,6 +239,8 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         await Send<JsonDocument>(request, ct);
     }
+
+    #endregion
 }
 
 file record EmoteRoot(SevenTVBasicEmote Emote);

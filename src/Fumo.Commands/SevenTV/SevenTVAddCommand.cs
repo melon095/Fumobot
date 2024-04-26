@@ -44,6 +44,10 @@ public class SevenTVAddCommand : ChatCommand
 
         if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
 
+        if (!exact) SevenTVFilter.ByTags(search, emotes.Items);
+
+        if (exact && emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
+
         return emotes.Items.ElementAt(0).AsBasicEmote();
     }
 
