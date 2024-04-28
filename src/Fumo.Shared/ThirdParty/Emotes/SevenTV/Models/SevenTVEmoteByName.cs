@@ -15,5 +15,5 @@ public record SevenTVEmoteByNameOwner(string Username, string ID);
 
 public class SevenTVBaseTag
 {
-    public List<string> Tags { get; }
+    public List<string> Tags { get; init; }
 }
