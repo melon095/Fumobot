@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 set -o pipefail
 
 CONFIG_NAME="config.json"
@@ -69,6 +68,6 @@ if [ $? -eq 0 ]; then
 EOF
 
     sudo systemctl restart fumo_bot.service
-    
+
     exit 0
 fi
