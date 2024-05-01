@@ -66,8 +66,9 @@ if [ $? -eq 0 ]; then
     <h1>
         SevenTV Token Updated   
     </h1>
+EOF
 
     sudo systemctl restart fumo_bot.service
-EOF
+    
     exit 0
 fi
