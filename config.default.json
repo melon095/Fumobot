@@ -25,5 +25,8 @@
         "PublicURL": "https://yeah.com"
     },
     "GlobalPrefix": "buh",
-    "DebugTMI": false
+    "DebugTMI": false,
+    "Curl": {
+        "TwitchCookies": "auth-token:...;persistent=..."
+    }
 }
