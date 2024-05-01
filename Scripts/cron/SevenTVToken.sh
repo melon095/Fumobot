@@ -3,15 +3,16 @@
 set -x
 set -o pipefail
 
-LOGIN_ROUTE="https://7tv.io/v3/auth?platform=twitch"
-CONFIG=$(cat config.json)
-CURRENT_TOKEN=$(echo $CONFIG | jq -r '.SevenTV.Bearer')
-TWITCH_COOKIES=$(echo $CONFIG | jq -r '.Curl.TwitchCookies')
+CONFIG_NAME="config.json"
+CONFIG_KEY=".SevenTV.Bearer"
 AUTH_COOKIE_NAME="seventv-auth"
 CSRF_COOKIE_NAME="seventv-csrf"
+LOGIN_ROUTE="https://7tv.io/v3/auth?platform=twitch"
+TWITCH_COOKIES=$(jq -r '.Curl.TwitchCookies' $CONFIG_NAME)
 
 check_auth() {
-    res=$(curl -s -X POST https://7tv.io/v3/gql -H "Content-Type: application/json" -d '{"query":"{user:actor{id}}"}' -H "Authorization: Bearer $CURRENT_TOKEN" | jq -r '.data.user.id')
+    token=$(jq -r $CONFIG_KEY $CONFIG_NAME)
+    res=$(curl -s -X POST https://7tv.io/v3/gql -H "Content-Type: application/json" -d '{"query":"{user:actor{id}}"}' -H "Authorization: Bearer $token" | jq -r '.data.user.id')
 
     if [ "$res" == "null" ]; then
         return 1
@@ -42,9 +43,9 @@ stage_one=$(echo "$pre_stage_one" | grep -i "location" | awk -F ": " '{print $2}
 # id.twitch.tv
 stage_two=$(curl -s -i -X GET $stage_one --cookie "$TWITCH_COOKIES")
 
-# SevenTV Callback Response
 stage_three=$(echo "$stage_two" | grep -o 'URL='\''[^'\'']*'\''' | awk -F"'" '{print $2}' | $(which python3) -c "import sys, html as h; print(h.unescape(sys.stdin.read().strip()))")
 
+# Callback
 cookie_resp=$(curl -s -i -X GET $stage_three --cookie "$CSRF_COOKIE_NAME=$csrf")
 auth_cookie=$(cookie_helper "$cookie_resp" "$AUTH_COOKIE_NAME")
 
@@ -53,9 +54,9 @@ if [ -z "$auth_cookie" ]; then
     exit 1
 fi
 
-NEW_CONFIG=$(echo $CONFIG | jq '.SevenTV.Bearer = "'$auth_cookie'" | .')
-echo $CONFIG > config.json.bak
-echo $NEW_CONFIG > config.json
+NEW_CONFIG=$(jq --arg new_token "$auth_cookie" '.SevenTV.Bearer = $new_token' $CONFIG_NAME)
+cp $CONFIG_NAME $CONFIG_NAME.bak
+echo "$NEW_CONFIG" > $CONFIG_NAME
 
 check_auth
 
