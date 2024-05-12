@@ -34,6 +34,15 @@
 		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Reference Include="MiniTwitch.Common">
+	    <HintPath>..\..\vendor\MiniTwitch.Common.dll</HintPath>
+	  </Reference>
+	  <Reference Include="MiniTwitch.Helix">
+	    <HintPath>..\..\vendor\MiniTwitch.Helix.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
 	<PropertyGroup>
 		<FrontendRoot>..\Fumo.Frontend\</FrontendRoot>
 		<FrontendOutputRoot>$(FrontendRoot)build\</FrontendOutputRoot>
