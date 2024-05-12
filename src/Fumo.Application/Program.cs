@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using AspNet.Security.OAuth.Twitch;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -7,13 +8,28 @@ using Fumo.Application.Startable;
 using Fumo.Database.DTO;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
-using Fumo.Shared.OAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Quartz;
-using Quartz.Impl.AdoJobStore.Common;
+using Microsoft.AspNetCore.DataProtection;
 using Serilog;
 using StackExchange.Redis;
+
+using MiniTwitch.Helix;
+
+HelixOptions opts = new
+{
+    AccessToken = ...,
+    UserID = ...,
+    ClientID = ...,
+    ClientSecret = ...
+
+    Events = new
+    {
+        OnTokenRenew = async (token) => ...,
+    }
+};
+
+HelixWrapper wrapper = new(opts);
 
 var configPath = args.FirstOrDefault("config.json");
 var config = new ConfigurationBuilder()

@@ -19,6 +19,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.Tests", "tests\Fumo.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fumo.Application", "src\Fumo.Application\Fumo.Application.csproj", "{EC32F7E8-0230-4CBD-9950-4D665E065515}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vendor", "vendor", "{CA08BB80-995B-4644-ADF7-68DC45CE2837}"
+	ProjectSection(SolutionItems) = preProject
+		vendor\MiniTwitch.Common.dll = vendor\MiniTwitch.Common.dll
+		vendor\MiniTwitch.Helix.dll = vendor\MiniTwitch.Helix.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
