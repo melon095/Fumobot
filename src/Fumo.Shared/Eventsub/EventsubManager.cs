@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Security.Cryptography;
+using System.Text;
 using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Fumo.Shared.ThirdParty.Helix;
@@ -13,11 +14,17 @@ namespace Fumo.Shared.Eventsub;
 
 public class EventsubManager : IEventsubManager
 {
+    private const string ConduitKey = "eventsub:conduit";
+    private const string WebhookSecret = "eventsub:conduit:secret";
+    private const string ShardKey = "eventsub:conduit:shard";
+
     private readonly IOAuthRepository OAuthRepository;
     private readonly IDatabase Redis;
     private readonly IHelixFactory HelixFactory;
     private readonly ILogger Logger;
     private readonly AppSettings AppSettings;
+
+    private string? Secret = null;
 
     public EventsubManager(IOAuthRepository oAuthRepository, IDatabase redis, IHelixFactory helixFactory, ILogger logger, AppSettings settings)
     {
@@ -31,11 +38,7 @@ public class EventsubManager : IEventsubManager
     private static string CooldownKey(string userId, EventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
 
-    private const string ConduitKey = "eventsub:conduit";
-    private const string WebhookSecret = "eventsub:conduit:secret";
-    private const string ShardKey = "eventsub:conduit:shard";
-
-    public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/Eventsub/Callback");
+    public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
 
     public async ValueTask<bool> IsUserEligible(string userId, EventsubType type, CancellationToken ct)
     {
@@ -148,20 +151,47 @@ public class EventsubManager : IEventsubManager
         Logger.Information("Conduit {ConduitId} has been created with shard {ShardId} {ShardStatus}", conduit.Id, shard.Id, shard.Status);
     }
 
-    public async ValueTask<bool> ValidateWebhookSecret(string input)
+    public async ValueTask<string> GetSecret()
     {
+        if (Secret is not null) return Secret;
+
         var secret = await Redis.StringGetAsync(WebhookSecret);
 
-        if (secret == input)
+        if (secret.HasValue)
         {
-            Logger.Information("Webhook secret has been validated.");
-
-            await Redis.KeyDeleteAsync(WebhookSecret);
-            return true;
+            Secret = secret;
+            return Secret!;
         }
 
-        Logger.Warning("Webhook secret validation failed.");
+        var newSecret = CreateSecret();
+        await Redis.StringSetAsync(WebhookSecret, newSecret);
 
-        return false;
+        Secret = newSecret;
+
+        return newSecret;
+    }
+
+    public async ValueTask<bool> CheckSignature(string message, string signature)
+    {
+        var secret = await GetSecret();
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        var signatureBytes = Encoding.UTF8.GetBytes(signature);
+
+        using HMACSHA256 hmacGen = new(Encoding.UTF8.GetBytes(secret));
+        var computedHash = hmacGen.ComputeHash(messageBytes);
+        var finalHmac = $"sha256={BitConverter.ToString(computedHash).Replace("-", "").ToLower()}";
+        var finalBytes = Encoding.UTF8.GetBytes(finalHmac);
+
+        return CryptographicOperations.FixedTimeEquals(finalBytes, signatureBytes);
+    }
+
+    public async ValueTask HandleMessage(MessageTypeRevocationBody message, CancellationToken ct)
+    {
+        Logger.Information("Revoked {SubscriptionType} subscription", message.Subscription.Type);
+    }
+
+    public async ValueTask HandleMessage(MessageTypeNotificationBody message, CancellationToken ct)
+    {
+        Logger.Information("Received notification for {SubscriptionType}", message.Subscription.Type);
     }
 }
