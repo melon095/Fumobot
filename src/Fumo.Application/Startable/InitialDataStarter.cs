@@ -1,8 +1,10 @@
 ﻿using Fumo.Application.Web.Service;
 using Fumo.Database;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
+using MiniTwitch.Helix.Models;
 
 namespace Fumo.Application.Startable;
 
@@ -11,7 +13,8 @@ internal class InitialDataStarter(
         DescriptionService DescriptionService,
         CommandRepository CommandRepository,
         DatabaseContext DbContext,
-        IChannelRepository channelRepository) : IAsyncStartable
+        IChannelRepository channelRepository,
+        IEventsubManager eventsubManager) : IAsyncStartable
 {
     public async ValueTask Start(CancellationToken ct)
     {
@@ -33,5 +36,15 @@ internal class InitialDataStarter(
         CommandRepository.LoadAssemblyCommands();
         await DescriptionService.Prepare(ct);
         await channelRepository.Prepare(ct);
+
+        log.Information("Checking for Conduit status");
+
+        var conduit = await eventsubManager.GetConduit(ct);
+        if (conduit is null)
+        {
+            log.Information("Missing Conduit. Creating");
+            await eventsubManager.CreateConduit(ct);
+            log.Information("Conduit has been made :)");
+        }
     }
 }

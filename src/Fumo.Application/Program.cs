@@ -1,35 +1,10 @@
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
-using AspNet.Security.OAuth.Twitch;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
-using Fumo.Database.DTO;
-using Fumo.Shared.Interfaces;
+using Fumo.Application.Web;
 using Fumo.Shared.Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.DataProtection;
 using Serilog;
-using StackExchange.Redis;
-
-using MiniTwitch.Helix;
-
-HelixOptions opts = new
-{
-    AccessToken = ...,
-    UserID = ...,
-    ClientID = ...,
-    ClientSecret = ...
-
-    Events = new
-    {
-        OnTokenRenew = async (token) => ...,
-    }
-};
-
-HelixWrapper wrapper = new(opts);
 
 var configPath = args.FirstOrDefault("config.json");
 var config = new ConfigurationBuilder()
@@ -67,84 +42,9 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
-builder.Services.AddDataProtection()
-    .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(appsettings.Connections.Redis), $"fumobot:{appsettings.Website.DataProtection.RedisKey}")
-    .ProtectKeysWithCertificate(new X509Certificate2(appsettings.Website.DataProtection.CertificateFile, appsettings.Website.DataProtection.CertificatePass));
-
-builder.Services
-    .AddAuthentication(x =>
-    {
-        x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        x.DefaultChallengeScheme = TwitchAuthenticationDefaults.AuthenticationScheme;
-    })
-    .AddCookie(x =>
-    {
-        x.LoginPath = "/api/Account/Login";
-        x.LogoutPath = "/api/Account/Logout";
-        x.Cookie.Name = "Fumo.Token";
-        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        x.Cookie.SameSite = SameSiteMode.Strict;
-        x.Cookie.HttpOnly = true;
-        x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        x.ExpireTimeSpan = TimeSpan.FromDays(30);
-    })
-    .AddTwitch(x =>
-    {
-        x.ForceVerify = false;
-        x.ClientId = appsettings.Twitch.ClientID;
-        x.ClientSecret = appsettings.Twitch.ClientSecret;
-        x.SaveTokens = true;
-        x.Scope.Add("openid");
-        x.Scope.Add("user:read:email");
-        x.Scope.Add("channel:bot");
-
-        x.Events.OnCreatingTicket = async (context) =>
-            {
-                var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                var oauthRepo = context.HttpContext.RequestServices.GetRequiredService<IUserOAuthRepository>();
-
-                var userId = context.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)
-                            ?? throw new InvalidOperationException("Unable to find user ID in claims");
-
-                if (!DateTime.TryParse(context.Properties.GetTokenValue("expires_at"), out DateTime expiresAt))
-                {
-                    return;
-                }
-
-                expiresAt = expiresAt.ToUniversalTime();
-
-                var user = await userRepo.SearchID(userId);
-
-                if (user is null)
-                {
-                    return;
-                }
-
-                var existing = await oauthRepo.Get(user.TwitchID, TwitchAuthenticationDefaults.Issuer);
-
-                if (existing is not null)
-                {
-                    existing.AccessToken = context.AccessToken!;
-                    existing.RefreshToken = context.RefreshToken!;
-                    existing.ExpiresAt = expiresAt;
-
-                    await oauthRepo.CreateOrUpdate(existing);
-                }
-                else
-                {
-                    var oauth = new UserOauthDTO
-                    {
-                        TwitchID = user.TwitchID,
-                        Provider = TwitchAuthenticationDefaults.Issuer,
-                        AccessToken = context.AccessToken!,
-                        RefreshToken = context.RefreshToken!,
-                        ExpiresAt = expiresAt
-                    };
-
-                    await oauthRepo.CreateOrUpdate(oauth);
-                }
-            };
-    });
+builder
+    .SetupDataProtection(appsettings)
+    .SetupHTTPAuthentication(appsettings);
 
 var app = builder.Build();
 
@@ -162,7 +62,6 @@ else
 
     app.UseStaticFiles();
 }
-
 
 app.UseRouting()
     .UseAuthentication()
@@ -197,6 +96,8 @@ static async Task RunStartup(WebApplication app, CancellationToken ct)
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "Error starting {ClassName}", startup.Name);
+
+            throw;
         }
     }
 }

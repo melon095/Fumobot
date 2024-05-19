@@ -18,10 +18,17 @@
 		<PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.7.17" />
+		<PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="MiniTwitch.Helix">
+			<HintPath>..\..\vendor\MiniTwitch.Helix.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 </Project>

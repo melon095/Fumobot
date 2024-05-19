@@ -1,163 +1,46 @@
-﻿using Fumo.Database.DTO;
-using Fumo.Database.Extensions;
-using Fumo.Shared.Exceptions;
-using Fumo.Shared.Models;
+﻿using Fumo.Shared.Models;
 using Fumo.Shared.Interfaces;
-using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
-using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
-using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
-using Microsoft.Extensions.Configuration;
 using MiniTwitch.Irc;
 using Serilog;
+using Fumo.Shared.Eventsub;
+using Fumo.Shared.Enums;
 
 namespace Fumo.Commands;
 
 public class JoinCommand : ChatCommand
 {
-    private readonly ILogger Logger;
-    private readonly IrcClient Irc;
-    private readonly IChannelRepository ChannelRepository;
-    private readonly IThreeLetterAPI ThreeLetterAPI;
-    private readonly IUserRepository UserRepository;
+    private readonly Uri JoinURL;
     private readonly string BotID;
 
     public JoinCommand()
     {
-        SetName("(re)?join");
-        SetDescription("Allow the bot to join you or a channel you mod");
-        SetCooldown(TimeSpan.FromMinutes(1));
+        SetName("join");
+        SetFlags(ChatCommandFlags.Reply);
     }
 
-    public JoinCommand(
-        ILogger logger,
-        AppSettings settings,
-        IrcClient irc,
-        IChannelRepository channelRepository,
-        IThreeLetterAPI threeLetterAPI,
-        IUserRepository userRepository) : this()
+    public JoinCommand(AppSettings settings) : this()
     {
-        Logger = logger.ForContext<JoinCommand>();
-        Irc = irc;
-        ChannelRepository = channelRepository;
-        ThreeLetterAPI = threeLetterAPI;
-        UserRepository = userRepository;
+        JoinURL = new Uri(new Uri(settings.Website.PublicURL), "/Account/Join/");
         BotID = settings.Twitch.UserID;
     }
 
-    private async ValueTask<bool> IsMod(UserDTO user, string channelName, CancellationToken ct)
+    public override ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var list = await this.ThreeLetterAPI.PaginatedQuery<ChannelModsResponse>(resp =>
+        if (Channel.TwitchID != BotID)
         {
-            if (resp is null)
-            {
-                return new ChannelModsInstruction(login: channelName);
-            }
-            if (resp.User.Mods.PageInfo.HasNextPage)
-            {
-                var latestCursor = resp.User.Mods.Edges[resp.User.Mods.Edges.Count - 1].Cursor;
+            return new(string.Empty);
+        }
 
-                return new ChannelModsInstruction(login: channelName, cursor: latestCursor);
-            }
+        var otherUser = Input.ElementAtOrDefault(0);
+        if (string.IsNullOrEmpty(otherUser))
+        {
+            return new($"Tell your friend to click here :) -> {JoinURL}");
+        }
 
-            return null;
-
-        }, ct);
-
-        // Sure it might be slow on a big channel but who cares
-        var isMod = list.Any(x => x.User.Mods.Edges.Any(x => x.Node.Id == user.TwitchID));
-
-        return isMod;
+        return new($"Click here :) -> {JoinURL}");
     }
 
-    public override async ValueTask<CommandResult> Execute(CancellationToken ct)
-    {
-        if (Channel.TwitchID != this.BotID)
-        {
-            return string.Empty;
-        }
-
-        var other = false;
-        var userToJoin = User;
-        var otherUser = Input.ElementAtOrDefault(0) ?? "";
-        var otherUsersUsername = UsernameCleanerRegex.CleanUsername(otherUser);
-
-
-        if (!string.IsNullOrEmpty(otherUser) && User.TwitchName != otherUsersUsername)
-        {
-            var isMod = await this.IsMod(User, otherUsersUsername, ct) || (User.HasPermission("admin.*"));
-
-            if (!isMod)
-            {
-                return "You're not a mod in that channel 🤨";
-            }
-
-            try
-            {
-                userToJoin = await this.UserRepository.SearchName(otherUsersUsername, ct);
-                other = true;
-            }
-            catch (UserNotFoundException ex)
-            {
-                return ex.Message;
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Error(ex, string.Empty);
-
-                return "Something went wrong";
-            }
-        }
-
-
-        if (ChannelRepository.GetByID(userToJoin.TwitchID) is ChannelDTO channel)
-        {
-            var possesivePronoun = other ? "their" : "your";
-
-            if (channel.SetForDeletion)
-            {
-                return "That channel was recently removed, please wait an hour or so before trying to 'join' again";
-            }
-
-            await this.Irc.PartChannel(userToJoin.TwitchName, ct);
-            await this.Irc.JoinChannel(userToJoin.TwitchName, ct);
-
-            return $"I tried to rejoin {possesivePronoun} channel.";
-        }
-
-        var pronoun = other ? $"{userToJoin.TwitchName}'s" : "your";
-
-        // TODO: Add website or smth here.
-        var response = $"Joining {pronoun} channel :) ";
-        var newChatReply = "FeelsDankMan 👋 Hi.";
-        if (other)
-        {
-            newChatReply += $" I was added by {User.TwitchName}";
-        }
-
-        try
-        {
-            ChannelDTO newChannel = new()
-            {
-                TwitchID = userToJoin.TwitchID,
-                TwitchName = userToJoin.TwitchName,
-                UserTwitchID = userToJoin.TwitchID,
-            };
-
-            await ChannelRepository.Create(newChannel, ct);
-
-            await this.Irc.JoinChannel(newChannel.TwitchName, ct);
-            await this.Irc.SendMessage(newChannel.TwitchName, newChatReply, cancellationToken: ct);
-
-            return response;
-        }
-        catch (Exception ex)
-        {
-            this.Logger.Error(ex, "Failed to join {Channel}", userToJoin.TwitchID);
-
-            return "An error occured joining that channel";
-        }
-    }
     public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
         => builder
             .WithCache()

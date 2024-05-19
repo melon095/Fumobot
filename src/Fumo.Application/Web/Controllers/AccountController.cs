@@ -1,5 +1,7 @@
-using System.Security.Claims;
 using AspNet.Security.OAuth.Twitch;
+using Fumo.Application.Web.Service;
+using Fumo.Shared.Eventsub;
+using Fumo.Shared.OAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -11,30 +13,47 @@ namespace Fumo.Application.Web.Controllers;
 [ApiController]
 public class AccountController : ControllerBase
 {
-    [HttpGet("login")]
-    public IActionResult Login([FromQuery] string? requestUri)
-    {
-        string redirect = requestUri switch
-        {
-            string uri when !string.IsNullOrWhiteSpace(uri) && Url.IsLocalUrl(uri) => uri,
-            _ => "/",
-        };
+    private readonly HttpUserService HttpUserService;
 
-        return Challenge(new AuthenticationProperties { RedirectUri = redirect }, TwitchAuthenticationDefaults.AuthenticationScheme);
+    public AccountController(HttpUserService httpUserService)
+    {
+        HttpUserService = httpUserService;
     }
 
-    [Authorize]
-    [HttpGet("logout")]
+    [HttpGet("Login")]
+    public IActionResult Login() => Challenge(new AuthenticationProperties { RedirectUri = "/" }, TwitchAuthenticationDefaults.AuthenticationScheme);
+
+    [HttpGet("Logout"), Authorize]
     public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
 
-    [HttpGet("user")]
-    public IActionResult GetUser()
+    [HttpGet("Me")]
+    public async ValueTask<IActionResult> Me()
     {
-        if (!User.Identity?.IsAuthenticated ?? true) return Unauthorized();
+        if (!User.Identity?.IsAuthenticated ?? true)
+            return Unauthorized();
 
-        var name = User.FindFirst(TwitchAuthenticationConstants.Claims.DisplayName)?.Value;
-        var picture = User.FindFirst(TwitchAuthenticationConstants.Claims.ProfileImageUrl)?.Value;
+        var user = await HttpUserService.GetUser();
 
-        return Ok(new { name, picture });
+        return Ok(new
+        {
+            id = user.TwitchID,
+            name = user.TwitchName,
+        });
+    }
+
+    [HttpGet("Join"), Authorize]
+    public async ValueTask<IActionResult> Join(IEventsubManager eventsubManager, CancellationToken ct)
+    {
+        var user = await HttpUserService.GetUser(ct);
+
+        if (!await eventsubManager.IsUserEligible(user.TwitchID, EventsubType.ChannelChatMessage, ct))
+            return RedirectToActionPermanent("Login");
+
+        if (await eventsubManager.CheckSubscribeCooldown(user.TwitchID, EventsubType.ChannelChatMessage))
+            return Redirect("/error?code=cooldown");
+
+        await eventsubManager.Subscribe(user.TwitchID, EventsubType.ChannelChatMessage, ct);
+
+        return Redirect("/");
     }
 }

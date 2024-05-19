@@ -32,8 +32,8 @@ internal class ScopedModule(AppSettings settings) : Module
             .InstancePerLifetimeScope();
 
         builder
-            .RegisterType<UserOAuthRepository>()
-            .As<IUserOAuthRepository>()
+            .RegisterType<OAuthRepository>()
+            .As<IOAuthRepository>()
             .InstancePerLifetimeScope();
     }
 }
