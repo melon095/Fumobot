@@ -1,7 +1,6 @@
 using AspNet.Security.OAuth.Twitch;
 using Fumo.Application.Web.Service;
 using Fumo.Shared.Eventsub;
-using Fumo.Shared.OAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;

@@ -17,5 +17,11 @@ public interface IEventsubManager
 
     ValueTask CreateConduit(CancellationToken ct);
 
-    ValueTask<bool> ValidateWebhookSecret(string input);
+    ValueTask<string> GetSecret();
+
+    ValueTask<bool> CheckSignature(string message, string signature);
+
+    ValueTask HandleMessage(MessageTypeRevocationBody message, CancellationToken ct);
+
+    ValueTask HandleMessage(MessageTypeNotificationBody message, CancellationToken ct);
 }

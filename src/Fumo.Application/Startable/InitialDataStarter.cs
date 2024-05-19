@@ -37,14 +37,21 @@ internal class InitialDataStarter(
         await DescriptionService.Prepare(ct);
         await channelRepository.Prepare(ct);
 
-        log.Information("Checking for Conduit status");
 
-        var conduit = await eventsubManager.GetConduit(ct);
-        if (conduit is null)
+        var isHttps = eventsubManager.CallbackUrl.Scheme == "https";
+        if (!isHttps)
+            log.Warning("Can't subscribe to Conduit without https :(");
+        else
         {
-            log.Information("Missing Conduit. Creating");
-            await eventsubManager.CreateConduit(ct);
-            log.Information("Conduit has been made :)");
+            log.Information("Checking for Conduit status");
+
+            var conduit = await eventsubManager.GetConduit(ct);
+            if (conduit is null)
+            {
+                log.Information("Missing Conduit. Creating");
+                await eventsubManager.CreateConduit(ct);
+                log.Information("Conduit has been made :)");
+            }
         }
     }
 }
