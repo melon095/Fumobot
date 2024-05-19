@@ -22,6 +22,9 @@ public class UserOauthDTO
     public string RefreshToken { get; set; }
 
     [Required]
+    public List<string> Scopes { get; set; } = new();
+
+    [Required]
     public DateTime ExpiresAt { get; set; }
 
     [ForeignKey(nameof(TwitchID))]
