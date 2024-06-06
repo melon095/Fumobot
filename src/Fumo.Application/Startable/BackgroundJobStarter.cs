@@ -1,21 +1,20 @@
-﻿using Fumo.Application.BackgroundJobs;
-using Fumo.Application.BackgroundJobs.SevenTV;
+﻿using Autofac.Extras.Quartz;
+using Fumo.BackgroundJobs;
+using Fumo.BackgroundJobs.SevenTV;
 using Quartz;
-using System.Collections.ObjectModel;
 
 namespace Fumo.Application.Startable;
 
 internal class BackgroundJobStarter : IAsyncStartable
 {
-    private static readonly ReadOnlyCollection<Func<(IJobDetail, List<ITrigger>)>> _jobFactories = new(new Func<(IJobDetail, List<ITrigger>)>[]
-    {
-        CreateChannelRemover,
-        CreateChannelRename,
-
-        CreateSevenTVRoles,
-        CreateSevenTVEmoteSet,
-        CreateSevenTVEditors,
-    });
+    private static readonly IReadOnlyList<JobData> Jobs =
+    [
+        CreateJob<ChannelRemoverJob>(EveryThirthyMinute),
+        CreateJob<ChannelRenameJob>(EveryThirthyMinute),
+        CreateJob<FetchRolesJob>(EveryHour),
+        CreateJob<FetchEmoteSetsJob>(EveryMinute(2)),
+        CreateJob<FetchChannelEditorsJob>(EveryMinute(5)),
+    ];
 
     private readonly Serilog.ILogger Logger;
     private readonly IScheduler Scheduler;
@@ -30,90 +29,36 @@ internal class BackgroundJobStarter : IAsyncStartable
     {
         Logger.Information("Registering Quartz jobs");
 
-        foreach (var jobFactory in _jobFactories)
+        foreach (var job in Jobs)
         {
-            var (job, triggers) = jobFactory();
-            await Scheduler.ScheduleJob(job, triggers, replace: true, cancellationToken: ct);
+            await Scheduler.ScheduleJob(job.JobDetail, job.Triggers, replace: true, cancellationToken: ct);
+
+            Logger.Information("Scheduled job {JobName}", job.JobDetail.Key.Name);
         }
 
         await Scheduler.Start(ct);
     }
 
-    private static (IJobDetail, List<ITrigger>) CreateChannelRemover()
+    private static JobData CreateJob<TJob>(IScheduleBuilder schedule) where TJob : IJob
     {
+        var className = typeof(TJob).Name;
+
         var job = JobBuilder
-            .Create<ChannelRemoverJob>()
-            .WithIdentity(nameof(ChannelRemoverJob))
+            .Create<TJob>()
+            .WithIdentity(className)
             .Build();
 
         var trigger = TriggerBuilder.Create()
-            .WithIdentity(nameof(ChannelRemoverJob))
-            .StartNow()
-            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(30))
+            .WithIdentity(className)
+            .WithSchedule(schedule)
             .Build();
 
-        return (job, new() { trigger });
+        return new(job, [trigger]);
     }
 
-    private static (IJobDetail, List<ITrigger>) CreateChannelRename()
-    {
-        var job = JobBuilder
-            .Create<ChannelRenameJob>()
-            .WithIdentity(nameof(ChannelRenameJob))
-            .Build();
+    private static SimpleScheduleBuilder EveryMinute(int minutes) => SimpleScheduleBuilder.RepeatMinutelyForever(minutes);
+    private static SimpleScheduleBuilder EveryHour => SimpleScheduleBuilder.RepeatHourlyForever();
+    private static SimpleScheduleBuilder EveryThirthyMinute => SimpleScheduleBuilder.RepeatMinutelyForever(30);
 
-        var trigger = TriggerBuilder.Create()
-            .WithIdentity(nameof(ChannelRenameJob))
-            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(30))
-            .Build();
-
-        return (job, new() { trigger });
-    }
-
-    private static (IJobDetail, List<ITrigger>) CreateSevenTVRoles()
-    {
-        var job = JobBuilder
-            .Create<FetchRolesJob>()
-            .WithIdentity(nameof(FetchRolesJob))
-            .Build();
-
-        var trigger = TriggerBuilder.Create()
-            .WithIdentity(nameof(FetchRolesJob))
-            .StartNow()
-            .WithSchedule(SimpleScheduleBuilder.RepeatHourlyForever())
-            .Build();
-
-        return (job, new() { trigger });
-    }
-
-
-    private static (IJobDetail, List<ITrigger>) CreateSevenTVEmoteSet()
-    {
-        var job = JobBuilder
-            .Create<FetchEmoteSetsJob>()
-            .WithIdentity(nameof(FetchEmoteSetsJob))
-            .Build();
-
-        var trigger = TriggerBuilder.Create()
-            .WithIdentity(nameof(FetchEmoteSetsJob))
-            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(2))
-            .Build();
-
-        return (job, new() { trigger });
-    }
-
-    private static (IJobDetail, List<ITrigger>) CreateSevenTVEditors()
-    {
-        var job = JobBuilder
-            .Create<FetchChannelEditorsJob>()
-            .WithIdentity(nameof(FetchChannelEditorsJob))
-            .Build();
-
-        var trigger = TriggerBuilder.Create()
-            .WithIdentity(nameof(FetchChannelEditorsJob))
-            .WithSchedule(SimpleScheduleBuilder.RepeatMinutelyForever(5))
-            .Build();
-
-        return (job, new() { trigger });
-    }
+    record struct JobData(IJobDetail JobDetail, IReadOnlyList<ITrigger> Triggers);
 }

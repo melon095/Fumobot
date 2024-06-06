@@ -6,12 +6,13 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Quartz;
 using StackExchange.Redis;
+using Serilog;
 
-namespace Fumo.Application.BackgroundJobs.SevenTV;
+namespace Fumo.BackgroundJobs.SevenTV;
 
-internal class FetchChannelEditorsJob : IJob
+public class FetchChannelEditorsJob : IJob
 {
-    public readonly Serilog.ILogger Logger;
+    public readonly ILogger Logger;
     public readonly IDatabase Redis;
     public readonly ISevenTVService SevenTV;
     public readonly IChannelRepository ChannelRepository;
@@ -20,7 +21,7 @@ internal class FetchChannelEditorsJob : IJob
     private readonly string BotID;
 
     public FetchChannelEditorsJob(
-        Serilog.ILogger logger,
+        ILogger logger,
         IDatabase redis,
         ISevenTVService sevenTVService,
         AppSettings settings,

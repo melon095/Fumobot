@@ -6,15 +6,15 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
 
-namespace Fumo.Application.BackgroundJobs.SevenTV;
+namespace Fumo.BackgroundJobs.SevenTV;
 
-internal class FetchEmoteSetsJob : IJob
+public class FetchEmoteSetsJob : IJob
 {
-    public readonly Serilog.ILogger Logger;
+    public readonly ILogger Logger;
     public readonly ISevenTVService SevenTVService;
     public readonly IChannelRepository ChannelRepository;
 
-    public FetchEmoteSetsJob(Serilog.ILogger logger, ISevenTVService sevenTVService, IChannelRepository channelRepository)
+    public FetchEmoteSetsJob(ILogger logger, ISevenTVService sevenTVService, IChannelRepository channelRepository)
     {
         Logger = logger.ForContext<FetchEmoteSetsJob>();
         SevenTVService = sevenTVService;

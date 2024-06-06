@@ -6,15 +6,15 @@ using Serilog;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace Fumo.Application.BackgroundJobs.SevenTV;
+namespace Fumo.BackgroundJobs.SevenTV;
 
-internal class FetchRolesJob : IJob
+public class FetchRolesJob : IJob
 {
     public readonly IDatabase Redis;
     public readonly ISevenTVService SevenTV;
-    public readonly Serilog.ILogger Logger;
+    public readonly ILogger Logger;
 
-    public FetchRolesJob(IDatabase redis, ISevenTVService sevenTV, Serilog.ILogger logger)
+    public FetchRolesJob(IDatabase redis, ISevenTVService sevenTV, ILogger logger)
     {
         Redis = redis;
         SevenTV = sevenTV;
