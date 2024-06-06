@@ -30,6 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Fumo.BackgroundJobs\Fumo.BackgroundJobs.csproj" />
 		<ProjectReference Include="..\Fumo.Commands\Fumo.Commands.csproj" />
 		<ProjectReference Include="..\Fumo.Database\Fumo.Database.csproj" />
 		<ProjectReference Include="..\Fumo.Shared\Fumo.Shared.csproj" />

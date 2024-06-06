@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
 
-namespace Fumo.Application.BackgroundJobs;
+namespace Fumo.BackgroundJobs;
 
-internal class ChannelRemoverJob : IJob
+public class ChannelRemoverJob : IJob
 {
-    public readonly Serilog.ILogger Logger;
+    public readonly ILogger Logger;
     public readonly DatabaseContext Database;
 
-    public ChannelRemoverJob(Serilog.ILogger logger, DatabaseContext database)
+    public ChannelRemoverJob(ILogger logger, DatabaseContext database)
     {
         Logger = logger.ForContext<ChannelRemoverJob>();
         Database = database;

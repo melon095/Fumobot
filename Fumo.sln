@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vendor", "vendor", "{CA08BB
 		vendor\MiniTwitch.Common.dll = vendor\MiniTwitch.Common.dll
 		vendor\MiniTwitch.Helix.dll = vendor\MiniTwitch.Helix.dll
 	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fumo.BackgroundJobs", "src\Fumo.BackgroundJobs\Fumo.BackgroundJobs.csproj", "{081B7D1D-D558-456D-8E39-CC4EE1CA3E74}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +52,10 @@ Global
 		{EC32F7E8-0230-4CBD-9950-4D665E065515}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC32F7E8-0230-4CBD-9950-4D665E065515}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC32F7E8-0230-4CBD-9950-4D665E065515}.Release|Any CPU.Build.0 = Release|Any CPU
+		{081B7D1D-D558-456D-8E39-CC4EE1CA3E74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{081B7D1D-D558-456D-8E39-CC4EE1CA3E74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{081B7D1D-D558-456D-8E39-CC4EE1CA3E74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{081B7D1D-D558-456D-8E39-CC4EE1CA3E74}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

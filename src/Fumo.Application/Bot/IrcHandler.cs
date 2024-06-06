@@ -5,7 +5,7 @@ using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Fumo.Database.DTO;
 using Quartz;
-using Fumo.Application.BackgroundJobs.SevenTV;
+using Fumo.BackgroundJobs.SevenTV;
 
 namespace Fumo.Application.Bot;
 

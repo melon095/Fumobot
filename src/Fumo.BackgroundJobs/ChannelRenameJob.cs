@@ -6,17 +6,17 @@ using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
 
-namespace Fumo.Application.BackgroundJobs;
+namespace Fumo.BackgroundJobs;
 
-internal class ChannelRenameJob : IJob
+public class ChannelRenameJob : IJob
 {
-    public readonly Serilog.ILogger Logger;
+    public readonly ILogger Logger;
     public readonly IChannelRepository ChannelRepository;
     public readonly IThreeLetterAPI ThreeLetterAPI;
     public readonly IrcClient IrcClient;
 
     public ChannelRenameJob(
-        Serilog.ILogger logger,
+        ILogger logger,
         IChannelRepository channelRepository,
         IThreeLetterAPI threeLetterAPI,
         IrcClient ircClient)
