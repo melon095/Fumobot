@@ -45,12 +45,16 @@ internal class InitialDataStarter(
         {
             log.Information("Checking for Conduit status");
 
-            var conduit = await eventsubManager.GetConduit(ct);
+            var conduit = await eventsubManager.GetConduitID(ct);
             if (conduit is null)
             {
                 log.Information("Missing Conduit. Creating");
                 await eventsubManager.CreateConduit(ct);
                 log.Information("Conduit has been made :)");
+            }
+            else
+            {
+                log.Information("Conduit found. ID: {ConduitID}", conduit);
             }
         }
     }

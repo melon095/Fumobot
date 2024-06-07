@@ -1,19 +1,17 @@
-﻿
-using MiniTwitch.Helix.Responses;
-
-namespace Fumo.Shared.Eventsub;
+﻿namespace Fumo.Shared.Eventsub;
 
 public interface IEventsubManager
 {
     Uri CallbackUrl { get; }
 
-    ValueTask<bool> CheckSubscribeCooldown(string userId, EventsubType type);
+    ValueTask<bool> CheckSubscribeCooldown(string userId, IEventsubType type);
 
-    ValueTask<bool> IsUserEligible(string userId, EventsubType type, CancellationToken ct);
+    ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct);
 
-    ValueTask Subscribe(string userId, EventsubType type, CancellationToken ct);
+    ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
+        where TCondition : class;
 
-    ValueTask<Conduits.Conduit?> GetConduit(CancellationToken ct);
+    ValueTask<string?> GetConduitID(CancellationToken ct);
 
     ValueTask CreateConduit(CancellationToken ct);
 

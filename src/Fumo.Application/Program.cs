@@ -1,9 +1,11 @@
+using AspNetCoreRateLimit;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
 using Fumo.Application.Web;
 using Fumo.Shared.Models;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 var configPath = args.FirstOrDefault("config.json");
@@ -44,9 +46,11 @@ builder.Services.AddControllers();
 
 builder
     .SetupDataProtection(appsettings)
+    .SetupRatelimitOptions()
     .SetupHTTPAuthentication(appsettings);
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -62,10 +66,14 @@ else
 
     app.UseStaticFiles();
 }
-
-app.UseRouting()
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    })
+    .UseRouting()
     .UseAuthentication()
-    .UseAuthorization();
+    .UseAuthorization()
+    .UseIpRateLimiting();
 
 app.MapControllers();
 

@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Fumo.Shared.Eventsub;
+using Fumo.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
+using Serilog.Events;
 
 namespace Fumo.Application.Web.Controllers;
 
@@ -9,12 +11,6 @@ namespace Fumo.Application.Web.Controllers;
 [ApiController]
 public class EventsubController : ControllerBase
 {
-    // TODO: Remove this
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-
     private const string HeaderMessageID = "Twitch-Eventsub-Message-Id";
     private const string HeaderMessageType = "Twitch-Eventsub-Message-Type";
     private const string HeaderMessageSignature = "Twitch-Eventsub-Message-Signature";
@@ -64,20 +60,21 @@ public class EventsubController : ControllerBase
             return Unauthorized("Invalid Signature");
         }
 
-        Logger.Information("Received {MessageType} message", messageType);
+        if (Logger.IsEnabled(LogEventLevel.Debug))
+            Logger.Debug("Received {MessageType} message", messageType);
 
         switch (messageType)
         {
             case MessageTypeVerification:
                 {
-                    var verification = JsonSerializer.Deserialize<MessageTypeVerificationBody>(body, SerializerOptions)!;
+                    var verification = JsonSerializer.Deserialize<MessageTypeVerificationBody>(body, FumoJson.SnakeCase)!;
 
                     return Ok(verification.Challenge);
                 }
 
             case MessageTypeRevocation:
                 {
-                    var revocation = JsonSerializer.Deserialize<MessageTypeRevocationBody>(body, SerializerOptions)!;
+                    var revocation = JsonSerializer.Deserialize<MessageTypeRevocationBody>(body, FumoJson.SnakeCase)!;
 
                     await EventsubManager.HandleMessage(revocation, ct);
                 }
@@ -85,7 +82,7 @@ public class EventsubController : ControllerBase
 
             case MessageTypeNotification:
                 {
-                    var notification = JsonSerializer.Deserialize<MessageTypeNotificationBody>(body, SerializerOptions)!;
+                    var notification = JsonSerializer.Deserialize<MessageTypeNotificationBody>(body, FumoJson.SnakeCase)!;
 
                     await EventsubManager.HandleMessage(notification, ct);
                 }

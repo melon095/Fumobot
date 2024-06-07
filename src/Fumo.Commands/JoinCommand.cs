@@ -1,9 +1,4 @@
 ﻿using Fumo.Shared.Models;
-using Fumo.Shared.Interfaces;
-using Fumo.Shared.ThirdParty.ThreeLetterAPI;
-using MiniTwitch.Irc;
-using Serilog;
-using Fumo.Shared.Eventsub;
 using Fumo.Shared.Enums;
 
 namespace Fumo.Commands;

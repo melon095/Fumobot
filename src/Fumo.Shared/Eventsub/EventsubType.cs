@@ -1,6 +1,31 @@
-﻿namespace Fumo.Shared.Eventsub;
+﻿using System.Text.Json.Serialization;
+using MiniTwitch.Helix.Requests;
 
-public record EventsubType(string Name, string[] RequiredScopes)
+namespace Fumo.Shared.Eventsub;
+
+public interface IEventsubType
 {
-    public static readonly EventsubType ChannelChatMessage = new("channel.chat.message", ["user:read:chat"]);
+    string Name { get; }
+    string[] RequiredScopes { get; }
+    string Version { get; }
+    TimeSpan SuccessCooldown { get; }
 }
+
+public record EventsubType<TCondition>(string Name, string[] RequiredScopes, TimeSpan SuccessCooldown, string Version = "1")
+    : IEventsubType
+    where TCondition : class
+{
+    public static readonly EventsubType ChannelChatMessage = new("channel.chat.message", ["channel:bot"], SuccessCooldown: DefaultCooldown);
+
+    public NewSubscription ToHelix(NewSubscription.EventsubTransport transport, TCondition condition)
+        => new(Name, Version, transport, condition);
+
+    private static readonly TimeSpan DefaultCooldown = TimeSpan.FromMinutes(1);
+}
+
+public record EventsubType(string Name, string[] RequiredScopes, string Version = "1", TimeSpan SuccessCooldown = default)
+    : EventsubType<EventsubBasicCondition>(Name, RequiredScopes, SuccessCooldown, Version);
+
+public record EventsubBasicCondition(
+    [property: JsonPropertyName("broadcaster_user_id")] string BroadcasterId,
+    string UserId);

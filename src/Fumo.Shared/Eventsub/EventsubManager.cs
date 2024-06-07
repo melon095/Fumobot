@@ -35,12 +35,13 @@ public class EventsubManager : IEventsubManager
         AppSettings = settings;
     }
 
-    private static string CooldownKey(string userId, EventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
+    private static string CooldownKey(string userId, IEventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
 
     public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
 
-    public async ValueTask<bool> IsUserEligible(string userId, EventsubType type, CancellationToken ct)
+
+    public async ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct)
     {
         var oauth = await OAuthRepository.Get(userId, OAuthProviderName.Twitch, ct);
         if (oauth is null) return false;
@@ -49,24 +50,69 @@ public class EventsubManager : IEventsubManager
         return type.RequiredScopes.All(oauth.Scopes.Contains);
     }
 
-    public async ValueTask<bool> CheckSubscribeCooldown(string userId, EventsubType type)
+    public async ValueTask<bool> CheckSubscribeCooldown(string userId, IEventsubType type)
     {
         var key = CooldownKey(userId, type);
 
         return await Redis.KeyExistsAsync(key);
     }
 
-    public async ValueTask Subscribe(string userId, EventsubType type, CancellationToken ct)
+    public async ValueTask SetCooldown(string userId, IEventsubType type, CancellationToken ct)
     {
-        var helix = await HelixFactory.Create(ct);
+        var key = CooldownKey(userId, type);
 
-        // TODO: Ensure conduit is created
-
+        await Redis.StringSetAsync(key, "1", type.SuccessCooldown, When.Always, CommandFlags.FireAndForget);
     }
 
-    public async ValueTask<Conduits.Conduit?> GetConduit(CancellationToken ct)
+    public async ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
+        where TCondition : class
+    {
+        var log = Logger.ForContext("UserId", request.UserId).ForContext("SubscriptionType", request.Type.Name);
+
+        try
+        {
+            log.Information("Subscribing to {SubscriptionType} for {UserId}");
+
+            var helix = await HelixFactory.Create(ct);
+            var conduit = await GetConduitID(ct);
+
+            if (conduit is null)
+            {
+                log.Error("Failed to get conduit ID");
+                return false;
+            }
+
+            var transport = new NewSubscription.EventsubTransport("conduit", conduitId: conduit);
+            var helixRequest = request.Type.ToHelix(transport, request.Condition);
+
+            var response = await helix.CreateEventSubSubscription(helixRequest, ct);
+            if (!response.Success)
+            {
+                log.Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}", response.Message);
+                return false;
+            }
+
+            log.Information("Successfully subscribed to {SubscriptionType} for {UserId}");
+
+            await SetCooldown(request.UserId, request.Type, ct);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to subscribe to {SubscriptionType} for {UserId}");
+
+            return false;
+        }
+    }
+
+    #region Conduit
+
+    public async ValueTask<string?> GetConduitID(CancellationToken ct)
     {
         var ourConduit = await Redis.StringGetAsync(ConduitKey);
+        if (ourConduit.HasValue) return ourConduit;
+
         var ourShard = await Redis.StringGetAsync(ShardKey);
 
         var helix = await HelixFactory.Create(ct);
@@ -108,7 +154,7 @@ public class EventsubManager : IEventsubManager
             return null;
         }
 
-        return conduit;
+        return conduit.Id;
     }
 
     public async ValueTask CreateConduit(CancellationToken ct)
@@ -150,6 +196,8 @@ public class EventsubManager : IEventsubManager
 
         Logger.Information("Conduit {ConduitId} has been created with shard {ShardId} {ShardStatus}", conduit.Id, shard.Id, shard.Status);
     }
+
+    #endregion
 
     public async ValueTask<string> GetSecret()
     {
@@ -194,4 +242,5 @@ public class EventsubManager : IEventsubManager
     {
         Logger.Information("Received notification for {SubscriptionType}", message.Subscription.Type);
     }
+
 }

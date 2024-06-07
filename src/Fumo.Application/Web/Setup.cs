@@ -9,7 +9,9 @@ using Fumo.Shared.OAuth;
 using StackExchange.Redis;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
-using Fumo.Database.Migrations;
+using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Fumo.Application.Web;
 
@@ -20,6 +22,14 @@ public static class Setup
         "openid",
         "user:read:email",
         "channel:bot"
+    ];
+
+    private static readonly List<string> TWITCH_BOT_SCOPES =
+    [
+        "openid",
+        "user:read:email",
+        "user:read:chat",
+        "user:bot",
     ];
 
     public static WebApplicationBuilder SetupDataProtection(this WebApplicationBuilder builder, AppSettings settings)
@@ -34,6 +44,43 @@ public static class Setup
         return builder;
     }
 
+    public static WebApplicationBuilder SetupRatelimitOptions(this WebApplicationBuilder builder)
+    {
+        var services = builder.Services;
+
+        services.AddMemoryCache();
+
+        services.Configure<IpRateLimitOptions>(o =>
+        {
+            o.EnableEndpointRateLimiting = true;
+            o.StackBlockedRequests = false;
+            o.RealIpHeader = "X-Real-IP";
+            o.ClientIdHeader = "X-ClientId";
+            o.HttpStatusCode = 429;
+            o.GeneralRules =
+            [
+                new()
+                {
+                    Endpoint = "*",
+                    Limit = 1000,
+                    Period = "1m"
+                },
+                new()
+                {
+                    Endpoint = "/Account/Join",
+                    Limit = 4,
+                    Period = "1h"
+                }
+            ];
+        })
+            .AddInMemoryRateLimiting()
+            .AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
+            .AddSingleton<IClientResolveContributor, ClientResolveContributor>();
+
+
+        return builder;
+    }
+
     public static WebApplicationBuilder SetupHTTPAuthentication(this WebApplicationBuilder builder, AppSettings settings)
     {
         builder.Services
@@ -44,13 +91,17 @@ public static class Setup
             })
             .AddCookie(x =>
             {
+                x.LoginPath = "/Account/Login";
+                x.LogoutPath = "/Account/Logout";
+                x.AccessDeniedPath = "/error?code=403";
+
                 x.Cookie.Name = "Fumo.Token";
                 x.Cookie.HttpOnly = true;
                 x.ExpireTimeSpan = TimeSpan.FromDays(30);
             })
             .AddTwitch(x =>
             {
-                x.ForceVerify = false;
+                x.ForceVerify = true;
                 x.ClientId = settings.Twitch.ClientID;
                 x.ClientSecret = settings.Twitch.ClientSecret;
                 x.SaveTokens = true;
@@ -103,6 +154,20 @@ public static class Setup
                         await oauthRepo.Update(oauth);
                     }
                 };
+            })
+            .AddTwitch(OAuthProviderName.TwitchBot, x =>
+            {
+                x.ForceVerify = true;
+                x.ClientId = settings.Twitch.ClientID;
+                x.ClientSecret = settings.Twitch.ClientSecret;
+                x.SaveTokens = true;
+
+                foreach (var scope in TWITCH_BOT_SCOPES)
+                {
+                    x.Scope.Add(scope);
+                }
+
+                // Don't do anything with the token.
             });
 
         return builder;

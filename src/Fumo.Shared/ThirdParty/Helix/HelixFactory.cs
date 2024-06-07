@@ -15,12 +15,6 @@ public class HelixFactory : IHelixFactory
     private readonly AppSettings Settings;
     private readonly ILoggerFactory LoggerFactory;
     private readonly HttpClient httpClient = new();
-    // TODO: FumoJson. cba cherry-picking
-    private readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
 
     private HelixWrapper? Helix = null;
     private readonly long UserId;
@@ -63,7 +57,7 @@ public class HelixFactory : IHelixFactory
             var response = await httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
 
-            return (await response.Content.ReadFromJsonAsync<TwitchToken>(JsonOptions, ct))!;
+            return (await response.Content.ReadFromJsonAsync<TwitchToken>(FumoJson.SnakeCase, ct))!;
         }
         catch (Exception e)
         {
