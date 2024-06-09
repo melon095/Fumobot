@@ -10,8 +10,6 @@ using StackExchange.Redis;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using AspNetCoreRateLimit;
-using Microsoft.AspNetCore.Authentication.OAuth;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Fumo.Application.Web;
 
@@ -55,7 +53,6 @@ public static class Setup
             o.EnableEndpointRateLimiting = true;
             o.StackBlockedRequests = false;
             o.RealIpHeader = "X-Real-IP";
-            o.ClientIdHeader = "X-ClientId";
             o.HttpStatusCode = 429;
             o.GeneralRules =
             [
@@ -67,15 +64,14 @@ public static class Setup
                 },
                 new()
                 {
-                    Endpoint = "/Account/Join",
+                    Endpoint = "get:/Account/Join",
                     Limit = 4,
                     Period = "1h"
                 }
             ];
         })
             .AddInMemoryRateLimiting()
-            .AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
-            .AddSingleton<IClientResolveContributor, ClientResolveContributor>();
+            .AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 
         return builder;

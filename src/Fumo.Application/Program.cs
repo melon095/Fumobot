@@ -1,10 +1,13 @@
-using AspNetCoreRateLimit;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
 using Fumo.Application.Web;
+using Fumo.Shared.Eventsub.Commands;
 using Fumo.Shared.Models;
+using Fumo.Web;
+using MediatR.Extensions.Autofac.DependencyInjection;
+using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
@@ -39,6 +42,13 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterModule(new ScopedModule(appsettings));
         x.RegisterModule(new QuartzModule(appsettings));
         x.RegisterModule(new StartableModule());
+
+        var mediatrConfig = MediatRConfigurationBuilder
+            .Create(typeof(EventsubNotificationCommand).Assembly)
+            .WithAllOpenGenericHandlerTypesRegistered()
+            .Build();
+
+        x.RegisterMediatR(mediatrConfig);
     }));
 
 builder.Host.UseSerilog();
@@ -50,7 +60,6 @@ builder
     .SetupHTTPAuthentication(appsettings);
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -66,14 +75,17 @@ else
 
     app.UseStaticFiles();
 }
+
+app.UseMiddleware<IpRateLimitMiddleware>();
+
 app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    })
-    .UseRouting()
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+app.UseRouting()
     .UseAuthentication()
-    .UseAuthorization()
-    .UseIpRateLimiting();
+    .UseAuthorization();
 
 app.MapControllers();
 

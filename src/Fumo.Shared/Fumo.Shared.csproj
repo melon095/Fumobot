@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Autofac" Version="8.0.0" />
+		<PackageReference Include="MediatR" Version="12.3.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
 		<PackageReference Include="MiniTwitch.Irc" Version="1.2.12" />

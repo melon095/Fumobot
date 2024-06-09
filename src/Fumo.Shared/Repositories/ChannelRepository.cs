@@ -51,7 +51,7 @@ public class ChannelRepository : IChannelRepository
     }
 
     public ChannelDTO? GetByID(string ID)
-        => Channels.Where(x => x.Value.TwitchID == ID).Select(x => x.Value).FirstOrDefault();
+        => Channels.Values.FirstOrDefault(x => x.TwitchID == ID);
 
     public ChannelDTO? GetByName(string Name)
         => Channels[Name];

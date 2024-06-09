@@ -94,7 +94,8 @@ public class EventsubManager : IEventsubManager
 
             log.Information("Successfully subscribed to {SubscriptionType} for {UserId}");
 
-            await SetCooldown(request.UserId, request.Type, ct);
+            if (request.Type.ShouldSetCooldown)
+                await SetCooldown(request.UserId, request.Type, ct);
 
             return true;
         }
@@ -104,6 +105,29 @@ public class EventsubManager : IEventsubManager
 
             return false;
         }
+    }
+
+    public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
+    {
+        var helix = await HelixFactory.Create(ct);
+
+        var subscriptions = await helix.
+            GetEventSubSubscriptions(EventSubStatus.Enabled, userId: long.Parse(userId), cancellationToken: ct).
+            PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
+            ((x) => Logger.Error("Failed to get '{SubscriptionType}' subscriptions for {UserId}: {Error}", type.Name, userId, x.Message), ct);
+
+        return subscriptions.Any(x => x.Type == type.Name);
+    }
+
+    public async ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct)
+    {
+        var helix = await HelixFactory.Create(ct);
+
+        var subscriptions = await helix.GetEventSubSubscriptions(EventSubStatus.Enabled, type: type.Name, cancellationToken: ct)
+            .PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
+            ((x) => Logger.Error("Failed to get '{SubscriptionTypes}' subscriptions: {Error}", type.Name, x.Message), ct);
+
+        return subscriptions.Count() > 0;
     }
 
     #region Conduit
@@ -232,15 +256,4 @@ public class EventsubManager : IEventsubManager
 
         return CryptographicOperations.FixedTimeEquals(finalBytes, signatureBytes);
     }
-
-    public async ValueTask HandleMessage(MessageTypeRevocationBody message, CancellationToken ct)
-    {
-        Logger.Information("Revoked {SubscriptionType} subscription", message.Subscription.Type);
-    }
-
-    public async ValueTask HandleMessage(MessageTypeNotificationBody message, CancellationToken ct)
-    {
-        Logger.Information("Received notification for {SubscriptionType}", message.Subscription.Type);
-    }
-
 }

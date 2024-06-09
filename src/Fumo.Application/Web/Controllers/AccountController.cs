@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using AspNet.Security.OAuth.Twitch;
 using Fumo.Application.Web.Service;
 using Fumo.Shared.Eventsub;
@@ -62,6 +61,9 @@ public class AccountController : ControllerBase
 
         if (await eventsubManager.CheckSubscribeCooldown(user.TwitchID, EventsubType.ChannelChatMessage))
             return Redirect("/error?code=cooldown");
+
+        if (await eventsubManager.IsSubscribed(EventsubType.ChannelChatMessage, user.TwitchID, ct) is true)
+            return Redirect("/error?code=already_joined");
 
         var request = new EventsubSubscriptionRequest<EventsubBasicCondition>(
             user.TwitchID,

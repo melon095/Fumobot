@@ -11,6 +11,10 @@ public interface IEventsubManager
     ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
         where TCondition : class;
 
+    ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct);
+
+    ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct);
+
     ValueTask<string?> GetConduitID(CancellationToken ct);
 
     ValueTask CreateConduit(CancellationToken ct);
@@ -18,8 +22,4 @@ public interface IEventsubManager
     ValueTask<string> GetSecret();
 
     ValueTask<bool> CheckSignature(string message, string signature);
-
-    ValueTask HandleMessage(MessageTypeRevocationBody message, CancellationToken ct);
-
-    ValueTask HandleMessage(MessageTypeNotificationBody message, CancellationToken ct);
 }

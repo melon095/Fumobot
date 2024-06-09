@@ -1,9 +1,10 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Fumo.Shared.Eventsub;
+using Fumo.Shared.Eventsub.Commands;
 using Fumo.Shared.Models;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Serilog.Events;
 
 namespace Fumo.Application.Web.Controllers;
 
@@ -22,20 +23,23 @@ public class EventsubController : ControllerBase
 
     private readonly IEventsubManager EventsubManager;
     private readonly Serilog.ILogger Logger;
+    private readonly IMediator Bus;
 
-    public EventsubController(IEventsubManager eventsubManager, Serilog.ILogger logger)
+    public EventsubController(IEventsubManager eventsubManager, IMediator bus, Serilog.ILogger logger)
     {
         EventsubManager = eventsubManager;
+        Bus = bus;
         Logger = logger.ForContext<EventsubController>();
     }
+
 
     [HttpPost("Callback")]
     public async ValueTask<IActionResult> Callback(CancellationToken ct)
     {
-        var messageId = Request.Headers[HeaderMessageID].ToString();
-        var messageType = Request.Headers[HeaderMessageType].ToString();
-        var messageTimestamp = Request.Headers[HeaderMessageTimestamp].ToString();
-        var messageSignature = Request.Headers[HeaderMessageSignature].ToString();
+        string messageId = Request.Headers[HeaderMessageID].ToString(),
+            messageType = Request.Headers[HeaderMessageType].ToString(),
+            messageTimestamp = Request.Headers[HeaderMessageTimestamp].ToString(),
+            messageSignature = Request.Headers[HeaderMessageSignature].ToString();
 
         if (string.IsNullOrEmpty(messageId) ||
             string.IsNullOrEmpty(messageType) ||
@@ -60,14 +64,13 @@ public class EventsubController : ControllerBase
             return Unauthorized("Invalid Signature");
         }
 
-        if (Logger.IsEnabled(LogEventLevel.Debug))
-            Logger.Debug("Received {MessageType} message", messageType);
-
         switch (messageType)
         {
             case MessageTypeVerification:
                 {
                     var verification = JsonSerializer.Deserialize<MessageTypeVerificationBody>(body, FumoJson.SnakeCase)!;
+
+                    await Bus.Send(new EventsubVerificationCommand(verification.Subscription), ct);
 
                     return Ok(verification.Challenge);
                 }
@@ -76,7 +79,7 @@ public class EventsubController : ControllerBase
                 {
                     var revocation = JsonSerializer.Deserialize<MessageTypeRevocationBody>(body, FumoJson.SnakeCase)!;
 
-                    await EventsubManager.HandleMessage(revocation, ct);
+                    await Bus.Send(new EventsubRevocationCommand(revocation.Subscription), ct);
                 }
                 break;
 
@@ -84,7 +87,13 @@ public class EventsubController : ControllerBase
                 {
                     var notification = JsonSerializer.Deserialize<MessageTypeNotificationBody>(body, FumoJson.SnakeCase)!;
 
-                    await EventsubManager.HandleMessage(notification, ct);
+                    await Bus.Send(new EventsubNotificationCommand(notification.Subscription, notification.Event), ct);
+                }
+                break;
+
+            default:
+                {
+                    Logger.Warning("Unknown message type {MessageType}", messageType);
                 }
                 break;
         }
