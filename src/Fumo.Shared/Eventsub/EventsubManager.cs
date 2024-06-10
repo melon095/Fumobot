@@ -57,7 +57,7 @@ public class EventsubManager : IEventsubManager
         return await Redis.KeyExistsAsync(key);
     }
 
-    public async ValueTask SetCooldown(string userId, IEventsubType type, CancellationToken ct)
+    public async ValueTask SetCooldown(string userId, IEventsubType type)
     {
         var key = CooldownKey(userId, type);
 
@@ -95,7 +95,7 @@ public class EventsubManager : IEventsubManager
             log.Information("Successfully subscribed to {SubscriptionType} for {UserId}");
 
             if (request.Type.ShouldSetCooldown)
-                await SetCooldown(request.UserId, request.Type, ct);
+                await SetCooldown(request.UserId, request.Type);
 
             return true;
         }
@@ -123,11 +123,12 @@ public class EventsubManager : IEventsubManager
     {
         var helix = await HelixFactory.Create(ct);
 
-        var subscriptions = await helix.GetEventSubSubscriptions(EventSubStatus.Enabled, type: type.Name, cancellationToken: ct)
-            .PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
+        var subscriptions = await helix.
+            GetEventSubSubscriptions(EventSubStatus.Enabled, type: type.Name, cancellationToken: ct).
+            PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionTypes}' subscriptions: {Error}", type.Name, x.Message), ct);
 
-        return subscriptions.Count() > 0;
+        return subscriptions.Any();
     }
 
     #region Conduit
@@ -241,19 +242,5 @@ public class EventsubManager : IEventsubManager
         Secret = newSecret;
 
         return newSecret;
-    }
-
-    public async ValueTask<bool> CheckSignature(string message, string signature)
-    {
-        var secret = await GetSecret();
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-        var signatureBytes = Encoding.UTF8.GetBytes(signature);
-
-        using HMACSHA256 hmacGen = new(Encoding.UTF8.GetBytes(secret));
-        var computedHash = hmacGen.ComputeHash(messageBytes);
-        var finalHmac = $"sha256={BitConverter.ToString(computedHash).Replace("-", "").ToLower()}";
-        var finalBytes = Encoding.UTF8.GetBytes(finalHmac);
-
-        return CryptographicOperations.FixedTimeEquals(finalBytes, signatureBytes);
     }
 }

@@ -14,7 +14,8 @@ internal class InitialDataStarter(
         CommandRepository CommandRepository,
         DatabaseContext DbContext,
         IChannelRepository channelRepository,
-        IEventsubManager eventsubManager) : IAsyncStartable
+        IEventsubManager eventsubManager,
+        IEventsubCommandRegistry eventsubCommandRegistry) : IAsyncStartable
 {
     public async ValueTask Start(CancellationToken ct)
     {
@@ -57,5 +58,7 @@ internal class InitialDataStarter(
                 log.Information("Conduit found. ID: {ConduitID}", conduit);
             }
         }
+
+        eventsubCommandRegistry.RegisterAll();
     }
 }

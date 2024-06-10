@@ -27,7 +27,6 @@ public record EventsubType<TCondition>(string Name, string[] RequiredScopes, Tim
     public NewSubscription ToHelix(NewSubscription.EventsubTransport transport, TCondition condition)
         => new(Name, Version, transport, condition);
 
-
     private static readonly TimeSpan DefaultCooldown = TimeSpan.FromMinutes(1);
 }
 

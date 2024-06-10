@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Fumo.Application.Bot;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
@@ -84,6 +85,11 @@ internal class SingletonModule(AppSettings settings) : Module
         builder
             .RegisterType<HelixFactory>()
             .As<IHelixFactory>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<EventsubCommandRegistry>()
+            .As<IEventsubCommandRegistry>()
             .SingleInstance();
     }
 }

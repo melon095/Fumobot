@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
@@ -34,6 +35,11 @@ internal class ScopedModule(AppSettings settings) : Module
         builder
             .RegisterType<OAuthRepository>()
             .As<IOAuthRepository>()
+            .InstancePerLifetimeScope();
+
+        builder
+            .RegisterType<EventsubCommandFactory>()
+            .As<IEventsubCommandFactory>()
             .InstancePerLifetimeScope();
     }
 }

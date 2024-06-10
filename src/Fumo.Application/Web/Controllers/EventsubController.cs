@@ -1,7 +1,7 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Fumo.Shared.Eventsub;
-using Fumo.Shared.Eventsub.Commands;
 using Fumo.Shared.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +24,14 @@ public class EventsubController : ControllerBase
     private readonly IEventsubManager EventsubManager;
     private readonly Serilog.ILogger Logger;
     private readonly IMediator Bus;
+    private readonly IEventsubCommandFactory EventsubCommandFactory;
 
-    public EventsubController(IEventsubManager eventsubManager, IMediator bus, Serilog.ILogger logger)
+    public EventsubController(IEventsubManager eventsubManager, IMediator bus, Serilog.ILogger logger, IEventsubCommandFactory eventsubCommandFactory)
     {
         EventsubManager = eventsubManager;
         Bus = bus;
         Logger = logger.ForContext<EventsubController>();
+        EventsubCommandFactory = eventsubCommandFactory;
     }
 
 
@@ -49,6 +51,7 @@ public class EventsubController : ControllerBase
             return Unauthorized("Missing Headers");
         }
 
+        var secret = await EventsubManager.GetSecret();
         var body = await ReadBody();
 
         var hmacBuilder = new StringBuilder();
@@ -56,38 +59,42 @@ public class EventsubController : ControllerBase
         hmacBuilder.Append(messageTimestamp);
         hmacBuilder.Append(body);
 
-        var signatureMatch = await EventsubManager.CheckSignature(hmacBuilder.ToString(), messageSignature);
-
-        if (!signatureMatch)
+        if (CheckSignature(hmacBuilder.ToString(), messageSignature, secret) is false)
         {
-            Logger.Warning("Invalid Signature");
             return Unauthorized("Invalid Signature");
         }
+
+        var jsonBody = JsonSerializer.Deserialize<JsonElement>(body, FumoJson.SnakeCase)!;
+        var subscription = jsonBody.GetProperty("subscription");
+        var type = subscription.GetProperty("type").GetString()!;
 
         switch (messageType)
         {
             case MessageTypeVerification:
                 {
-                    var verification = JsonSerializer.Deserialize<MessageTypeVerificationBody>(body, FumoJson.SnakeCase)!;
+                    var challenge = jsonBody.GetProperty("challenge").GetString()!;
 
-                    await Bus.Send(new EventsubVerificationCommand(verification.Subscription), ct);
+                    var command = EventsubCommandFactory.Create(EventsubCommandType.Verification, type, jsonBody);
+                    if (command is not null)
+                        await Bus.Send(command, ct);
 
-                    return Ok(verification.Challenge);
+                    return Ok(challenge);
                 }
 
             case MessageTypeRevocation:
                 {
-                    var revocation = JsonSerializer.Deserialize<MessageTypeRevocationBody>(body, FumoJson.SnakeCase)!;
-
-                    await Bus.Send(new EventsubRevocationCommand(revocation.Subscription), ct);
+                    var command = EventsubCommandFactory.Create(EventsubCommandType.Revocation, type, jsonBody);
+                    if (command is not null)
+                        await Bus.Send(command, ct);
                 }
                 break;
 
             case MessageTypeNotification:
                 {
-                    var notification = JsonSerializer.Deserialize<MessageTypeNotificationBody>(body, FumoJson.SnakeCase)!;
-
-                    await Bus.Send(new EventsubNotificationCommand(notification.Subscription, notification.Event), ct);
+                    var msgEvent = jsonBody.GetProperty("event");
+                    var command = EventsubCommandFactory.Create(EventsubCommandType.Notification, type, msgEvent);
+                    if (command is not null)
+                        await Bus.Send(command, ct);
                 }
                 break;
 
@@ -106,5 +113,18 @@ public class EventsubController : ControllerBase
         using StreamReader reader = new(Request.Body);
 
         return await reader.ReadToEndAsync();
+    }
+
+    private static bool CheckSignature(string message, string signature, string secret)
+    {
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        var signatureBytes = Encoding.UTF8.GetBytes(signature);
+
+        using HMACSHA256 hmacGen = new(Encoding.UTF8.GetBytes(secret));
+        var computedHash = hmacGen.ComputeHash(messageBytes);
+        var finalHmac = $"sha256={BitConverter.ToString(computedHash).Replace("-", "").ToLower()}";
+        var finalBytes = Encoding.UTF8.GetBytes(finalHmac);
+
+        return CryptographicOperations.FixedTimeEquals(finalBytes, signatureBytes);
     }
 }

@@ -20,6 +20,4 @@ public interface IEventsubManager
     ValueTask CreateConduit(CancellationToken ct);
 
     ValueTask<string> GetSecret();
-
-    ValueTask<bool> CheckSignature(string message, string signature);
 }
