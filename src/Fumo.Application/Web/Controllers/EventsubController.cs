@@ -16,6 +16,7 @@ public class EventsubController : ControllerBase
     private const string HeaderMessageType = "Twitch-Eventsub-Message-Type";
     private const string HeaderMessageSignature = "Twitch-Eventsub-Message-Signature";
     private const string HeaderMessageTimestamp = "Twitch-Eventsub-Message-Timestamp";
+    private const string HeaderSubscriptionventType = "Twitch-Eventsub-Subscription-Type";
 
     private const string MessageTypeVerification = "webhook_callback_verification";
     private const string MessageTypeNotification = "notification";
@@ -34,14 +35,14 @@ public class EventsubController : ControllerBase
         EventsubCommandFactory = eventsubCommandFactory;
     }
 
-
     [HttpPost("Callback")]
     public async ValueTask<IActionResult> Callback(CancellationToken ct)
     {
         string messageId = Request.Headers[HeaderMessageID].ToString(),
             messageType = Request.Headers[HeaderMessageType].ToString(),
             messageTimestamp = Request.Headers[HeaderMessageTimestamp].ToString(),
-            messageSignature = Request.Headers[HeaderMessageSignature].ToString();
+            messageSignature = Request.Headers[HeaderMessageSignature].ToString(),
+            type = Request.Headers[HeaderSubscriptionventType].ToString();
 
         if (string.IsNullOrEmpty(messageId) ||
             string.IsNullOrEmpty(messageType) ||
@@ -65,8 +66,6 @@ public class EventsubController : ControllerBase
         }
 
         var jsonBody = JsonSerializer.Deserialize<JsonElement>(body, FumoJson.SnakeCase)!;
-        var subscription = jsonBody.GetProperty("subscription");
-        var type = subscription.GetProperty("type").GetString()!;
 
         switch (messageType)
         {

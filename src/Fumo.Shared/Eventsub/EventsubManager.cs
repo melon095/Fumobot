@@ -107,16 +107,18 @@ public class EventsubManager : IEventsubManager
         }
     }
 
+    private static readonly string EnabledEventsubStatus = EventSubStatus.Enabled.ToString();
+
     public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
     {
         var helix = await HelixFactory.Create(ct);
 
         var subscriptions = await helix.
-            GetEventSubSubscriptions(EventSubStatus.Enabled, userId: long.Parse(userId), cancellationToken: ct).
+            GetEventSubSubscriptions(userId: long.Parse(userId), cancellationToken: ct).
             PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionType}' subscriptions for {UserId}: {Error}", type.Name, userId, x.Message), ct);
 
-        return subscriptions.Any(x => x.Type == type.Name);
+        return subscriptions.Any(x => x.Status == EnabledEventsubStatus && x.Type == type.Name);
     }
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct)
@@ -124,11 +126,11 @@ public class EventsubManager : IEventsubManager
         var helix = await HelixFactory.Create(ct);
 
         var subscriptions = await helix.
-            GetEventSubSubscriptions(EventSubStatus.Enabled, type: type.Name, cancellationToken: ct).
+            GetEventSubSubscriptions(type: type.Name, cancellationToken: ct).
             PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionTypes}' subscriptions: {Error}", type.Name, x.Message), ct);
 
-        return subscriptions.Any();
+        return subscriptions.Any(x => x.Status == EnabledEventsubStatus);
     }
 
     #region Conduit
@@ -213,13 +215,13 @@ public class EventsubManager : IEventsubManager
 
         var shard = shardStatus.Value.Data.Where(x => x.Id == shardId).First();
         if (shard.Status != ConduitShardStatus.Enabled || shard.Status != ConduitShardStatus.WebhookCallbackVerificationPending)
-            Logger.Warning("Shard {ShardId} is in a weird state {ShardStatus}.", shard.Id, shard.Status);
+            Logger.Warning("Conduit {ConduitId} is in a weird state - {ShardStatus}.", conduit.Id, shard.Status);
 
         await Redis.StringSetAsync(ConduitKey, conduit.Id);
         await Redis.StringSetAsync(WebhookSecret, secret);
         await Redis.StringSetAsync(ShardKey, shard.Id);
 
-        Logger.Information("Conduit {ConduitId} has been created with shard {ShardId} {ShardStatus}", conduit.Id, shard.Id, shard.Status);
+        Logger.Information("Conduit {ConduitId} has been created - {ShardStatus}", conduit.Id, shard.Status);
     }
 
     #endregion

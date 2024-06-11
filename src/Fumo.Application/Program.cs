@@ -3,7 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
 using Fumo.Application.Web;
-using Fumo.Shared.Eventsub.Commands;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Models;
 using Fumo.Web;
 using MediatR.Extensions.Autofac.DependencyInjection;
@@ -44,7 +44,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterModule(new StartableModule());
 
         var mediatrConfig = MediatRConfigurationBuilder
-            .Create(typeof(EventsubNotificationCommand).Assembly)
+            .Create(typeof(EventsubCommandType).Assembly, typeof(Program).Assembly)
             .WithAllOpenGenericHandlerTypesRegistered()
             .Build();
 
@@ -91,8 +91,11 @@ app.MapControllers();
 
 var token = app.Services.GetRequiredService<CancellationToken>();
 
+app.Start();
+
 await RunStartup(app, token);
-await app.RunAsync(token);
+
+await app.WaitForShutdownAsync(token);
 
 static async Task RunStartup(WebApplication app, CancellationToken ct)
 {

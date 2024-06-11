@@ -4,7 +4,7 @@ using MiniTwitch.Irc.Models;
 
 namespace Fumo.Shared.Models;
 
-public record struct ChatMessage(
+public record ChatMessage(
     ChannelDTO Channel,
     UserDTO User,
     List<string> Input,

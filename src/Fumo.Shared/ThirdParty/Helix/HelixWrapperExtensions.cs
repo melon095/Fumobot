@@ -18,13 +18,14 @@ public static class HelixWrapperExtensions
     where TResult : PaginableResponse<TData>
     {
         List<TData> results = [];
-        results.AddRange(initial.Value.Data);
 
         if (!initial.Success)
         {
             onError(initial);
             return [];
         }
+
+        results.AddRange(initial.Value.Data);
 
         if (!initial.CanPaginate) return results;
 

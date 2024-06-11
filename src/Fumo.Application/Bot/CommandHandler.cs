@@ -37,7 +37,7 @@ internal class CommandHandler : ICommandHandler
         DatabaseContext = databaseContext;
         GlobalPrefix = settings.GlobalPrefix;
 
-        irc.OnMessage += OnMessage;
+        //irc.OnMessage += OnMessage;
 
         Logger.Information("CommandHandler Initialized. Global Prefix is {GlobalPrefix}", GlobalPrefix);
     }

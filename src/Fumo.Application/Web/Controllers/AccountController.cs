@@ -57,7 +57,7 @@ public class AccountController : ControllerBase
         var user = await HttpUserService.GetUser(ct);
 
         if (!await eventsubManager.IsUserEligible(user.TwitchID, EventsubType.ChannelChatMessage, ct))
-            return RedirectToActionPermanent(nameof(Login));
+            return RedirectToAction(nameof(Login));
 
         if (await eventsubManager.CheckSubscribeCooldown(user.TwitchID, EventsubType.ChannelChatMessage))
             return Redirect("/error?code=cooldown");
@@ -73,6 +73,6 @@ public class AccountController : ControllerBase
 
         await eventsubManager.Subscribe(request, ct);
 
-        return RedirectPermanent("/");
+        return Redirect("/");
     }
 }

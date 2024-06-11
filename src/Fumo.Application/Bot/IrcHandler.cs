@@ -3,23 +3,21 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Interfaces;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
-using Fumo.Database.DTO;
-using Quartz;
-using Fumo.BackgroundJobs.SevenTV;
+using Fumo.Database.Extensions;
+using Fumo.Database;
+using Fumo.Shared.MediatorCommands;
+using MediatR;
 
 namespace Fumo.Application.Bot;
 
 public class IrcHandler
 {
-    public event Func<ChatMessage, CancellationToken, ValueTask> OnMessage = default!;
-
     private readonly Serilog.ILogger Logger;
     private readonly ILifetimeScope Scope;
     private readonly AppSettings Settings;
-    private readonly CancellationToken CancellationToken;
+    private readonly CancellationTokenSource CancellationTokenSource;
     private readonly IrcClient IrcClient;
     private readonly IChannelRepository ChannelRepository;
-    private readonly ISchedulerFactory SchedulerFactory;
     private readonly MetricsTracker MetricsTracker;
 
     public IrcHandler(
@@ -29,40 +27,28 @@ public class IrcHandler
         CancellationTokenSource cancellationTokenSource,
         IrcClient ircClient,
         IChannelRepository channelRepository,
-        ISchedulerFactory schedulerFactory,
         MetricsTracker metricsTracker)
     {
         Logger = logger.ForContext<IrcHandler>();
         Scope = scope;
         Settings = settings;
-        CancellationToken = cancellationTokenSource.Token;
+        CancellationTokenSource = cancellationTokenSource;
         IrcClient = ircClient;
         ChannelRepository = channelRepository;
-        SchedulerFactory = schedulerFactory;
         MetricsTracker = metricsTracker;
 
         IrcClient.OnMessage += IrcClient_OnMessage;
-
-        ChannelRepository.OnChannelCreated += ChannelRepository_OnChannelCreated;
-    }
-
-    private async ValueTask ChannelRepository_OnChannelCreated(ChannelDTO arg)
-    {
-        var scheduler = await SchedulerFactory.GetScheduler(CancellationToken);
-
-        // Cluegi
-        await scheduler.TriggerJob(new(nameof(FetchChannelEditorsJob)), CancellationToken);
-        await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), CancellationToken);
     }
 
     public async ValueTask Start()
     {
         Logger.Information("Connecting to TMI");
+        var token = CancellationTokenSource.Token;
 
         var connected = Settings.DebugTMI switch
         {
-            true => await IrcClient.ConnectAsync("ws://localhost:6969/", CancellationToken),
-            false => await IrcClient.ConnectAsync(cancellationToken: CancellationToken)
+            true => await IrcClient.ConnectAsync("ws://localhost:6969/", token),
+            false => await IrcClient.ConnectAsync(cancellationToken: token)
         };
 
         if (!connected)
@@ -73,11 +59,13 @@ public class IrcHandler
 
         Logger.Information("Connected to TMI");
 
-        var channels = ChannelRepository.GetAll();
+        var channels = ChannelRepository.GetAll()
+            .Where(x => x.GetSetting(ChannelSettingKey.ConnectedWithEventsub) == false.ToString())
+            .Select(x => x.TwitchName);
 
         foreach (var channel in channels)
         {
-            await IrcClient.JoinChannel(channel.TwitchName, CancellationToken);
+            await IrcClient.JoinChannel(channel, token);
         }
     }
 
@@ -85,10 +73,11 @@ public class IrcHandler
     {
         try
         {
-            CancellationToken token = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken).Token;
+            var token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
             var messageScope = Scope.BeginLifetimeScope();
             var userRepo = messageScope.Resolve<IUserRepository>();
+            var bus = messageScope.Resolve<IMediator>();
 
             var channel = ChannelRepository.GetByID(privmsg.Channel.Id.ToString());
             if (channel is null) return;
@@ -112,18 +101,9 @@ public class IrcHandler
             bool isBroadcaster = user.TwitchID == channel.TwitchID;
             bool isMod = privmsg.Author.IsMod || isBroadcaster;
 
-            ChatMessage message = new()
-            {
-                Channel = channel,
-                User = user,
-                Input = input,
-                IsBroadcaster = isBroadcaster,
-                IsMod = isMod,
-                Scope = messageScope,
-                ReplyID = privmsg.Id
-            };
+            MessageCommand message = new ChatMessage(channel, user, input, isBroadcaster, isMod, messageScope, privmsg.Id);
 
-            await (OnMessage?.Invoke(message, token) ?? ValueTask.CompletedTask);
+            await bus.Publish(message, token);
         }
         catch (Exception ex)
         {

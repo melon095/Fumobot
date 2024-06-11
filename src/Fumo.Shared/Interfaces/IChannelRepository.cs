@@ -4,9 +4,6 @@ namespace Fumo.Shared.Interfaces;
 
 public interface IChannelRepository
 {
-    event Func<ChannelDTO, ValueTask> OnChannelCreated;
-    event Func<ChannelDTO, ValueTask> OnChannelDeleted;
-
     ValueTask Prepare(CancellationToken ct = default);
 
     IEnumerable<ChannelDTO> GetAll();
@@ -15,7 +12,7 @@ public interface IChannelRepository
 
     ChannelDTO? GetByName(string Name);
 
-    ValueTask Create(ChannelDTO channelDTO, CancellationToken ct = default);
+    ValueTask<ChannelDTO> Create(ChannelDTO channelDTO, CancellationToken ct = default);
 
     ValueTask Delete(ChannelDTO channelDTO, CancellationToken ct = default);
 
