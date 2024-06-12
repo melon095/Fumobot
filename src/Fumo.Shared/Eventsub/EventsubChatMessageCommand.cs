@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Autofac;
+﻿using Autofac;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
@@ -14,7 +13,7 @@ namespace Fumo.Shared.Eventsub;
 
 #region Verification
 
-[EventsubCommand(EventsubCommandType.Verification, "channel.chat.message")]
+[EventsubCommand(EventsubCommandType.Subscribed, "channel.chat.message")]
 internal class ChannelChatMessageVerificationCommand : EventsubVerificationCommand<EventsubBasicCondition>;
 
 internal class ChannelChatMessageVerificationCommandHandler : IRequestHandler<ChannelChatMessageVerificationCommand>

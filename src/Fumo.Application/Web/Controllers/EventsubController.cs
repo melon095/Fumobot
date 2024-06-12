@@ -67,19 +67,15 @@ public class EventsubController : ControllerBase
 
         var jsonBody = JsonSerializer.Deserialize<JsonElement>(body, FumoJson.SnakeCase)!;
 
+        if (messageType == MessageTypeVerification)
+        {
+            var challenge = jsonBody.GetProperty("challenge").GetString()!;
+
+            return Ok(challenge);
+        }
+
         switch (messageType)
         {
-            case MessageTypeVerification:
-                {
-                    var challenge = jsonBody.GetProperty("challenge").GetString()!;
-
-                    var command = EventsubCommandFactory.Create(EventsubCommandType.Verification, type, jsonBody);
-                    if (command is not null)
-                        await Bus.Send(command, ct);
-
-                    return Ok(challenge);
-                }
-
             case MessageTypeRevocation:
                 {
                     var command = EventsubCommandFactory.Create(EventsubCommandType.Revocation, type, jsonBody);

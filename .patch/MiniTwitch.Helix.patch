@@ -1,18 +1,3 @@
-diff --git a/MiniTwitch.Common/MiniTwitch.Common.csproj b/MiniTwitch.Common/MiniTwitch.Common.csproj
-index b584aad..31cc491 100644
---- a/MiniTwitch.Common/MiniTwitch.Common.csproj
-+++ b/MiniTwitch.Common/MiniTwitch.Common.csproj
-@@ -4,8 +4,8 @@
-     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-       <PackageId>MiniTwitch.Common</PackageId>
-       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
--      <PackageVersion>1.1.7</PackageVersion>
--      <Version>1.1.7</Version>
-+      <PackageVersion>1.1.6</PackageVersion>
-+      <Version>1.1.6</Version>
-       <ImplicitUsings>enable</ImplicitUsings>
-       <Nullable>enable</Nullable>
-       <Title>MiniTwitch.Common</Title>
 diff --git a/MiniTwitch.Helix/HelixWrapper.cs b/MiniTwitch.Helix/HelixWrapper.cs
 index 13430d7..cee87bf 100644
 --- a/MiniTwitch.Helix/HelixWrapper.cs
@@ -46,28 +31,6 @@ index 663da7d..b807d19 100644
      public Task<(HttpResponseMessage, TimeSpan)> RequestAsync(RequestData requestObject, CancellationToken ct) => requestObject._method switch
      {
          "POST" => PostAsync(requestObject, ct),
-diff --git a/MiniTwitch.Helix/Internal/Json/SnakeCase.cs b/MiniTwitch.Helix/Internal/Json/SnakeCase.cs
-index d96efe5..3587138 100644
---- a/MiniTwitch.Helix/Internal/Json/SnakeCase.cs
-+++ b/MiniTwitch.Helix/Internal/Json/SnakeCase.cs
-@@ -6,7 +6,7 @@ internal class SnakeCase : ICaseConverter
- 
-     public string? ConvertFromCase(string? str)
-     {
--        if (str is null)
-+        if (str is null || str.Length == 0)
-             return null;
- 
-         const char underscore = '_';
-@@ -27,7 +27,7 @@ internal class SnakeCase : ICaseConverter
- 
-     public string? ConvertToCase(string? str)
-     {
--        if (str is null)
-+        if (str is null || str.Length == 0)
-             return null;
- 
-         const char underscore = '_';
 diff --git a/MiniTwitch.Helix/Requests/NewSubscription.cs b/MiniTwitch.Helix/Requests/NewSubscription.cs
 index 8cb0164..179ebc9 100644
 --- a/MiniTwitch.Helix/Requests/NewSubscription.cs
@@ -112,3 +75,17 @@ index 8cb0164..179ebc9 100644
 +        this.Condition = condition;
      }
  }
+diff --git a/MiniTwitch.Helix/Responses/CreatedSubscription.cs b/MiniTwitch.Helix/Responses/CreatedSubscription.cs
+index 7e71773..f2a2511 100644
+--- a/MiniTwitch.Helix/Responses/CreatedSubscription.cs
++++ b/MiniTwitch.Helix/Responses/CreatedSubscription.cs
+@@ -13,7 +13,8 @@ public class CreatedSubscription : BaseResponse<CreatedSubscription.Info>
+     public int MaxTotalCost { get; init; }
+ 
+     public record Condition(
+-      long UserId
++        string? BroadcasterUserId,
++        string? UserId
+     );
+ 
+     public record Info(

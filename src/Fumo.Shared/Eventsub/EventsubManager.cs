@@ -1,14 +1,19 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using Autofac;
 using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Fumo.Shared.ThirdParty.Helix;
+using MediatR;
 using MiniTwitch.Helix.Enums;
+using MiniTwitch.Helix.Models;
 using MiniTwitch.Helix.Requests;
 using MiniTwitch.Helix.Responses;
 using Serilog;
 using StackExchange.Redis;
 using static MiniTwitch.Helix.Requests.UpdateConduitRequest;
+using static MiniTwitch.Helix.Responses.UnbanRequests;
 
 namespace Fumo.Shared.Eventsub;
 
@@ -23,23 +28,57 @@ public class EventsubManager : IEventsubManager
     private readonly IHelixFactory HelixFactory;
     private readonly ILogger Logger;
     private readonly AppSettings AppSettings;
+    private readonly ILifetimeScope LifetimeScope;
+    private readonly IEventsubCommandRegistry EventsubCommandFactory;
 
     private string? Secret = null;
 
-    public EventsubManager(IOAuthRepository oAuthRepository, IDatabase redis, IHelixFactory helixFactory, ILogger logger, AppSettings settings)
+    public EventsubManager(
+        IOAuthRepository oAuthRepository,
+        IDatabase redis,
+        IHelixFactory helixFactory,
+        ILogger logger,
+        AppSettings settings,
+        ILifetimeScope lifetimeScope,
+        IEventsubCommandRegistry eventsubCommandFactory)
     {
         OAuthRepository = oAuthRepository;
         Redis = redis;
         HelixFactory = helixFactory;
         Logger = logger.ForContext<EventsubManager>();
         AppSettings = settings;
+        LifetimeScope = lifetimeScope;
+        EventsubCommandFactory = eventsubCommandFactory;
     }
 
     private static string CooldownKey(string userId, IEventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
 
-    public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
+    private async ValueTask SendSubscriptionCommand<TCondition>(EventsubSubscriptionRequest<TCondition> request, CreatedSubscription response, CancellationToken ct)
+        where TCondition : class
+    {
+        try
+        {
+            using var scope = LifetimeScope.BeginLifetimeScope();
+            var bus = scope.Resolve<IMediator>();
 
+            var commandType = EventsubCommandFactory.Get((request.Type.Name, EventsubCommandType.Subscribed));
+            if (commandType is null) return;
+
+            // TODO: This is terrible...
+            var dataEl = response.Data[0];
+            var dataElString = JsonSerializer.Serialize(dataEl, FumoJson.SnakeCase);
+            var command = (IRequest)JsonSerializer.Deserialize(dataElString, commandType, FumoJson.SnakeCase)!;
+
+            await bus.Send(command, ct);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to handle eventsub command for {SubscriptionType}", request.Type.Name);
+        }
+    }
+
+    public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
 
     public async ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct)
     {
@@ -69,6 +108,7 @@ public class EventsubManager : IEventsubManager
     {
         var log = Logger.ForContext("UserId", request.UserId).ForContext("SubscriptionType", request.Type.Name);
 
+        HelixResult<CreatedSubscription> response;
         try
         {
             log.Information("Subscribing to {SubscriptionType} for {UserId}");
@@ -85,7 +125,7 @@ public class EventsubManager : IEventsubManager
             var transport = new NewSubscription.EventsubTransport("conduit", conduitId: conduit);
             var helixRequest = request.Type.ToHelix(transport, request.Condition);
 
-            var response = await helix.CreateEventSubSubscription(helixRequest, ct);
+            response = await helix.CreateEventSubSubscription(helixRequest, ct);
             if (!response.Success)
             {
                 log.Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}", response.Message);
@@ -96,15 +136,17 @@ public class EventsubManager : IEventsubManager
 
             if (request.Type.ShouldSetCooldown)
                 await SetCooldown(request.UserId, request.Type);
-
-            return true;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to subscribe to {SubscriptionType} for {UserId}");
+            log.Error(ex, "Failed to subscribe to {SubscriptionType} for {UserId}");
 
             return false;
         }
+
+        await SendSubscriptionCommand(request, response.Value, ct);
+
+        return true;
     }
 
     private static readonly string EnabledEventsubStatus = EventSubStatus.Enabled.ToString();
