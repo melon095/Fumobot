@@ -11,7 +11,6 @@ public interface IEventsubCommandRegistry
     Type? Get(CommandKey key);
 }
 
-
 public class EventsubCommandRegistry : IEventsubCommandRegistry
 {
     private readonly Dictionary<CommandKey, Type> CommandMap = [];

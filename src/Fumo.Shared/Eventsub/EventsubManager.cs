@@ -29,7 +29,7 @@ public class EventsubManager : IEventsubManager
     private readonly ILogger Logger;
     private readonly AppSettings AppSettings;
     private readonly ILifetimeScope LifetimeScope;
-    private readonly IEventsubCommandRegistry EventsubCommandFactory;
+    private readonly IEventsubCommandRegistry EventsubCommandRegistry;
 
     private string? Secret = null;
 
@@ -40,7 +40,7 @@ public class EventsubManager : IEventsubManager
         ILogger logger,
         AppSettings settings,
         ILifetimeScope lifetimeScope,
-        IEventsubCommandRegistry eventsubCommandFactory)
+        IEventsubCommandRegistry eventsubCommandRegistry)
     {
         OAuthRepository = oAuthRepository;
         Redis = redis;
@@ -48,33 +48,32 @@ public class EventsubManager : IEventsubManager
         Logger = logger.ForContext<EventsubManager>();
         AppSettings = settings;
         LifetimeScope = lifetimeScope;
-        EventsubCommandFactory = eventsubCommandFactory;
+        EventsubCommandRegistry = eventsubCommandRegistry;
     }
 
     private static string CooldownKey(string userId, IEventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
 
-    private async ValueTask SendSubscriptionCommand<TCondition>(EventsubSubscriptionRequest<TCondition> request, CreatedSubscription response, CancellationToken ct)
+    private async ValueTask SendSubscriptionCommand<TCondition>(EventsubType<TCondition> request, CreatedSubscription.Info left, CancellationToken ct)
         where TCondition : class
     {
         try
         {
-            using var scope = LifetimeScope.BeginLifetimeScope();
-            var bus = scope.Resolve<IMediator>();
-
-            var commandType = EventsubCommandFactory.Get((request.Type.Name, EventsubCommandType.Subscribed));
+            var commandType = EventsubCommandRegistry.Get((request.Name, EventsubCommandType.Subscribed));
             if (commandType is null) return;
 
-            // TODO: This is terrible...
-            var dataEl = response.Data[0];
-            var dataElString = JsonSerializer.Serialize(dataEl, FumoJson.SnakeCase);
-            var command = (IRequest)JsonSerializer.Deserialize(dataElString, commandType, FumoJson.SnakeCase)!;
+            var instance = Activator.CreateInstance(commandType, left);
 
-            await bus.Send(command, ct);
+            if (instance is IRequest command)
+            {
+                using var scope = LifetimeScope.BeginLifetimeScope();
+                var bus = scope.Resolve<IMediator>();
+                await bus.Send(command, ct);
+            }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to handle eventsub command for {SubscriptionType}", request.Type.Name);
+            Logger.Error(ex, "Failed to handle eventsub command for {SubscriptionType}", request.Name);
         }
     }
 
@@ -144,7 +143,7 @@ public class EventsubManager : IEventsubManager
             return false;
         }
 
-        await SendSubscriptionCommand(request, response.Value, ct);
+        await SendSubscriptionCommand(request.Type, response.Value.Data[0], ct);
 
         return true;
     }

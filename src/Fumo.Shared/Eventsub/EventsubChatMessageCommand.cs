@@ -6,6 +6,7 @@ using Fumo.Shared.Interfaces;
 using Fumo.Shared.MediatorCommands;
 using Fumo.Shared.Models;
 using MediatR;
+using MiniTwitch.Helix.Responses;
 using MiniTwitch.Irc;
 using Serilog;
 
@@ -14,7 +15,8 @@ namespace Fumo.Shared.Eventsub;
 #region Verification
 
 [EventsubCommand(EventsubCommandType.Subscribed, "channel.chat.message")]
-internal class ChannelChatMessageVerificationCommand : EventsubVerificationCommand<EventsubBasicCondition>;
+internal record ChannelChatMessageVerificationCommand(CreatedSubscription.Info condition)
+    : EventsubVerificationCommand<EventsubBasicCondition>(condition.Condition);
 
 internal class ChannelChatMessageVerificationCommandHandler : IRequestHandler<ChannelChatMessageVerificationCommand>
 {

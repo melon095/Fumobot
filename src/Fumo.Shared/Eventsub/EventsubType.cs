@@ -32,7 +32,3 @@ public record EventsubType<TCondition>(string Name, string[] RequiredScopes, Tim
 
 public record EventsubType(string Name, string[] RequiredScopes, string Version = "1", TimeSpan SuccessCooldown = default)
     : EventsubType<EventsubBasicCondition>(Name, RequiredScopes, SuccessCooldown, Version);
-
-public record EventsubBasicCondition(
-    [property: JsonPropertyName("broadcaster_user_id")] string BroadcasterId,
-    string UserId);

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using MediatR;
+using MiniTwitch.Helix.Responses;
 
 namespace Fumo.Shared.Eventsub;
 
@@ -15,9 +16,13 @@ public record MessageTypeRevocationBody(EventsubSubscription Subscription);
 public record struct EventsubSubscriptionRequest<TCondition>(string UserId, EventsubType<TCondition> Type, TCondition Condition)
     where TCondition : class;
 
-public class EventsubVerificationCommand<TCondition> : IRequest
+public record EventsubVerificationCommand<TCondition>(TCondition Condition) : IRequest;
+public record EventsubBasicCondition(
+    [property: JsonPropertyName("broadcaster_user_id")] string BroadcasterId,
+    string UserId)
 {
-    public TCondition Condition { get; set; }
+    public static implicit operator EventsubBasicCondition(CreatedSubscription.Condition left)
+        => new(left.BroadcasterUserId ?? "", left.UserId ?? "");
 }
 
 #region channel.chat.message
