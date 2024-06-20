@@ -1,13 +1,17 @@
 ﻿using Fumo.BackgroundJobs.SevenTV;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Mediator;
 using MediatR;
 using Quartz;
 
-namespace Fumo.Shared.Mediator;
+namespace Fumo.Application.MediatorHandlers;
 
 #region Created
 
-public class OnChannelCreatedCommandHandler(IChannelRepository channelRepository, ISchedulerFactory schedulerFactory) : INotificationHandler<OnChannelCreatedCommand>
+public class OnChannelCreatedCommandHandler(
+    IChannelRepository channelRepository,
+    ISchedulerFactory schedulerFactory)
+        : INotificationHandler<OnChannelCreatedCommand>
 {
     private readonly IChannelRepository ChannelRepository = channelRepository;
     private readonly ISchedulerFactory SchedulerFactory = schedulerFactory;
@@ -19,7 +23,6 @@ public class OnChannelCreatedCommandHandler(IChannelRepository channelRepository
         await scheduler.TriggerJob(new(nameof(FetchChannelEditorsJob)), ct);
         await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), ct);
     }
-
 }
 
 #endregion

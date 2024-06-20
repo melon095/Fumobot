@@ -18,6 +18,6 @@ public class IpRateLimitMiddleware : RateLimitMiddleware<IpRateLimitProcessor>
 
     protected override void LogBlockedRequest(HttpContext httpContext, ClientRequestIdentity identity, RateLimitCounter counter, RateLimitRule rule)
     {
-        // DONT LOGGING BLOCKED REQUESTS
+        // DONT LOG BLOCKED REQUESTS
     }
 }

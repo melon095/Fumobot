@@ -6,7 +6,7 @@ public static class ChannelDTOExtensions
 {
     public static string GetSetting(this ChannelDTO channel, string key)
     {
-        return channel.Settings.FirstOrDefault(x => x.Key == key)?.Value ?? "";
+        return channel.Settings.FirstOrDefault(x => x.Key == key)?.Value ?? string.Empty;
     }
 
     public static string SetSetting(this ChannelDTO channel, string key, string value)

@@ -1,83 +1,42 @@
 ﻿using Autofac;
+using System.Diagnostics;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.MediatorCommands;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Exceptions;
-using System.Diagnostics;
+using MediatR;
 
-namespace Fumo.Application.Bot;
+namespace Fumo.Application.MediatorHandlers;
 
-internal class CommandHandler : ICommandHandler
+public class MessageReceivedCommandHandler(
+    Serilog.ILogger logger,
+    ICooldownHandler cooldownHandler,
+    IMessageSenderHandler messageSenderHandler,
+    CommandRepository commandRepository,
+    DatabaseContext databaseContext,
+    AppSettings settings)
+        : INotificationHandler<MessageReceivedCommand>
 {
-    private readonly Serilog.ILogger Logger;
-    private readonly ICooldownHandler CooldownHandler;
-    private readonly IMessageSenderHandler MessageSenderHandler;
-    private readonly CommandRepository CommandRepository;
-    private readonly DatabaseContext DatabaseContext;
-    private readonly string GlobalPrefix;
+    private readonly Serilog.ILogger Logger = logger.ForContext<MessageReceivedCommandHandler>();
+    private readonly ICooldownHandler CooldownHandler = cooldownHandler;
+    private readonly IMessageSenderHandler MessageSenderHandler = messageSenderHandler;
+    private readonly CommandRepository CommandRepository = commandRepository;
+    private readonly DatabaseContext DatabaseContext = databaseContext;
+    private readonly string GlobalPrefix = settings.GlobalPrefix;
 
-    public CommandHandler(
-        IrcHandler irc,
-        Serilog.ILogger logger,
-        ICooldownHandler cooldownHandler,
-        IMessageSenderHandler messageSenderHandler,
-        AppSettings settings,
-        CommandRepository commandRepository,
-        DatabaseContext databaseContext)
-    {
-        Logger = logger.ForContext<CommandHandler>();
-        CooldownHandler = cooldownHandler;
-        CommandRepository = commandRepository;
-        MessageSenderHandler = messageSenderHandler;
-        DatabaseContext = databaseContext;
-        GlobalPrefix = settings.GlobalPrefix;
-
-        //irc.OnMessage += OnMessage;
-
-        Logger.Information("CommandHandler Initialized. Global Prefix is {GlobalPrefix}", GlobalPrefix);
-    }
-
-    // On messages that begin with the channel/global prefix are executed.
-    private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
-    {
-        var prefix = GetPrefixForChannel(message.Channel);
-        if (!message.Input[0].StartsWith(prefix)) return;
-
-        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
-        if (commandName is null) return;
-
-        message.Input.Clear();
-        message.Input.AddRange(input);
-
-        var result = await TryExecute(message, commandName, cancellationToken);
-
-        if (result is null) return;
-
-        ScheduleMessageSpecification spec = new(message.Channel.TwitchName, result.Message)
+    private string GetPrefix(ChannelDTO channel)
+        => channel.GetSetting(ChannelSettingKey.Prefix) switch
         {
-            IgnoreBanphrase = result.IgnoreBanphrase,
-            ReplyID = result.ReplyID,
+            string prefix when !string.IsNullOrEmpty(prefix) => prefix,
+            _ => GlobalPrefix,
         };
 
-        MessageSenderHandler.ScheduleMessage(spec);
-    }
-
-    private string GetPrefixForChannel(ChannelDTO channel)
-    {
-        var channelPrefix = channel.GetSetting(ChannelSettingKey.Prefix);
-
-        if (!string.IsNullOrEmpty(channelPrefix))
-        {
-            return channelPrefix;
-        }
-
-        return GlobalPrefix;
-    }
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
@@ -110,7 +69,7 @@ internal class CommandHandler : ICommandHandler
         }
     }
 
-    public async ValueTask<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
+    private async ValueTask<CommandResult?> Execute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
     {
         var commandScope = CommandRepository.CreateCommandScope(commandName, message.Scope);
         if (commandScope is null) return null;
@@ -208,5 +167,33 @@ internal class CommandHandler : ICommandHandler
                 await DatabaseContext.SaveChangesAsync(cancellationToken);
             }
         }
+    }
+
+    public async Task Handle(MessageReceivedCommand notification, CancellationToken cancellationToken)
+    {
+        var message = notification.Message;
+
+        var prefix = GetPrefix(message.Channel);
+        if (!message.Input[0].StartsWith(prefix)) return;
+
+        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
+        if (commandName is null) return;
+
+        message.Input.Clear();
+        message.Input.AddRange(input);
+
+        var result = await Execute(message, commandName, cancellationToken);
+        if (result is null) return;
+
+        // TODO: Do something better here.
+        // TODO: Use Helix to send messages.
+        ScheduleMessageSpecification spec = new(message.Channel.TwitchName, result.Message)
+        {
+            IgnoreBanphrase = result.IgnoreBanphrase,
+            ReplyID = result.ReplyID,
+        };
+
+        Logger.Information("Sending message {Spec}", spec);
+        //MessageSenderHandler.ScheduleMessage(spec);
     }
 }

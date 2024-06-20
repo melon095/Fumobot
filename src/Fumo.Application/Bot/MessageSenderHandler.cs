@@ -39,8 +39,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         ChannelRepository = channelRepository;
         CancellationToken = cancellationTokenSource.Token;
 
-        //channelRepository.OnChannelDeleted += DoCleanChannelQueue;
-
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
 

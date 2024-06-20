@@ -12,28 +12,28 @@ using Serilog;
 
 namespace Fumo.Shared.Eventsub;
 
-#region Verification
+#region Subscribed
 
 [EventsubCommand(EventsubCommandType.Subscribed, "channel.chat.message")]
-internal record ChannelChatMessageVerificationCommand(CreatedSubscription.Info Info)
+internal record ChannelChatMessageSubscribedCommand(CreatedSubscription.Info Info)
     : EventsubVerificationCommand<EventsubBasicCondition>(Info.Condition);
 
-internal class ChannelChatMessageVerificationCommandHandler : IRequestHandler<ChannelChatMessageVerificationCommand>
+internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<ChannelChatMessageSubscribedCommand>
 {
     private readonly ILogger Logger;
     private readonly IChannelRepository ChannelRepository;
     private readonly IUserRepository UserRepository;
     private readonly IrcClient IrcClient;
 
-    public ChannelChatMessageVerificationCommandHandler(ILogger logger, IChannelRepository channelRepository, IUserRepository userRepository, IrcClient ircClient)
+    public ChannelChatMessageSubscribedCommandHandler(ILogger logger, IChannelRepository channelRepository, IUserRepository userRepository, IrcClient ircClient)
     {
-        Logger = logger.ForContext<ChannelChatMessageVerificationCommandHandler>();
+        Logger = logger.ForContext<ChannelChatMessageSubscribedCommandHandler>();
         ChannelRepository = channelRepository;
         UserRepository = userRepository;
         IrcClient = ircClient;
     }
 
-    public async Task Handle(ChannelChatMessageVerificationCommand request, CancellationToken ct)
+    public async Task Handle(ChannelChatMessageSubscribedCommand request, CancellationToken ct)
     {
         var user = await UserRepository.SearchID(request.Condition.BroadcasterId, ct);
         if (user is null)
@@ -124,7 +124,7 @@ internal class ChatMessageNotificationCommandHandler(
 
             var isBroadcaster = user.TwitchID == channel.TwitchID;
 
-            MessageCommand message = new ChatMessage(
+            MessageReceivedCommand message = new ChatMessage(
                 channel,
                 user,
                 input,

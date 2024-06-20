@@ -44,11 +44,6 @@ internal class SingletonModule(AppSettings settings) : Module
         builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot:"));
 
         builder
-            .RegisterType<CommandHandler>()
-            .As<ICommandHandler>()
-            .SingleInstance();
-
-        builder
             .RegisterType<IrcHandler>()
             .AsSelf()
             .SingleInstance();

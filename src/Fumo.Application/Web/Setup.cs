@@ -10,6 +10,7 @@ using StackExchange.Redis;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using AspNetCoreRateLimit;
+using System.Diagnostics;
 
 namespace Fumo.Application.Web;
 
@@ -80,12 +81,8 @@ public static class Setup
     public static WebApplicationBuilder SetupHTTPAuthentication(this WebApplicationBuilder builder, AppSettings settings)
     {
         builder.Services
-            .AddAuthentication(x =>
-            {
-                x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = TwitchAuthenticationDefaults.AuthenticationScheme;
-            })
-            .AddCookie(x =>
+            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, x =>
             {
                 x.LoginPath = "/Account/Login";
                 x.LogoutPath = "/Account/Logout";

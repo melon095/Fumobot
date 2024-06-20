@@ -2,20 +2,23 @@
 using Fumo.Database;
 using Fumo.Shared.Eventsub;
 using Fumo.Shared.Interfaces;
+using Fumo.Shared.Mediator;
 using Fumo.Shared.Repositories;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MiniTwitch.Helix.Models;
 
 namespace Fumo.Application.Startable;
 
 internal class InitialDataStarter(
-        Serilog.ILogger Logger,
-        DescriptionService DescriptionService,
-        CommandRepository CommandRepository,
-        DatabaseContext DbContext,
-        IChannelRepository channelRepository,
-        IEventsubManager eventsubManager,
-        IEventsubCommandRegistry eventsubCommandRegistry) : IAsyncStartable
+    Serilog.ILogger Logger,
+    DescriptionService DescriptionService,
+    CommandRepository CommandRepository,
+    DatabaseContext DbContext,
+    IChannelRepository channelRepository,
+    IEventsubManager eventsubManager,
+    IEventsubCommandRegistry eventsubCommandRegistry)
+        : IAsyncStartable
 {
     public async ValueTask Start(CancellationToken ct)
     {

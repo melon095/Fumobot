@@ -23,10 +23,12 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("Login"), AllowAnonymous]
-    public IActionResult Login() => Challenge(new AuthenticationProperties { RedirectUri = "/" }, TwitchAuthenticationDefaults.AuthenticationScheme);
+    public IActionResult Login()
+        => Challenge(new AuthenticationProperties { RedirectUri = "/" }, TwitchAuthenticationDefaults.AuthenticationScheme);
 
     [HttpGet("Logout")]
-    public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
+    public IActionResult Logout()
+        => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
 
     [HttpGet("__BotLogin")]
     public async ValueTask<IActionResult> BotLogin(CancellationToken ct)
