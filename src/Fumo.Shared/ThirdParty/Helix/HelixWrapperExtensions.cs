@@ -4,14 +4,14 @@ namespace Fumo.Shared.ThirdParty.Helix;
 
 public static class HelixWrapperExtensions
 {
-    public static async ValueTask<IEnumerable<TData>> PaginationHelper<TResult, TData>(
+    public static async ValueTask<List<TData>> PaginationHelper<TResult, TData>(
         this Task<HelixResult<TResult>> initial,
         Action<HelixResult<TResult>> onError,
         CancellationToken ct)
         where TResult : PaginableResponse<TData>
         => await (await initial).PaginationHelper<TResult, TData>(onError, ct);
 
-    public static async ValueTask<IEnumerable<TData>> PaginationHelper<TResult, TData>(
+    public static async ValueTask<List<TData>> PaginationHelper<TResult, TData>(
         this HelixResult<TResult> initial,
         Action<HelixResult<TResult>> onError,
         CancellationToken ct)

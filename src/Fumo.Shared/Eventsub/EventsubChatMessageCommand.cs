@@ -15,8 +15,8 @@ namespace Fumo.Shared.Eventsub;
 #region Verification
 
 [EventsubCommand(EventsubCommandType.Subscribed, "channel.chat.message")]
-internal record ChannelChatMessageVerificationCommand(CreatedSubscription.Info condition)
-    : EventsubVerificationCommand<EventsubBasicCondition>(condition.Condition);
+internal record ChannelChatMessageVerificationCommand(CreatedSubscription.Info Info)
+    : EventsubVerificationCommand<EventsubBasicCondition>(Info.Condition);
 
 internal class ChannelChatMessageVerificationCommandHandler : IRequestHandler<ChannelChatMessageVerificationCommand>
 {

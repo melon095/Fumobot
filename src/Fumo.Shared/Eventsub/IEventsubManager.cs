@@ -11,6 +11,9 @@ public interface IEventsubManager
     ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
         where TCondition : class;
 
+    ValueTask<bool> Unsubscribe<TCondition>(string userId, EventsubType<TCondition> type, CancellationToken ct)
+        where TCondition : class;
+
     ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct);
 
     ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct);

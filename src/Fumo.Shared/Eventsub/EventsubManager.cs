@@ -26,7 +26,6 @@ public class EventsubManager(
     private const string ConduitKey = "eventsub:conduit";
     private const string WebhookSecret = "eventsub:conduit:secret";
     private const string ShardKey = "eventsub:conduit:shard";
-    private static readonly string EnabledEventsubStatusString = EventSubStatus.Enabled.ToString();
 
     private readonly IOAuthRepository OAuthRepository = oAuthRepository;
     private readonly IDatabase Redis = redis;
@@ -64,6 +63,18 @@ public class EventsubManager(
         }
     }
 
+    private async ValueTask<IEnumerable<EventSubSubscriptions.Subscription>> GetSubscriptions(IEventsubType type, string userId, CancellationToken ct)
+    {
+        var helix = await HelixFactory.Create(ct);
+
+        var subscriptions = await helix.
+            GetEventSubSubscriptions(userId: long.Parse(userId), cancellationToken: ct).
+            PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
+            ((x) => Logger.Error("Failed to get '{SubscriptionType}' subscriptions for {UserId}: {Error}", type.Name, userId, x.Message), ct);
+
+        return subscriptions.Where(x => x.Type == type.Name);
+    }
+
     public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
 
     public async ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct)
@@ -78,10 +89,8 @@ public class EventsubManager(
     public async ValueTask<bool> CheckSubscribeCooldown(string userId, IEventsubType type)
         => await Redis.KeyExistsAsync(CooldownKey(userId, type));
 
-
     public async ValueTask SetCooldown(string userId, IEventsubType type)
         => await Redis.StringSetAsync(CooldownKey(userId, type), "1", type.SuccessCooldown, When.Always, CommandFlags.FireAndForget);
-
 
     public async ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
         where TCondition : class
@@ -129,17 +138,19 @@ public class EventsubManager(
         return true;
     }
 
-    public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
+    public async ValueTask<bool> Unsubscribe<TCondition>(string userId, EventsubType<TCondition> type, CancellationToken ct)
+        where TCondition : class
     {
-        var helix = await HelixFactory.Create(ct);
+        var log = Logger.ForContext("UserId", userId).ForContext("SubscriptionType", type.Name);
 
-        var subscriptions = await helix.
-            GetEventSubSubscriptions(userId: long.Parse(userId), cancellationToken: ct).
-            PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
-            ((x) => Logger.Error("Failed to get '{SubscriptionType}' subscriptions for {UserId}: {Error}", type.Name, userId, x.Message), ct);
+        log.Information("Unsubscribing from {SubscriptionType} for {UserId}");
 
-        return subscriptions.Any(x => x.Status == EnabledEventsubStatusString && x.Type == type.Name);
+        return false;
     }
+
+    public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
+        => (await GetSubscriptions(type, userId, ct)).Any(x => x.Status == EventSubStatus.Enabled);
+
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct)
     {
@@ -150,7 +161,7 @@ public class EventsubManager(
             PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionTypes}' subscriptions: {Error}", type.Name, x.Message), ct);
 
-        return subscriptions.Any(x => x.Status == EnabledEventsubStatusString);
+        return subscriptions.Any(x => x.Status == EventSubStatus.Enabled);
     }
 
     #region Conduit

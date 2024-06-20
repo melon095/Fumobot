@@ -1,91 +1,20 @@
-diff --git a/MiniTwitch.Helix/HelixWrapper.cs b/MiniTwitch.Helix/HelixWrapper.cs
-index 13430d7..cee87bf 100644
---- a/MiniTwitch.Helix/HelixWrapper.cs
-+++ b/MiniTwitch.Helix/HelixWrapper.cs
-@@ -36,6 +36,8 @@ public class HelixWrapper
-         this.UserId = userId;
-     }
+diff --git a/MiniTwitch.Helix/Responses/EventSubSubscriptions.cs b/MiniTwitch.Helix/Responses/EventSubSubscriptions.cs
+index c9ed3c0..53e8a0d 100644
+--- a/MiniTwitch.Helix/Responses/EventSubSubscriptions.cs
++++ b/MiniTwitch.Helix/Responses/EventSubSubscriptions.cs
+@@ -1,4 +1,5 @@
+ using System.Text.Json.Serialization;
++using MiniTwitch.Helix.Enums;
+ using MiniTwitch.Helix.Models;
  
-+    public void SetAccessToken(string accessToken) => _all.ApiClient.SetAccessToken(accessToken);
-+
-     public Task<HelixResult<Commercial>> StartCommercial(
-         NewCommercial body,
-         CancellationToken cancellationToken = default)
-diff --git a/MiniTwitch.Helix/Internal/HelixApiClient.cs b/MiniTwitch.Helix/Internal/HelixApiClient.cs
-index 663da7d..b807d19 100644
---- a/MiniTwitch.Helix/Internal/HelixApiClient.cs
-+++ b/MiniTwitch.Helix/Internal/HelixApiClient.cs
-@@ -30,12 +30,14 @@ internal sealed class HelixApiClient
+ namespace MiniTwitch.Helix.Responses;
+@@ -19,7 +20,8 @@ public class EventSubSubscriptions : PaginableResponse<EventSubSubscriptions.Sub
  
-     public HelixApiClient(string token, long userId, ILogger? logger, string tokenValidationUrl)
-     {
--        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-+        _httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
-         _tokenValidationUrl = tokenValidationUrl;
-         _logger = logger;
-         this.UserId = userId;
-     }
- 
-+    public void SetAccessToken(string token) => _httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
-+
-     public Task<(HttpResponseMessage, TimeSpan)> RequestAsync(RequestData requestObject, CancellationToken ct) => requestObject._method switch
-     {
-         "POST" => PostAsync(requestObject, ct),
-diff --git a/MiniTwitch.Helix/Requests/NewSubscription.cs b/MiniTwitch.Helix/Requests/NewSubscription.cs
-index 8cb0164..179ebc9 100644
---- a/MiniTwitch.Helix/Requests/NewSubscription.cs
-+++ b/MiniTwitch.Helix/Requests/NewSubscription.cs
-@@ -5,6 +5,7 @@ public class NewSubscription
-     public string Type { get; }
-     public string Version { get; }
-     public EventsubTransport Transport { get; }
-+    public object Condition { get; }
- 
-     public readonly struct EventsubTransport
-     {
-@@ -12,25 +13,29 @@ public class NewSubscription
-         public string? Callback { get; }
-         public string? Secret { get; }
-         public string? SessionId { get; }
-+        public string? ConduitId { get; }
- 
-         public EventsubTransport(
-             string method,
-             string? callback = null,
-             string? secret = null,
--            string? sessionId = null
-+            string? sessionId = null,
-+            string? conduitId = null
-         )
-         {
-             this.Method = method;
-             this.Callback = callback;
-             this.Secret = secret;
-             this.SessionId = sessionId;
-+            this.ConduitId = conduitId;
-         }
-     }
- 
--    public NewSubscription(string type, string version, EventsubTransport transport)
-+    public NewSubscription(string type, string version, EventsubTransport transport, object condition)
-     {
-         this.Type = type;
-         this.Version = version;
-         this.Transport = transport;
-+        this.Condition = condition;
-     }
- }
-diff --git a/MiniTwitch.Helix/Responses/CreatedSubscription.cs b/MiniTwitch.Helix/Responses/CreatedSubscription.cs
-index 7e71773..f2a2511 100644
---- a/MiniTwitch.Helix/Responses/CreatedSubscription.cs
-+++ b/MiniTwitch.Helix/Responses/CreatedSubscription.cs
-@@ -13,7 +13,8 @@ public class CreatedSubscription : BaseResponse<CreatedSubscription.Info>
-     public int MaxTotalCost { get; init; }
- 
-     public record Condition(
--      long UserId
-+        string? BroadcasterUserId,
-+        string? UserId
-     );
- 
-     public record Info(
+     public record Subscription(
+         string Id,
+-        string Status,
++        [property: JsonConverter(typeof(JsonStringEnumConverter))]
++        EventSubStatus Status,
+         string Type,
+         string Version,
+         Condition Condition,

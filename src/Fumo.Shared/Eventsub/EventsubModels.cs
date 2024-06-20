@@ -13,7 +13,7 @@ public record MessageTypeNotificationBody(EventsubSubscription Subscription, Jso
 
 public record MessageTypeRevocationBody(EventsubSubscription Subscription);
 
-public record struct EventsubSubscriptionRequest<TCondition>(string UserId, EventsubType<TCondition> Type, TCondition Condition)
+public record EventsubSubscriptionRequest<TCondition>(string UserId, EventsubType<TCondition> Type, TCondition Condition)
     where TCondition : class;
 
 public record EventsubVerificationCommand<TCondition>(TCondition Condition) : IRequest;
