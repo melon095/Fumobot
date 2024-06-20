@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using Autofac;
+﻿using Autofac;
 using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Fumo.Shared.ThirdParty.Helix;
@@ -13,43 +10,33 @@ using MiniTwitch.Helix.Responses;
 using Serilog;
 using StackExchange.Redis;
 using static MiniTwitch.Helix.Requests.UpdateConduitRequest;
-using static MiniTwitch.Helix.Responses.UnbanRequests;
 
 namespace Fumo.Shared.Eventsub;
 
-public class EventsubManager : IEventsubManager
+public class EventsubManager(
+    IOAuthRepository oAuthRepository,
+    IDatabase redis,
+    IHelixFactory helixFactory,
+    ILogger logger,
+    AppSettings settings,
+    ILifetimeScope lifetimeScope,
+    IEventsubCommandRegistry eventsubCommandRegistry)
+        : IEventsubManager
 {
     private const string ConduitKey = "eventsub:conduit";
     private const string WebhookSecret = "eventsub:conduit:secret";
     private const string ShardKey = "eventsub:conduit:shard";
+    private static readonly string EnabledEventsubStatusString = EventSubStatus.Enabled.ToString();
 
-    private readonly IOAuthRepository OAuthRepository;
-    private readonly IDatabase Redis;
-    private readonly IHelixFactory HelixFactory;
-    private readonly ILogger Logger;
-    private readonly AppSettings AppSettings;
-    private readonly ILifetimeScope LifetimeScope;
-    private readonly IEventsubCommandRegistry EventsubCommandRegistry;
+    private readonly IOAuthRepository OAuthRepository = oAuthRepository;
+    private readonly IDatabase Redis = redis;
+    private readonly IHelixFactory HelixFactory = helixFactory;
+    private readonly ILogger Logger = logger.ForContext<EventsubManager>();
+    private readonly AppSettings AppSettings = settings;
+    private readonly ILifetimeScope LifetimeScope = lifetimeScope;
+    private readonly IEventsubCommandRegistry EventsubCommandRegistry = eventsubCommandRegistry;
 
     private string? Secret = null;
-
-    public EventsubManager(
-        IOAuthRepository oAuthRepository,
-        IDatabase redis,
-        IHelixFactory helixFactory,
-        ILogger logger,
-        AppSettings settings,
-        ILifetimeScope lifetimeScope,
-        IEventsubCommandRegistry eventsubCommandRegistry)
-    {
-        OAuthRepository = oAuthRepository;
-        Redis = redis;
-        HelixFactory = helixFactory;
-        Logger = logger.ForContext<EventsubManager>();
-        AppSettings = settings;
-        LifetimeScope = lifetimeScope;
-        EventsubCommandRegistry = eventsubCommandRegistry;
-    }
 
     private static string CooldownKey(string userId, IEventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
@@ -89,18 +76,12 @@ public class EventsubManager : IEventsubManager
     }
 
     public async ValueTask<bool> CheckSubscribeCooldown(string userId, IEventsubType type)
-    {
-        var key = CooldownKey(userId, type);
+        => await Redis.KeyExistsAsync(CooldownKey(userId, type));
 
-        return await Redis.KeyExistsAsync(key);
-    }
 
     public async ValueTask SetCooldown(string userId, IEventsubType type)
-    {
-        var key = CooldownKey(userId, type);
+        => await Redis.StringSetAsync(CooldownKey(userId, type), "1", type.SuccessCooldown, When.Always, CommandFlags.FireAndForget);
 
-        await Redis.StringSetAsync(key, "1", type.SuccessCooldown, When.Always, CommandFlags.FireAndForget);
-    }
 
     public async ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
         where TCondition : class
@@ -148,8 +129,6 @@ public class EventsubManager : IEventsubManager
         return true;
     }
 
-    private static readonly string EnabledEventsubStatus = EventSubStatus.Enabled.ToString();
-
     public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
     {
         var helix = await HelixFactory.Create(ct);
@@ -159,7 +138,7 @@ public class EventsubManager : IEventsubManager
             PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionType}' subscriptions for {UserId}: {Error}", type.Name, userId, x.Message), ct);
 
-        return subscriptions.Any(x => x.Status == EnabledEventsubStatus && x.Type == type.Name);
+        return subscriptions.Any(x => x.Status == EnabledEventsubStatusString && x.Type == type.Name);
     }
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct)
@@ -171,7 +150,7 @@ public class EventsubManager : IEventsubManager
             PaginationHelper<EventSubSubscriptions, EventSubSubscriptions.Subscription>
             ((x) => Logger.Error("Failed to get '{SubscriptionTypes}' subscriptions: {Error}", type.Name, x.Message), ct);
 
-        return subscriptions.Any(x => x.Status == EnabledEventsubStatus);
+        return subscriptions.Any(x => x.Status == EnabledEventsubStatusString);
     }
 
     #region Conduit
@@ -228,11 +207,12 @@ public class EventsubManager : IEventsubManager
     public async ValueTask CreateConduit(CancellationToken ct)
     {
         const string shardId = "0";
+        const int shardCount = 1;
 
         var helix = await HelixFactory.Create(ct);
         var secret = CreateSecret();
 
-        var conduits = await helix.CreateConduits(1, ct);
+        var conduits = await helix.CreateConduits(shardCount, ct);
         if (!conduits.Success)
         {
             Logger.Error("Failed to create conduit: {Error}", conduits.Message);
