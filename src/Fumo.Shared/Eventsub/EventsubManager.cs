@@ -143,9 +143,39 @@ public class EventsubManager(
     {
         var log = Logger.ForContext("UserId", userId).ForContext("SubscriptionType", type.Name);
 
-        log.Information("Unsubscribing from {SubscriptionType} for {UserId}");
+        try
+        {
+            var subscription = (await GetSubscriptions(type, userId, ct))
+                .Where(x => x.Status == EventSubStatus.Enabled)
+                .FirstOrDefault();
 
-        return false;
+            if (subscription is null)
+            {
+                log.Warning("No active subscription found for {SubscriptionType} for {UserId}", type.Name, userId);
+                return false;
+            }
+
+            log.Information("Unsubscribing from {SubscriptionType} for {UserId}");
+
+            var helix = await HelixFactory.Create(ct);
+            var response = await helix.DeleteEventSubSubscription(subscription.Id, ct);
+
+            if (!response.Success)
+            {
+                log.Error("Failed to unsubscribe from {SubscriptionType} for {UserId}: {Error}", type.Name, userId, response.Message);
+                return false;
+            }
+
+            log.Information("Successfully unsubscribed from {SubscriptionType} for {UserId}");
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Failed to unsubscribe from {SubscriptionType} for {UserId}");
+
+            return false;
+        }
+
+        return true;
     }
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
