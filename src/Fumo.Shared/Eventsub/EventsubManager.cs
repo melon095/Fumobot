@@ -145,15 +145,9 @@ public class EventsubManager(
 
         try
         {
-            var subscription = (await GetSubscriptions(type, userId, ct))
-                .Where(x => x.Status == EventSubStatus.Enabled)
-                .FirstOrDefault();
+            var subscription = (await GetSubscriptions(type, userId, ct)).FirstOrDefault();
 
-            if (subscription is null)
-            {
-                log.Warning("No active subscription found for {SubscriptionType} for {UserId}", type.Name, userId);
-                return false;
-            }
+            if (subscription is null) return false;
 
             log.Information("Unsubscribing from {SubscriptionType} for {UserId}");
 

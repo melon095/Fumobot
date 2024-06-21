@@ -18,8 +18,19 @@ internal class SingletonModule(AppSettings settings) : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
+        var commandRepository = new CommandRepository(Log.Logger);
+        commandRepository.LoadAssemblyCommands();
+
+        foreach (var command in commandRepository.Commands)
+        {
+            builder
+                .RegisterType(command.Value.GetType())
+                .AsSelf()
+                .InstancePerDependency();
+        }
+
         builder
-            .RegisterType<CommandRepository>()
+            .RegisterInstance(commandRepository)
             .AsSelf()
             .SingleInstance();
 

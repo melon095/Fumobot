@@ -13,7 +13,6 @@ namespace Fumo.Application.Startable;
 internal class InitialDataStarter(
     Serilog.ILogger Logger,
     DescriptionService DescriptionService,
-    CommandRepository CommandRepository,
     DatabaseContext DbContext,
     IChannelRepository channelRepository,
     IEventsubManager eventsubManager,
@@ -37,10 +36,8 @@ internal class InitialDataStarter(
         else
             log.Information("No pending migrations found");
 
-        CommandRepository.LoadAssemblyCommands();
         await DescriptionService.Prepare(ct);
         await channelRepository.Prepare(ct);
-
 
         var isHttps = eventsubManager.CallbackUrl.Scheme == "https";
         if (!isHttps)

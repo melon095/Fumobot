@@ -5,7 +5,6 @@ using Fumo.Shared.Interfaces;
 using Fumo.Shared.Mediator;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MiniTwitch.Common.Extensions;
 using System.Collections.Concurrent;
 using System.Data;
 
@@ -82,11 +81,19 @@ public class ChannelRepository : IChannelRepository
 
     public async ValueTask Delete(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
-        using var transaction = await Database.Database.BeginTransactionAsync(cancellationToken);
+        using var scope = LifetimeScope.BeginLifetimeScope();
+        var bus = scope.Resolve<IMediator>();
 
-        channelDTO.SetForDeletion = true;
-        await Database.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        using (var transaction = await Database.Database.BeginTransactionAsync(cancellationToken))
+        {
+            channelDTO.SetForDeletion = true;
+            await Database.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        Channels.TryRemove(channelDTO.TwitchName, out _);
+
+        await bus.Publish(new OnChannelDeletedCommand(channelDTO), cancellationToken);
     }
 
     public async ValueTask Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default)

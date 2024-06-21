@@ -49,18 +49,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         MessageTask.Dispose();
     }
 
-    private ValueTask DoCleanChannelQueue(ChannelDTO channel)
-    {
-        Logger.Information("Cleaning queue for {Channel}", channel.TwitchName);
-
-        if (Queues.TryRemove(channel.TwitchName, out var queue))
-        {
-            queue.Clear();
-        }
-
-        return ValueTask.CompletedTask;
-    }
-
     private Task SendTask() => Task.Run(async () =>
     {
         while (true)
@@ -195,4 +183,18 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             Message = message
         });
     }
+
+    public void Cleanup(string channel)
+    {
+        if (Queues.TryRemove(channel, out var queue))
+        {
+            Logger.Information("Cleaning queue for {Channel}", channel);
+            queue.Clear();
+        }
+        else
+        {
+            Logger.Information("No queue to clean for {Channel}", channel);
+        }
+    }
+
 }

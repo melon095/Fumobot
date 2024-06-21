@@ -5,8 +5,8 @@ using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Fumo.Database.Extensions;
 using Fumo.Database;
-using Fumo.Shared.MediatorCommands;
 using MediatR;
+using Fumo.Shared.Mediator;
 
 namespace Fumo.Application.Bot;
 

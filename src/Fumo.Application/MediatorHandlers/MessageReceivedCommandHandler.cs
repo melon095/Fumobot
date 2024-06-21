@@ -6,11 +6,11 @@ using Fumo.Database.Extensions;
 using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Interfaces;
-using Fumo.Shared.MediatorCommands;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Exceptions;
 using MediatR;
+using Fumo.Shared.Mediator;
 
 namespace Fumo.Application.MediatorHandlers;
 
@@ -36,7 +36,6 @@ public class MessageReceivedCommandHandler(
             string prefix when !string.IsNullOrEmpty(prefix) => prefix,
             _ => GlobalPrefix,
         };
-
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
@@ -69,14 +68,12 @@ public class MessageReceivedCommandHandler(
         }
     }
 
-    private async ValueTask<CommandResult?> Execute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
+    private async ValueTask<CommandResult?> Execute(
+        ChatCommand command,
+        ChatMessage message,
+        string commandInvocationName,
+        CancellationToken cancellationToken = default)
     {
-        var commandScope = CommandRepository.CreateCommandScope(commandName, message.Scope);
-        if (commandScope is null) return null;
-
-        var command = commandScope.Resolve<ChatCommand>();
-
-        var stopwatch = Stopwatch.StartNew();
         CommandExecutionLogsDTO commandExecutionLogs = new()
         {
             Id = Guid.NewGuid(),
@@ -86,6 +83,8 @@ public class MessageReceivedCommandHandler(
             Success = false,
             Input = message.Input,
         };
+
+        var stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -106,7 +105,7 @@ public class MessageReceivedCommandHandler(
             command.Channel = message.Channel;
             command.User = message.User;
             command.Input = message.Input;
-            command.CommandInvocationName = commandName;
+            command.CommandInvocationName = commandInvocationName;
 
             Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 
@@ -143,7 +142,7 @@ public class MessageReceivedCommandHandler(
             commandExecutionLogs.Success = false;
             commandExecutionLogs.Result = ex.Message;
 
-            Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
+            Logger.Error(ex, "Failed to execute command {CommandName} in {Channel}", commandInvocationName, message.Channel.TwitchName);
 
             if (message.User.HasPermission("user.chat_error"))
             {
@@ -182,8 +181,13 @@ public class MessageReceivedCommandHandler(
         message.Input.Clear();
         message.Input.AddRange(input);
 
-        var result = await Execute(message, commandName, cancellationToken);
-        if (result is null) return;
+        var commandType = CommandRepository.GetCommandType(commandName);
+        if (commandType is null) return;
+
+        if (message.Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
+
+        var result = await Execute(commandInstance, message, commandName, cancellationToken);
+        if (result is null || result.Message.Length == 0) return;
 
         // TODO: Do something better here.
         // TODO: Use Helix to send messages.

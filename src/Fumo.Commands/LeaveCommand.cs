@@ -3,7 +3,6 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Interfaces;
 using MiniTwitch.Irc;
 using Serilog;
-using Fumo.Shared.Eventsub;
 
 namespace Fumo.Commands;
 
@@ -11,7 +10,6 @@ public class LeaveCommand : ChatCommand
 {
     private readonly ILogger Logger;
     private readonly IChannelRepository ChannelRepository;
-    private readonly IEventsubManager EventsubManager;
     private readonly IrcClient IrcClient;
 
     public LeaveCommand()
@@ -20,11 +18,10 @@ public class LeaveCommand : ChatCommand
         SetFlags(ChatCommandFlags.BroadcasterOnly);
     }
 
-    public LeaveCommand(ILogger logger, IChannelRepository channelRepository, IEventsubManager eventsubManager, IrcClient ircClient) : this()
+    public LeaveCommand(ILogger logger, IChannelRepository channelRepository, IrcClient ircClient) : this()
     {
         Logger = logger.ForContext<LeaveCommand>();
         ChannelRepository = channelRepository;
-        EventsubManager = eventsubManager;
         IrcClient = ircClient;
     }
 
@@ -33,7 +30,6 @@ public class LeaveCommand : ChatCommand
         try
         {
             await IrcClient.PartChannel(Channel.TwitchName, ct);
-            await EventsubManager.Unsubscribe(Channel.TwitchID, EventsubType.ChannelChatMessage, ct);
             await ChannelRepository.Delete(Channel, ct);
         }
         catch (Exception ex)

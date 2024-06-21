@@ -2,15 +2,15 @@
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Interfaces;
-using Fumo.Shared.MediatorCommands;
 using Fumo.Shared.Models;
 using MediatR;
 using MiniTwitch.Helix.Responses;
 using MiniTwitch.Irc;
 using Serilog;
 
-namespace Fumo.Shared.Eventsub;
+namespace Fumo.Shared.Mediator;
 
 #region Subscribed
 

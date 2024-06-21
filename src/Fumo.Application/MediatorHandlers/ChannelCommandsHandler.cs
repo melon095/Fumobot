@@ -8,12 +8,8 @@ namespace Fumo.Application.MediatorHandlers;
 
 #region Created
 
-public class OnChannelCreatedCommandHandler(
-    IChannelRepository channelRepository,
-    ISchedulerFactory schedulerFactory)
-        : INotificationHandler<OnChannelCreatedCommand>
+public class OnChannelCreatedCommandHandler(ISchedulerFactory schedulerFactory) : INotificationHandler<OnChannelCreatedCommand>
 {
-    private readonly IChannelRepository ChannelRepository = channelRepository;
     private readonly ISchedulerFactory SchedulerFactory = schedulerFactory;
 
     public async Task Handle(OnChannelCreatedCommand request, CancellationToken ct)
@@ -22,6 +18,20 @@ public class OnChannelCreatedCommandHandler(
 
         await scheduler.TriggerJob(new(nameof(FetchChannelEditorsJob)), ct);
         await scheduler.TriggerJob(new(nameof(FetchEmoteSetsJob)), ct);
+    }
+}
+
+#endregion
+
+#region Deleted
+
+public class OnChannelDeletedCommandHandler(IMessageSenderHandler messageSenderHandler) : INotificationHandler<OnChannelDeletedCommand>
+{
+    public Task Handle(OnChannelDeletedCommand request, CancellationToken ct)
+    {
+        messageSenderHandler.Cleanup(request.Channel.TwitchName);
+
+        return Task.CompletedTask;
     }
 }
 

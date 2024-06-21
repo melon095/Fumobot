@@ -1,7 +1,7 @@
 ﻿using Fumo.Shared.Models;
 using MediatR;
 
-namespace Fumo.Shared.MediatorCommands;
+namespace Fumo.Shared.Mediator;
 
 public record MessageReceivedCommand(ChatMessage Message) : INotification
 {

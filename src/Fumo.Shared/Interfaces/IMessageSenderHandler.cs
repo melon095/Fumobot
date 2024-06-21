@@ -15,4 +15,6 @@ public interface IMessageSenderHandler
     /// </summary>
     ValueTask SendMessage(ScheduleMessageSpecification spec);
     ValueTask SendMessage(string channel, string message);
+
+    void Cleanup(string channel);
 }
