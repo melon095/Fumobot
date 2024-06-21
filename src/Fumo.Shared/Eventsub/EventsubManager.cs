@@ -117,7 +117,7 @@ public class EventsubManager(
             response = await helix.CreateEventSubSubscription(helixRequest, ct);
             if (!response.Success)
             {
-                log.Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}", response.Message);
+                log.ForContext("Error", response.Message).Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}");
                 return false;
             }
 
@@ -156,7 +156,7 @@ public class EventsubManager(
 
             if (!response.Success)
             {
-                log.Error("Failed to unsubscribe from {SubscriptionType} for {UserId}: {Error}", type.Name, userId, response.Message);
+                log.ForContext("Error", response.Message).Error("Failed to unsubscribe from {SubscriptionType} for {UserId}: {Error}");
                 return false;
             }
 
@@ -174,7 +174,6 @@ public class EventsubManager(
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, string userId, CancellationToken ct)
         => (await GetSubscriptions(type, userId, ct)).Any(x => x.Status == EventSubStatus.Enabled);
-
 
     public async ValueTask<bool> IsSubscribed(IEventsubType type, CancellationToken ct)
     {
