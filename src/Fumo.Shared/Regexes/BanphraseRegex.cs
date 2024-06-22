@@ -5,7 +5,7 @@ namespace Fumo.Shared.Regexes;
 
 public static partial class BanphraseRegex
 {
-    public static readonly ReadOnlyCollection<Func<string, bool>> GlobalRegex = new(new List<Func<string, bool>>
+    public static readonly ReadOnlyCollection<Func<string, bool>> GlobalRegexes = new(new List<Func<string, bool>>
     {
         Racism1,
         Racism2,

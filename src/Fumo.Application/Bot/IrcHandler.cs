@@ -75,6 +75,7 @@ public class IrcHandler
         {
             var token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
+            // TODO: Figure out if memory leak and if 'using' would break.
             var messageScope = Scope.BeginLifetimeScope();
             var userRepo = messageScope.Resolve<IUserRepository>();
             var bus = messageScope.Resolve<IMediator>();

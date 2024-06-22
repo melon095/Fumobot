@@ -189,15 +189,14 @@ public class MessageReceivedCommandHandler(
         var result = await Execute(commandInstance, message, commandName, cancellationToken);
         if (result is null || result.Message.Length == 0) return;
 
-        // TODO: Do something better here.
-        // TODO: Use Helix to send messages.
-        ScheduleMessageSpecification spec = new(message.Channel.TwitchName, result.Message)
+        var bancheckResult = await MessageSenderHandler.CheckBanphrase(message.Channel, result.Message, cancellationToken);
+        if (bancheckResult == BanphraseReason.None)
         {
-            IgnoreBanphrase = result.IgnoreBanphrase,
-            ReplyID = result.ReplyID,
-        };
-
-        Logger.Information("Sending message {Spec}", spec);
-        //MessageSenderHandler.ScheduleMessage(spec);
+            MessageSenderHandler.ScheduleMessage(message.Channel.TwitchID, result.Message, result.ReplyID);
+        }
+        else
+        {
+            MessageSenderHandler.ScheduleMessage(message.Channel.TwitchID, bancheckResult.ToReasonString(), result.ReplyID);
+        }
     }
 }

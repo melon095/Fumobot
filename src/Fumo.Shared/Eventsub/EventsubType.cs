@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using MiniTwitch.Helix.Requests;
+﻿using MiniTwitch.Helix.Requests;
 
 namespace Fumo.Shared.Eventsub;
 
@@ -11,7 +10,7 @@ public interface IEventsubType
     TimeSpan SuccessCooldown { get; }
 }
 
-public record EventsubType<TCondition>(string Name, string[] RequiredScopes, TimeSpan SuccessCooldown, string Version = "1")
+public record EventsubType<TCondition>(string Name, string[] RequiredScopes, string Version = "1", TimeSpan SuccessCooldown = default)
     : IEventsubType
     where TCondition : class
 {
@@ -31,4 +30,4 @@ public record EventsubType<TCondition>(string Name, string[] RequiredScopes, Tim
 }
 
 public record EventsubType(string Name, string[] RequiredScopes, string Version = "1", TimeSpan SuccessCooldown = default)
-    : EventsubType<EventsubBasicCondition>(Name, RequiredScopes, SuccessCooldown, Version);
+    : EventsubType<EventsubBasicCondition>(Name, RequiredScopes, Version, SuccessCooldown);

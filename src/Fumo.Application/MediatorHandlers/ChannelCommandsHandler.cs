@@ -29,7 +29,7 @@ public class OnChannelDeletedCommandHandler(IMessageSenderHandler messageSenderH
 {
     public Task Handle(OnChannelDeletedCommand request, CancellationToken ct)
     {
-        messageSenderHandler.Cleanup(request.Channel.TwitchName);
+        messageSenderHandler.Cleanup(request.Channel.TwitchID);
 
         return Task.CompletedTask;
     }

@@ -34,7 +34,6 @@ public class HelixFactory : IHelixFactory
     private async ValueTask SaveToken(TwitchToken token)
         => await Redis.StringSetAsync(TokenKey, token.AccessToken, expiry: TimeSpan.FromSeconds(token.ExpiresIn));
 
-
     private async ValueTask<string?> GetToken()
         => await Redis.StringGetAsync(TokenKey);
 

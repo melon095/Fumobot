@@ -3,41 +3,47 @@ using Fumo.Database;
 using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
-using MiniTwitch.Irc;
 using System.Collections.Concurrent;
 using Fumo.Database.Extensions;
 using Fumo.Shared.ThirdParty.Pajbot1;
+using Fumo.Shared.Enums;
+using Fumo.Shared.ThirdParty.Helix;
+
+using QueueValue = (string ChannelId, string Message, string? ReplyId);
+using MiniTwitch.Helix.Responses;
 
 namespace Fumo.Application.Bot;
 
-using MessageQueue = ConcurrentQueue<ScheduleMessageSpecification>;
+using MessageQueue = ConcurrentQueue<QueueValue>;
 
 public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 {
-    public static readonly int MessageInterval = 1250;
+    private const int MessageSendInterval = 1250;
+    private const int QueueCheckInterval = 100;
+    private const int MaxMessageLength = 500;
+    private const string Ellipsis = "…";
 
     private readonly ConcurrentDictionary<string, MessageQueue> Queues = new();
-    private readonly IrcClient IrcClient;
-    private readonly CancellationToken CancellationToken;
     private readonly ConcurrentDictionary<string, long> SendHistory = new();
+
     private readonly Task MessageTask;
+    private readonly CancellationToken CancellationToken;
+
     private readonly MetricsTracker MetricsTracker;
-    private readonly IChannelRepository ChannelRepository;
-    private readonly Serilog.ILogger Logger;
     private readonly PajbotClient Pajbot = new();
+    private readonly Serilog.ILogger Logger;
+    private readonly IHelixFactory HelixFactory;
 
     public MessageSenderHandler(
-        IrcClient ircClient,
         CancellationTokenSource cancellationTokenSource,
         MetricsTracker metricsTracker,
         Serilog.ILogger logger,
-        IChannelRepository channelRepository)
+        IHelixFactory helixFactory)
     {
         Logger = logger.ForContext<MessageSenderHandler>();
-        IrcClient = ircClient;
         MetricsTracker = metricsTracker;
-        ChannelRepository = channelRepository;
         CancellationToken = cancellationTokenSource.Token;
+        HelixFactory = helixFactory;
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
@@ -46,155 +52,137 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     {
         GC.SuppressFinalize(this);
 
-        MessageTask.Dispose();
+        MessageTask.Wait();
     }
 
-    private Task SendTask() => Task.Run(async () =>
+    private async Task SendTask()
     {
-        while (true)
+        while (!CancellationToken.IsCancellationRequested)
+        {
             try
             {
                 long now = Unix();
-                foreach (var (channel, queue) in Queues)
+                foreach (var (channelId, queue) in Queues)
                 {
-                    while (queue.TryDequeue(out var spec))
+                    while (queue.TryDequeue(out var value))
                     {
-                        if (SendHistory.TryGetValue(channel, out var lastSent))
+                        if (SendHistory.TryGetValue(channelId, out var lastSent))
                         {
-                            if (now - lastSent > MessageInterval)
+                            if (now - lastSent > MessageSendInterval)
                             {
-                                await SendMessage(spec);
+                                await SendMessage(value.ChannelId, value.Message, value.ReplyId);
                                 continue;
                             }
 
-                            await Task.Delay(MessageInterval);
-                            await SendMessage(spec);
+                            await Task.Delay(MessageSendInterval);
+                            await SendMessage(value.ChannelId, value.Message, value.ReplyId);
                             continue;
                         }
 
-                        SendHistory[channel] = now;
-                        await SendMessage(spec);
+                        SendHistory[channelId] = now;
+                        await SendMessage(value.ChannelId, value.Message, value.ReplyId);
                     }
                 }
 
-                await Task.Delay(100);
+                await Task.Delay(QueueCheckInterval, CancellationToken);
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error in message sender task");
             }
-    });
+        }
+    }
 
     private static long Unix() => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-    private async Task<(bool Banned, string Reason)> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken)
+    /// <inheritdoc/>
+    public void ScheduleMessage(string channelId, string message, string? replyId = null)
     {
-        foreach (var func in BanphraseRegex.GlobalRegex)
+        SendHistory[channelId] = Unix();
+
+        if (!Queues.TryGetValue(channelId, out var queue))
         {
-            if (func(message))
-            {
-                return (true, "Global banphrase");
-            }
+            queue = new MessageQueue();
+            Queues[channelId] = queue;
         }
 
-        var pajbot1Instance = channel.GetSetting(ChannelSettingKey.Pajbot1);
-        if (string.IsNullOrEmpty(pajbot1Instance))
-        {
-            return (false, string.Empty);
-        }
+        queue.Enqueue((channelId, message, replyId));
+    }
 
+    /// <inheritdoc/>
+    public async ValueTask SendMessage(string channelId, string message, string? replyId = null)
+    {
         try
         {
-            return await Pajbot.Check(message, pajbot1Instance, cancellationToken);
+            if (string.IsNullOrEmpty(message)) return;
+
+            SendHistory[channelId] = Unix();
+
+            message = message.Trim();
+
+            if (message.Length > MaxMessageLength)
+            {
+                message = message[..(MaxMessageLength - Ellipsis.Length)] + Ellipsis;
+            }
+
+            var helix = await HelixFactory.Create(CancellationToken);
+
+            SentMessage sendResult = await helix.SendChatMessage(new(long.Parse(channelId), message, replyParentMessageId: replyId));
+            var sendValue = sendResult.Data[0];
+
+            MetricsTracker.TotalMessagesSent.Inc();
+
+            if (sendValue.IsSent) return;
+
+            Logger.Warning("Failed to send message '{MessageId}' to {ChannelId} {DropReason}", sendValue.MessageId, sendValue.DropReason);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Asking pajbot for banphrase for {Channel}", channel.TwitchName);
-            // Lole @brian6932
-            return (true, "Pepega 📣 SOMETHING'S WRONG WITH YOUR BANPHRASES -> (Check help command to remove it)");
+            Logger.Error(ex, "Failed to send message to {ChannelId}", channelId);
         }
     }
 
-    /// <inheritdoc/>
-    public void ScheduleMessage(ScheduleMessageSpecification spec)
+    public void Cleanup(string channelId)
     {
-        SendHistory[spec.Channel] = Unix();
-
-        if (!Queues.TryGetValue(spec.Channel, out var queue))
+        if (Queues.TryRemove(channelId, out var queue))
         {
-            queue = new MessageQueue();
-            Queues[spec.Channel] = queue;
-        }
-
-        queue.Enqueue(spec);
-    }
-
-    public void ScheduleMessage(string channel, string message)
-    {
-        ScheduleMessage(new ScheduleMessageSpecification
-        {
-            Channel = channel,
-            Message = message
-        });
-    }
-
-    /// <inheritdoc/>
-    public async ValueTask SendMessage(ScheduleMessageSpecification spec)
-    {
-        if (string.IsNullOrEmpty(spec.Message)) return;
-
-        var dto = ChannelRepository.GetByName(spec.Channel)
-            ?? throw new Exception($"Channel {spec.Channel} not found");
-
-        if (!spec.IgnoreBanphrase)
-        {
-            var (banphraseCheck, banphraseReason) = await CheckBanphrase(dto, spec.Message, CancellationToken);
-            if (banphraseCheck)
-            {
-                // Overwrite the output
-                spec.Message = banphraseReason;
-            }
-        }
-
-        SendHistory[spec.Channel] = Unix();
-
-        spec.Message = spec.Message
-            .Replace("\r", string.Empty)
-            .Replace("\n", string.Empty)
-            .Trim();
-
-        MetricsTracker.TotalMessagesSent.Inc();
-
-        if (spec.ReplyID is null)
-        {
-            await IrcClient.SendMessage(spec.Channel, spec.Message, cancellationToken: CancellationToken);
-        }
-        else
-        {
-            await IrcClient.ReplyTo(spec.ReplyID, spec.Channel, spec.Message, cancellationToken: CancellationToken);
-        }
-    }
-
-    public ValueTask SendMessage(string channel, string message)
-    {
-        return SendMessage(new ScheduleMessageSpecification
-        {
-            Channel = channel,
-            Message = message
-        });
-    }
-
-    public void Cleanup(string channel)
-    {
-        if (Queues.TryRemove(channel, out var queue))
-        {
-            Logger.Information("Cleaning queue for {Channel}", channel);
+            Logger.Information("Cleaning queue for {ChannelId}", channelId);
             queue.Clear();
         }
         else
         {
-            Logger.Information("No queue to clean for {Channel}", channel);
+            Logger.Information("No queue to clean for {ChannelId}", channelId);
         }
+    }
+
+    public async ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default)
+    {
+        foreach (var func in BanphraseRegex.GlobalRegexes)
+        {
+            if (func(message))
+            {
+                return BanphraseReason.Global;
+            }
+        }
+
+        if (channel.GetSetting(ChannelSettingKey.Pajbot1) is not string pajbotUrl)
+        {
+            return BanphraseReason.None;
+        }
+
+        try
+        {
+            if (await Pajbot.Check(message, pajbotUrl, cancellationToken) is true)
+                return BanphraseReason.Pajbot;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to query pajbot for '{ChannelName} {ChannelId}'", channel.TwitchName, channel.TwitchID);
+
+            return BanphraseReason.PajbotTimeout;
+        }
+
+        return BanphraseReason.None;
     }
 
 }

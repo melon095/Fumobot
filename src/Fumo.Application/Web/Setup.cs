@@ -1,5 +1,4 @@
-﻿using AspNet.Security.OAuth.Twitch;
-using Fumo.Database.DTO;
+﻿using Fumo.Database.DTO;
 using Fumo.Shared.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
@@ -10,7 +9,6 @@ using StackExchange.Redis;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using AspNetCoreRateLimit;
-using System.Diagnostics;
 
 namespace Fumo.Application.Web;
 
@@ -28,6 +26,7 @@ public static class Setup
         "openid",
         "user:read:email",
         "user:read:chat",
+        "user:write:chat",
         "user:bot",
     ];
 
