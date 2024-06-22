@@ -137,7 +137,7 @@ public class SevenTVYoinkCommand : ChatCommand
 
                 var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.ID, aliasName, ct) ?? throw new Exception("Idk what happened");
 
-                MessageSender.ScheduleMessage(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}");
+                MessageSender.ScheduleMessage(new(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}"));
             }
             catch (Exception ex)
             {
@@ -147,7 +147,7 @@ public class SevenTVYoinkCommand : ChatCommand
                     e += $" (alias of {emote.Name})";
                 }
 
-                MessageSender.ScheduleMessage(Channel.TwitchName, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}");
+                MessageSender.ScheduleMessage(new(Channel.TwitchName, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}"));
             }
         }
 

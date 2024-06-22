@@ -1,5 +1,4 @@
 ﻿using Fumo.Shared.Exceptions;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
@@ -61,7 +60,7 @@ public class SevenTVRemoveCommand : ChatCommand
             output.Append($"Could not find the following emote{(Input.Count > 1 ? "s" : "")}");
             Input.ForEach(x => output.Append($" {x}"));
 
-            MessageSender.ScheduleMessage(Channel.TwitchName, output.ToString());
+            MessageSender.ScheduleMessage(new(Channel.TwitchName, output.ToString()));
 
             output.Clear();
 

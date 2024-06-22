@@ -1,6 +1,6 @@
 ﻿using Fumo.BackgroundJobs.SevenTV;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Mediator;
+using Fumo.Shared.Models;
 using MediatR;
 using Quartz;
 

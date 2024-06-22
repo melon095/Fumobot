@@ -1,20 +1,35 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Database;
-using Fumo.Shared.Interfaces;
-using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using System.Collections.Concurrent;
 using Fumo.Database.Extensions;
 using Fumo.Shared.ThirdParty.Pajbot1;
 using Fumo.Shared.Enums;
 using Fumo.Shared.ThirdParty.Helix;
-
-using QueueValue = (string ChannelId, string Message, string? ReplyId);
 using MiniTwitch.Helix.Responses;
 
-namespace Fumo.Application.Bot;
+namespace Fumo.Shared.Models;
 
-using MessageQueue = ConcurrentQueue<QueueValue>;
+using MessageQueue = ConcurrentQueue<MessageSendSpec>;
+
+public record MessageSendSpec(string ChannelId, string Message, string? ReplyId = null);
+
+public interface IMessageSenderHandler
+{
+    /// <summary>
+    /// Schedule a message to be sent to a channel after the global message interval rule
+    /// </summary>
+    void ScheduleMessage(MessageSendSpec spec);
+
+    /// <summary>
+    /// Will directly send a message to chat without obeying the message queue
+    /// </summary>
+    ValueTask SendMessage(MessageSendSpec spec);
+
+    void Cleanup(string channelId);
+
+    ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default);
+}
 
 public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 {
@@ -70,17 +85,17 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                         {
                             if (now - lastSent > MessageSendInterval)
                             {
-                                await SendMessage(value.ChannelId, value.Message, value.ReplyId);
+                                await SendMessage(value);
                                 continue;
                             }
 
                             await Task.Delay(MessageSendInterval);
-                            await SendMessage(value.ChannelId, value.Message, value.ReplyId);
+                            await SendMessage(value);
                             continue;
                         }
 
                         SendHistory[channelId] = now;
-                        await SendMessage(value.ChannelId, value.Message, value.ReplyId);
+                        await SendMessage(value);
                     }
                 }
 
@@ -96,29 +111,29 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private static long Unix() => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
     /// <inheritdoc/>
-    public void ScheduleMessage(string channelId, string message, string? replyId = null)
+    public void ScheduleMessage(MessageSendSpec spec)
     {
-        SendHistory[channelId] = Unix();
+        SendHistory[spec.ChannelId] = Unix();
 
-        if (!Queues.TryGetValue(channelId, out var queue))
+        if (!Queues.TryGetValue(spec.ChannelId, out var queue))
         {
             queue = new MessageQueue();
-            Queues[channelId] = queue;
+            Queues[spec.ChannelId] = queue;
         }
 
-        queue.Enqueue((channelId, message, replyId));
+        queue.Enqueue(spec);
     }
 
     /// <inheritdoc/>
-    public async ValueTask SendMessage(string channelId, string message, string? replyId = null)
+    public async ValueTask SendMessage(MessageSendSpec spec)
     {
         try
         {
-            if (string.IsNullOrEmpty(message)) return;
+            if (string.IsNullOrEmpty(spec.Message)) return;
 
-            SendHistory[channelId] = Unix();
+            SendHistory[spec.ChannelId] = Unix();
 
-            message = message.Trim();
+            var message = spec.Message.Trim();
 
             if (message.Length > MaxMessageLength)
             {
@@ -127,7 +142,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
             var helix = await HelixFactory.Create(CancellationToken);
 
-            SentMessage sendResult = await helix.SendChatMessage(new(long.Parse(channelId), message, replyParentMessageId: replyId));
+            SentMessage sendResult = await helix.SendChatMessage(new(long.Parse(spec.ChannelId), message, replyParentMessageId: spec.ReplyId));
             var sendValue = sendResult.Data[0];
 
             MetricsTracker.TotalMessagesSent.Inc();
@@ -138,7 +153,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to send message to {ChannelId}", channelId);
+            Logger.Error(ex, "Failed to send message to {ChannelId}", spec.ChannelId);
         }
     }
 
@@ -184,5 +199,4 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
         return BanphraseReason.None;
     }
-
 }

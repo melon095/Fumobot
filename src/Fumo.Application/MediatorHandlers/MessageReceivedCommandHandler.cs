@@ -192,11 +192,11 @@ public class MessageReceivedCommandHandler(
         var bancheckResult = await MessageSenderHandler.CheckBanphrase(message.Channel, result.Message, cancellationToken);
         if (bancheckResult == BanphraseReason.None)
         {
-            MessageSenderHandler.ScheduleMessage(message.Channel.TwitchID, result.Message, result.ReplyID);
+            MessageSenderHandler.ScheduleMessage(new(message.Channel.TwitchID, result.Message, result.ReplyID));
         }
         else
         {
-            MessageSenderHandler.ScheduleMessage(message.Channel.TwitchID, bancheckResult.ToReasonString(), result.ReplyID);
+            MessageSenderHandler.ScheduleMessage(new(message.Channel.TwitchID, bancheckResult.ToReasonString(), result.ReplyID));
         }
     }
 }
