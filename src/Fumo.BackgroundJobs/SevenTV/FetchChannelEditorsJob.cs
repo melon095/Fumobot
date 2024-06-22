@@ -1,5 +1,4 @@
-﻿using Fumo.Shared.Interfaces;
-using Fumo.Shared.Models;
+﻿using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.ThirdParty.Exceptions;
@@ -7,6 +6,7 @@ using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Quartz;
 using StackExchange.Redis;
 using Serilog;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.BackgroundJobs.SevenTV;
 

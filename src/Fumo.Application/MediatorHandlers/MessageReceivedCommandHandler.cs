@@ -5,18 +5,18 @@ using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Exceptions;
 using MediatR;
 using Fumo.Shared.Mediator;
+using StackExchange.Redis;
 
 namespace Fumo.Application.MediatorHandlers;
 
 public class MessageReceivedCommandHandler(
     Serilog.ILogger logger,
-    ICooldownHandler cooldownHandler,
+    IDatabase redis,
     IMessageSenderHandler messageSenderHandler,
     CommandRepository commandRepository,
     DatabaseContext databaseContext,
@@ -24,18 +24,13 @@ public class MessageReceivedCommandHandler(
         : INotificationHandler<MessageReceivedCommand>
 {
     private readonly Serilog.ILogger Logger = logger.ForContext<MessageReceivedCommandHandler>();
-    private readonly ICooldownHandler CooldownHandler = cooldownHandler;
+    private readonly IDatabase Redis = redis;
     private readonly IMessageSenderHandler MessageSenderHandler = messageSenderHandler;
     private readonly CommandRepository CommandRepository = commandRepository;
     private readonly DatabaseContext DatabaseContext = databaseContext;
     private readonly string GlobalPrefix = settings.GlobalPrefix;
 
-    private string GetPrefix(ChannelDTO channel)
-        => channel.GetSetting(ChannelSettingKey.Prefix) switch
-        {
-            string prefix when !string.IsNullOrEmpty(prefix) => prefix,
-            _ => GlobalPrefix,
-        };
+    private static string CooldownKey(ChatMessage message, ChatCommand command) => $"channel:{message.Channel.TwitchID}:cooldown:{command.NameMatcher}:{message.User.TwitchID}";
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
@@ -68,6 +63,13 @@ public class MessageReceivedCommandHandler(
         }
     }
 
+    private string GetPrefix(ChannelDTO channel)
+        => channel.GetSetting(ChannelSettingKey.Prefix) switch
+        {
+            string prefix when !string.IsNullOrEmpty(prefix) => prefix,
+            _ => GlobalPrefix,
+        };
+
     private async ValueTask<CommandResult?> Execute(
         ChatCommand command,
         ChatMessage message,
@@ -98,7 +100,7 @@ public class MessageReceivedCommandHandler(
                 }
             }
 
-            bool onCooldown = await CooldownHandler.IsOnCooldown(message, command);
+            bool onCooldown = await Redis.KeyExistsAsync(CooldownKey(message, command));
             if (onCooldown) return null;
 
             command.ParseArguments(message.Input);
@@ -118,7 +120,7 @@ public class MessageReceivedCommandHandler(
 
             result.IgnoreBanphrase = command.Flags.HasFlag(ChatCommandFlags.IgnoreBanphrase);
 
-            await CooldownHandler.SetCooldown(message, command);
+            await Redis.StringSetAsync(CooldownKey(message, command), 1, expiry: command.Cooldown);
 
             if (command.Flags.HasFlag(ChatCommandFlags.Reply))
             {

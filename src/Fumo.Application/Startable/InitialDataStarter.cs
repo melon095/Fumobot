@@ -1,12 +1,8 @@
 ﻿using Fumo.Application.Web.Service;
 using Fumo.Database;
 using Fumo.Shared.Eventsub;
-using Fumo.Shared.Interfaces;
-using Fumo.Shared.Mediator;
 using Fumo.Shared.Repositories;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MiniTwitch.Helix.Models;
 
 namespace Fumo.Application.Startable;
 

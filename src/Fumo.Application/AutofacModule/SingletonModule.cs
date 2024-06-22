@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Fumo.Application.Bot;
 using Fumo.Shared.Eventsub;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
@@ -57,11 +56,6 @@ internal class SingletonModule(AppSettings settings) : Module
         builder
             .RegisterType<IrcHandler>()
             .AsSelf()
-            .SingleInstance();
-
-        builder
-            .RegisterType<CooldownHandler>()
-            .As<ICooldownHandler>()
             .SingleInstance();
 
         builder

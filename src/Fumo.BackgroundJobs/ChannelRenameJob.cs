@@ -1,4 +1,4 @@
-﻿using Fumo.Shared.Interfaces;
+﻿using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;

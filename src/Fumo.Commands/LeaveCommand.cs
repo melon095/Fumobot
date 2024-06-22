@@ -1,6 +1,6 @@
 ﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Models;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Repositories;
 using MiniTwitch.Irc;
 using Serilog;
 

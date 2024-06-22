@@ -1,12 +1,12 @@
 ﻿using Autofac;
 using Fumo.Shared.Models;
-using Fumo.Shared.Interfaces;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
 using Fumo.Database.Extensions;
 using Fumo.Database;
 using MediatR;
 using Fumo.Shared.Mediator;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Application.Bot;
 

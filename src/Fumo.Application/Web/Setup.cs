@@ -1,5 +1,4 @@
 ﻿using Fumo.Database.DTO;
-using Fumo.Shared.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
@@ -9,6 +8,7 @@ using StackExchange.Redis;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using AspNetCoreRateLimit;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Application.Web;
 

@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Shared.Eventsub;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.OAuth;
 using Fumo.Shared.Repositories;

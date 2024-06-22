@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Fumo.Database.DTO;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Application.Web.Service;
 

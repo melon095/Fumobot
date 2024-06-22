@@ -1,5 +1,4 @@
 ﻿using Fumo.Application.Bot;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 
 namespace Fumo.Application.Startable;

@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Database.DTO;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Mediator;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +8,23 @@ using System.Collections.Concurrent;
 using System.Data;
 
 namespace Fumo.Shared.Repositories;
+
+public interface IChannelRepository
+{
+    ValueTask Prepare(CancellationToken ct = default);
+
+    IEnumerable<ChannelDTO> GetAll();
+
+    ChannelDTO? GetByID(string ID);
+
+    ChannelDTO? GetByName(string Name);
+
+    ValueTask<ChannelDTO> Create(ChannelDTO channelDTO, CancellationToken ct = default);
+
+    ValueTask Delete(ChannelDTO channelDTO, CancellationToken ct = default);
+
+    ValueTask Update(ChannelDTO channelDTO, CancellationToken ct = default);
+}
 
 public class ChannelRepository : IChannelRepository
 {
