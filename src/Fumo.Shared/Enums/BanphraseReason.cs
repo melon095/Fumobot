@@ -28,10 +28,9 @@ public static class BanphraseReasonExtension
     public static string ToReasonString(this BanphraseReason reason)
         => reason switch
         {
-            BanphraseReason.None => string.Empty,
+            BanphraseReason.None | BanphraseReason.PajbotTimeout => string.Empty,
             BanphraseReason.Global => "Message blocked due to naughty words monkaS",
             BanphraseReason.Pajbot => "Message blocked by pajbot monkaS",
-            BanphraseReason.PajbotTimeout => "Pepega 📣 SOMETHING'S WRONG WITH YOUR PAJBOT -> (Check help command to remove it)",
             _ => "🤷‍",
         };
 }
