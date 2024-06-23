@@ -23,8 +23,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("Login"), AllowAnonymous]
-    public IActionResult Login()
-        => Challenge(new AuthenticationProperties { RedirectUri = "/" }, TwitchAuthenticationDefaults.AuthenticationScheme);
+    public IActionResult Login(string returnUrl = "/")
+        => Challenge(new AuthenticationProperties { RedirectUri = returnUrl }, TwitchAuthenticationDefaults.AuthenticationScheme);
 
     [HttpGet("Logout")]
     public IActionResult Logout()

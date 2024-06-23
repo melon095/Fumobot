@@ -93,7 +93,7 @@ public static class Setup
             })
             .AddTwitch(x =>
             {
-                x.ForceVerify = true;
+                x.ForceVerify = false;
                 x.ClientId = settings.Twitch.ClientID;
                 x.ClientSecret = settings.Twitch.ClientSecret;
                 x.SaveTokens = true;
