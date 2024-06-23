@@ -16,22 +16,17 @@ public class JoinCommand : ChatCommand
 
     public JoinCommand(AppSettings settings) : this()
     {
-        JoinURL = new Uri(new Uri(settings.Website.PublicURL), "/Account/Join/");
+        JoinURL = new Uri(settings.Website.PublicURL, "/Account/Join/");
         BotID = settings.Twitch.UserID;
     }
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         if (Channel.TwitchID != BotID)
-        {
             return new(string.Empty);
-        }
 
-        var otherUser = Input.ElementAtOrDefault(0);
-        if (string.IsNullOrEmpty(otherUser))
-        {
+        if (Input.Count > 0)
             return new($"Tell your friend to click here :) -> {JoinURL}");
-        }
 
         return new($"Click here :) -> {JoinURL}");
     }

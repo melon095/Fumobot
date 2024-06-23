@@ -43,7 +43,7 @@ public record TwitchSettings(
 );
 
 public record WebsiteSettings(
-    string PublicURL,
+    Uri PublicURL,
     DataProtectionSettings DataProtection
 );
 

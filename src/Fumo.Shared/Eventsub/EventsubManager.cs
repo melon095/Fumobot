@@ -75,7 +75,7 @@ public class EventsubManager(
         return subscriptions.Where(x => x.Type == type.Name);
     }
 
-    public Uri CallbackUrl => new(new Uri(AppSettings.Website.PublicURL), "/api/Eventsub/Callback");
+    public Uri CallbackUrl => new(AppSettings.Website.PublicURL, "/api/Eventsub/Callback");
 
     public async ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct)
     {
