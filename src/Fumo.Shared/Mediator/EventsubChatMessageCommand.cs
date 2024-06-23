@@ -65,7 +65,6 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
             };
 
             channel = await ChannelRepository.Create(newChannel, ct);
-            channel.SetSetting(ChannelSettingKey.ConnectedWithEventsub, true.ToString());
 
             Logger.Information("Created new channel {ChannelName} in database", channel.TwitchName);
         }

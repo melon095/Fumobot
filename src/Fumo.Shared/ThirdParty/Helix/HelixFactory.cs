@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using System.Text.Json;
 using Fumo.Shared.Models;
 using Microsoft.Extensions.Logging;
 using MiniTwitch.Helix;
@@ -7,6 +6,11 @@ using Serilog;
 using StackExchange.Redis;
 
 namespace Fumo.Shared.ThirdParty.Helix;
+
+public interface IHelixFactory
+{
+    ValueTask<HelixWrapper> Create(CancellationToken ct);
+}
 
 public class HelixFactory : IHelixFactory
 {

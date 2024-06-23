@@ -1,7 +1,9 @@
 ﻿using Fumo.Database;
 using Fumo.Database.DTO;
+using Fumo.Database.Extensions;
 using Fumo.Shared.Eventsub;
 using Microsoft.EntityFrameworkCore;
+using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
 
@@ -12,12 +14,14 @@ public class ChannelRemoverJob : IJob
     private readonly ILogger Logger;
     private readonly DatabaseContext Database;
     private readonly IEventsubManager EventsubManager;
+    private readonly IrcClient IrcClient;
 
-    public ChannelRemoverJob(ILogger logger, DatabaseContext database, IEventsubManager eventsubManager)
+    public ChannelRemoverJob(ILogger logger, DatabaseContext database, IEventsubManager eventsubManager, IrcClient ircClient)
     {
         Logger = logger.ForContext<ChannelRemoverJob>();
         Database = database;
         EventsubManager = eventsubManager;
+        IrcClient = ircClient;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -35,7 +39,10 @@ public class ChannelRemoverJob : IJob
             {
                 Logger.Information("Removing channel {ChannelName} from the database", channel.TwitchName);
 
-                await EventsubManager.Unsubscribe(channel.TwitchID, EventsubType.ChannelChatMessage, context.CancellationToken);
+                if (channel.GetSetting(ChannelSettingKey.ConnectedWithEventsub) == true.ToString())
+                    await EventsubManager.Unsubscribe(channel.TwitchID, EventsubType.ChannelChatMessage, context.CancellationToken);
+                else
+                    await IrcClient.PartChannel(channel.TwitchName, context.CancellationToken);
 
                 Database.Channels.Remove(channel);
             }

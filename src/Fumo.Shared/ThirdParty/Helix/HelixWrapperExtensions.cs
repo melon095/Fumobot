@@ -19,34 +19,22 @@ public static class HelixWrapperExtensions
     {
         List<TData> results = [];
 
-        if (!initial.Success)
-        {
-            onError(initial);
-            return [];
-        }
-
-        results.AddRange(initial.Value.Data);
-
-        if (!initial.CanPaginate) return results;
-
         var current = initial;
 
-        while (await current.Paginate(ct) is HelixResult<TResult> next)
+        do
         {
-            if (!next.Success)
+            if (!current.Success)
             {
-                onError(next);
+                onError(current);
                 break;
             }
 
-            results.AddRange(next.Value.Data);
+            results.AddRange(current.Value.Data);
 
-            if (!next.CanPaginate) break;
+            if (!current.CanPaginate) break;
 
-            current = next;
-
-            ct.ThrowIfCancellationRequested();
-        }
+            current = await current.Paginate(ct);
+        } while (current.CanPaginate);
 
         return results;
     }

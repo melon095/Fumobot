@@ -149,7 +149,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
             if (sendValue.IsSent) return;
 
-            Logger.Warning("Failed to send message '{MessageId}' to {ChannelId} {DropReason}", sendValue.MessageId, sendValue.DropReason);
+            Logger.Warning("Failed to send message '{Message}' to {ChannelId} {DropReason}", message, sendValue.DropReason);
         }
         catch (Exception ex)
         {
@@ -159,15 +159,11 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     public void Cleanup(string channelId)
     {
+        Logger.Information("Cleaning queue for {ChannelId}", channelId);
+
+        SendHistory.TryRemove(channelId, out _);
         if (Queues.TryRemove(channelId, out var queue))
-        {
-            Logger.Information("Cleaning queue for {ChannelId}", channelId);
             queue.Clear();
-        }
-        else
-        {
-            Logger.Information("No queue to clean for {ChannelId}", channelId);
-        }
     }
 
     public async ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default)
@@ -180,7 +176,8 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             }
         }
 
-        if (channel.GetSetting(ChannelSettingKey.Pajbot1) is not string pajbotUrl)
+        var pajbotUrl = channel.GetSetting(ChannelSettingKey.Pajbot1);
+        if (string.IsNullOrEmpty(pajbotUrl))
         {
             return BanphraseReason.None;
         }

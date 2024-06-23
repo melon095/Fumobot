@@ -16,7 +16,7 @@ public class EventsubController : ControllerBase
     private const string HeaderMessageType = "Twitch-Eventsub-Message-Type";
     private const string HeaderMessageSignature = "Twitch-Eventsub-Message-Signature";
     private const string HeaderMessageTimestamp = "Twitch-Eventsub-Message-Timestamp";
-    private const string HeaderSubscriptionventType = "Twitch-Eventsub-Subscription-Type";
+    private const string HeaderSubscriptionType = "Twitch-Eventsub-Subscription-Type";
 
     private const string MessageTypeVerification = "webhook_callback_verification";
     private const string MessageTypeNotification = "notification";
@@ -42,7 +42,7 @@ public class EventsubController : ControllerBase
             messageType = Request.Headers[HeaderMessageType].ToString(),
             messageTimestamp = Request.Headers[HeaderMessageTimestamp].ToString(),
             messageSignature = Request.Headers[HeaderMessageSignature].ToString(),
-            type = Request.Headers[HeaderSubscriptionventType].ToString();
+            subscriptionType = Request.Headers[HeaderSubscriptionType].ToString();
 
         if (string.IsNullOrEmpty(messageId) ||
             string.IsNullOrEmpty(messageType) ||
@@ -78,7 +78,7 @@ public class EventsubController : ControllerBase
         {
             case MessageTypeRevocation:
                 {
-                    var command = EventsubCommandFactory.Create(EventsubCommandType.Revocation, type, jsonBody);
+                    var command = EventsubCommandFactory.Create(EventsubCommandType.Revocation, subscriptionType, jsonBody);
                     if (command is not null)
                         await Bus.Send(command, ct);
                 }
@@ -87,7 +87,7 @@ public class EventsubController : ControllerBase
             case MessageTypeNotification:
                 {
                     var msgEvent = jsonBody.GetProperty("event");
-                    var command = EventsubCommandFactory.Create(EventsubCommandType.Notification, type, msgEvent);
+                    var command = EventsubCommandFactory.Create(EventsubCommandType.Notification, subscriptionType, msgEvent);
                     if (command is not null)
                         await Bus.Send(command, ct);
                 }
