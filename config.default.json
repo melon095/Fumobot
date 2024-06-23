@@ -35,5 +35,6 @@
     "DebugTMI": false,
     "Curl": {
         "TwitchCookies": "auth-token:...;persistent=..."
-    }
+    },
+    "MessageSendingMethod": "Helix|Console"
 }

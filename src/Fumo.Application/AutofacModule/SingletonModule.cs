@@ -58,8 +58,15 @@ internal class SingletonModule(AppSettings settings) : Module
             .AsSelf()
             .SingleInstance();
 
+        var messageMethod = settings.MessageSendingMethod switch
+        {
+            MessageSendingMethod.Helix => typeof(MessageSenderHandler),
+            MessageSendingMethod.Console => typeof(ConsoleMessageSenderHandler),
+            _ => throw new ArgumentException(nameof(settings.MessageSendingMethod))
+        };
+
         builder
-            .RegisterType<MessageSenderHandler>()
+            .RegisterType(messageMethod)
             .As<IMessageSenderHandler>()
             .SingleInstance();
 

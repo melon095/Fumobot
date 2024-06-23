@@ -85,7 +85,7 @@ public static class Setup
             {
                 x.LoginPath = "/Account/Login";
                 x.LogoutPath = "/Account/Logout";
-                x.AccessDeniedPath = "/error?code=403";
+                x.AccessDeniedPath = "/error/403";
 
                 x.Cookie.Name = "Fumo.Token";
                 x.Cookie.HttpOnly = true;

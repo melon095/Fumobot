@@ -1,4 +1,5 @@
-﻿using Serilog.Events;
+﻿using System.Text.Json.Serialization;
+using Serilog.Events;
 
 namespace Fumo.Shared.Models;
 
@@ -10,7 +11,8 @@ public record AppSettings(
     MetricsSettings Metrics,
     WebsiteSettings Website,
     bool DebugTMI,
-    string GlobalPrefix = "!"
+    string GlobalPrefix = "!",
+    MessageSendingMethod MessageSendingMethod = MessageSendingMethod.Helix
 );
 
 public record ConnectionsSettings(
@@ -52,3 +54,10 @@ public record DataProtectionSettings(
     string CertificateFile,
     string CertificatePass
 );
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MessageSendingMethod
+{
+    Helix,
+    Console
+}
