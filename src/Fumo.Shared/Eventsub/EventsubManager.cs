@@ -23,10 +23,13 @@ public class EventsubManager(
     IEventsubCommandRegistry eventsubCommandRegistry)
         : IEventsubManager
 {
+    #region Constants
     private const string ConduitKey = "eventsub:conduit";
     private const string WebhookSecret = "eventsub:conduit:secret";
     private const string ShardKey = "eventsub:conduit:shard";
+    #endregion
 
+    #region Dependencies
     private readonly IOAuthRepository OAuthRepository = oAuthRepository;
     private readonly IDatabase Redis = redis;
     private readonly IHelixFactory HelixFactory = helixFactory;
@@ -34,10 +37,16 @@ public class EventsubManager(
     private readonly AppSettings AppSettings = settings;
     private readonly ILifetimeScope LifetimeScope = lifetimeScope;
     private readonly IEventsubCommandRegistry EventsubCommandRegistry = eventsubCommandRegistry;
+    #endregion
 
     private string? Secret = null;
 
+    public Uri CallbackUrl => new(AppSettings.Website.PublicURL, "/api/Eventsub/Callback");
+
+    #region Private Methods
+
     private static string CooldownKey(string userId, IEventsubType type) => $"eventsub:cooldown:{userId}:{type.Name}";
+
     private static string CreateSecret() => Guid.NewGuid().ToString("N");
 
     private async ValueTask SendSubscriptionCommand<TCondition>(EventsubType<TCondition> request, CreatedSubscription.Info left, CancellationToken ct)
@@ -75,7 +84,9 @@ public class EventsubManager(
         return subscriptions.Where(x => x.Type == type.Name);
     }
 
-    public Uri CallbackUrl => new(AppSettings.Website.PublicURL, "/api/Eventsub/Callback");
+    #endregion
+
+    #region Public Methods
 
     public async ValueTask<bool> IsUserEligible(string userId, IEventsubType type, CancellationToken ct)
     {
@@ -300,4 +311,6 @@ public class EventsubManager(
 
         return newSecret;
     }
+
+    #endregion
 }

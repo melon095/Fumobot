@@ -11,6 +11,5 @@ public class WebModule : Module
         builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
         builder.RegisterType<DescriptionService>().SingleInstance();
         builder.RegisterType<HttpUserService>().InstancePerLifetimeScope();
-        builder.RegisterType<EventsubManager>().As<IEventsubManager>().SingleInstance();
     }
 }

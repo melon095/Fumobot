@@ -6,7 +6,6 @@ using Fumo.Shared.OAuth;
 using Fumo.Shared.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Serilog;
 
 namespace Fumo.Application.AutofacModule;
 
@@ -39,6 +38,11 @@ internal class ScopedModule(AppSettings settings) : Module
         builder
             .RegisterType<EventsubCommandFactory>()
             .As<IEventsubCommandFactory>()
+            .InstancePerLifetimeScope();
+
+        builder
+            .RegisterType<EventsubManager>()
+            .As<IEventsubManager>()
             .InstancePerLifetimeScope();
     }
 }
