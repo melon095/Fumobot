@@ -61,7 +61,8 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
                 Settings =
                 [
                     new() { Key = ChannelSettingKey.ConnectedWithEventsub, Value = true.ToString() }
-                ]
+                ],
+                UserTwitchID = user.TwitchID
             };
 
             channel = await ChannelRepository.Create(newChannel, ct);
@@ -70,6 +71,8 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
         }
 
         await ChannelRepository.Update(channel, ct);
+
+        // TODO: Send message to chat.
     }
 }
 
