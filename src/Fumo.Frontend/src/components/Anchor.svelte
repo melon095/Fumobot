@@ -1,6 +1,6 @@
 <script lang="ts">
 	export let href: string;
-	export let style: string | null = '';
+	export let className: string | null = '';
 </script>
 
-<a {href} class="text-gray-800 hover:text-gray-600 font-semibold {style}"><slot /></a>
+<a {href} class="text-gray-800 hover:text-gray-600 font-semibold {className}"><slot /></a>

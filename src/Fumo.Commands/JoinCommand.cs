@@ -16,7 +16,7 @@ public class JoinCommand : ChatCommand
 
     public JoinCommand(AppSettings settings) : this()
     {
-        JoinURL = new Uri(settings.Website.PublicURL, "/Account/Join/");
+        JoinURL = new Uri(settings.Website.PublicURL, "/ask-join/");
         BotID = settings.Twitch.UserID;
     }
 

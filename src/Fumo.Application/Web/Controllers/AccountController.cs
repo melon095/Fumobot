@@ -65,7 +65,7 @@ public class AccountController : ControllerBase
             return Redirect("/error/cooldown");
 
         if (await eventsubManager.IsSubscribed(EventsubType.ChannelChatMessage, user.TwitchID, ct) is true)
-            return Redirect("/error/already_joined");
+            return Redirect("/error/already-joined");
 
         var request = new EventsubSubscriptionRequest<EventsubBasicCondition>(
             user.TwitchID,

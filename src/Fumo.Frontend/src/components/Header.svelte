@@ -1,5 +1,4 @@
 <script>
-	import { userStore } from '../stores/user';
 	import Anchor from './Anchor.svelte';
 </script>
 
@@ -8,15 +7,10 @@
 		<div class="flex items-center space-x-4">
 			<Anchor href="/commands/">List Commands</Anchor>
 		</div>
-		<div class="flex items-center space-x-4">
-			{#if $userStore != null}
-				<div>
-					<Anchor href="/account/">My Account</Anchor>
-					<Anchor href="/api/Account/Logout/">Logout</Anchor>
-				</div>
-			{:else}
-				<Anchor href="/api/Account/Login/">Login</Anchor>
-			{/if}
+		<div>
+			<Anchor href="/ask-join/" className="bg-blue-500  text-white font-bold py-2 px-4 rounded"
+				>Join Bot</Anchor
+			>
 		</div>
 	</div>
 </header>
