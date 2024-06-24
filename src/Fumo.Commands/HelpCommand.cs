@@ -6,7 +6,8 @@ namespace Fumo.Commands;
 
 public class HelpCommand : ChatCommand
 {
-    private readonly string PublicURL;
+    private readonly string CommandUrl;
+
 
     public HelpCommand()
     {
@@ -17,18 +18,11 @@ public class HelpCommand : ChatCommand
 
     public HelpCommand(AppSettings settings) : this()
     {
-        PublicURL = settings.Website.PublicURL;
+        CommandUrl = new Uri(settings.Website.PublicURL, "/commands/").ToString();
     }
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)
-    {
-        var url = new Uri(new Uri(PublicURL), "/commands/");
-
-        return ValueTask.FromResult(new CommandResult
-        {
-            Message = url.ToString()
-        });
-    }
+        => new(CommandUrl);
 
     public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
         => builder

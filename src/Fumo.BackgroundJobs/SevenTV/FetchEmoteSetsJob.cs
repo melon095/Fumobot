@@ -1,6 +1,6 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;

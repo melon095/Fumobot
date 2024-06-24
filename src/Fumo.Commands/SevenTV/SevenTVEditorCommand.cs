@@ -4,9 +4,9 @@ using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using StackExchange.Redis;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands.SevenTV;
 
