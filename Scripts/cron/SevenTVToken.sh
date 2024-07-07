@@ -11,9 +11,18 @@ TWITCH_COOKIES=$(jq -r '.Curl.TwitchCookies' $CONFIG_NAME)
 
 check_auth() {
     token=$(jq -r $CONFIG_KEY $CONFIG_NAME)
-    res=$(curl -s -X POST https://7tv.io/v3/gql -H "Content-Type: application/json" -d '{"query":"{user:actor{id}}"}' -H "Authorization: Bearer $token" | jq -r '.data.user.id')
+    tmpfile=$(mktemp)
+    res=$(curl -s -w "%{http_code}" -o "$tmpfile" -X POST https://7tv.io/v3/gql -H "Content-Type: application/json" -d '{"query":"{user:actor{id}}"}' -H "Authorization: Bearer $token")
 
-    if [ "$res" == "null" ]; then
+    http_code=${res: -3}
+
+    if [ "$http_code" -ne 200 ]; then
+        return 1
+    fi
+
+    id=$(jq -r '.data.user.id' $tmpfile)
+
+    if [ "$id" == "null" ]; then
         return 1
     fi
     
