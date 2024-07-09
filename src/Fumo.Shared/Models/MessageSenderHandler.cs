@@ -78,39 +78,47 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     private async Task SendTask()
     {
-        while (!CancellationToken.IsCancellationRequested)
+        try
         {
-            try
+
+            while (!CancellationToken.IsCancellationRequested)
             {
-                long now = Unix();
-                foreach (var (channelId, queue) in Queues)
+                try
                 {
-                    while (queue.TryDequeue(out var value))
+                    long now = Unix();
+                    foreach (var (channelId, queue) in Queues)
                     {
-                        if (SendHistory.TryGetValue(channelId, out var lastSent))
+                        while (queue.TryDequeue(out var value))
                         {
-                            if (now - lastSent > MessageSendInterval)
+                            if (SendHistory.TryGetValue(channelId, out var lastSent))
                             {
+                                if (now - lastSent > MessageSendInterval)
+                                {
+                                    await SendMessage(value);
+                                    continue;
+                                }
+
+                                await Task.Delay(MessageSendInterval);
                                 await SendMessage(value);
                                 continue;
                             }
 
-                            await Task.Delay(MessageSendInterval);
+                            SendHistory[channelId] = now;
                             await SendMessage(value);
-                            continue;
                         }
-
-                        SendHistory[channelId] = now;
-                        await SendMessage(value);
                     }
-                }
 
-                await Task.Delay(QueueCheckInterval, CancellationToken);
+                    await Task.Delay(QueueCheckInterval, CancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Error in message sender task");
+                }
             }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error in message sender task");
-            }
+        }
+        catch (TaskCanceledException)
+        {
+            Logger.Information("Message sender task was cancelled");
         }
     }
 
