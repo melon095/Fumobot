@@ -1,5 +1,9 @@
 import type { PageLoad } from './$types';
 
+// To add more error messages:
+//      Add a new member here.
+//      Add the full /error/[errorCode] path to the svelte.config.js file.
+
 const errorMessages: Record<string, string> = {
 	'already-joined':
 		'The bot has already been added to your channel. If you believe this is wrong, contact @melon095 :)',
