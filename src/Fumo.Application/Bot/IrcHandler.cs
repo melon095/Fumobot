@@ -104,7 +104,7 @@ public class IrcHandler
 
             MessageReceivedCommand message = new ChatMessage(channel, user, input, isBroadcaster, isMod, messageScope, privmsg.Id);
 
-            await bus.Publish(message, token);
+            await bus.Publish(message, token).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
