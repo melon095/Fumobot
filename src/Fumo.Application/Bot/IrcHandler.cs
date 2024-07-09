@@ -60,7 +60,7 @@ public class IrcHandler
         Logger.Information("Connected to TMI");
 
         var channels = ChannelRepository.GetAll()
-            .Where(x => x.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == true)
+            .Where(x => x.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == false)
             .Select(x => x.TwitchName);
 
         foreach (var channel in channels)
