@@ -18,9 +18,9 @@ public class ConsoleMessageSenderHandler : IMessageSenderHandler
         Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(ScheduleMessage), spec.ChannelId, spec.Message);
     }
 
-    public async ValueTask ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel, CancellationToken cancellationToken = default)
+    public async void ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel)
     {
-        await CheckBanphrase(channel, spec.Message, cancellationToken);
+        await CheckBanphrase(channel, spec.Message, default);
         ScheduleMessage(spec);
     }
 

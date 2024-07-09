@@ -193,7 +193,6 @@ public class MessageReceivedCommandHandler(
 
         var responseSpec = new MessageSendSpec(message.Channel.TwitchID, result.Message, result.ReplyID);
 
-
-        await MessageSenderHandler.ScheduleMessageWithBanphraseCheck(responseSpec, message.Channel, cancellationToken);
+        MessageSenderHandler.ScheduleMessageWithBanphraseCheck(responseSpec, message.Channel);
     }
 }

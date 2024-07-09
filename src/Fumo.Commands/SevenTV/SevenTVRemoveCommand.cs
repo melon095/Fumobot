@@ -60,8 +60,8 @@ public class SevenTVRemoveCommand : ChatCommand
             output.Append($"Could not find the following emote{(Input.Count > 1 ? "s" : "")}");
             Input.ForEach(x => output.Append($" {x}"));
 
-            await MessageSender.ScheduleMessageWithBanphraseCheck(
-                new(Channel.TwitchName, output.ToString()), Channel, ct);
+            MessageSender.ScheduleMessageWithBanphraseCheck(
+                new(Channel.TwitchName, output.ToString()), Channel);
 
             output.Clear();
 
