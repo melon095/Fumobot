@@ -96,6 +96,7 @@ app.Start();
 await RunStartup(app, token);
 
 await app.WaitForShutdownAsync(token);
+Environment.Exit(0);
 
 static async Task RunStartup(WebApplication app, CancellationToken ct)
 {
