@@ -3,7 +3,7 @@
 public enum EventsubCommandType
 {
     Subscribed,
-    Revocation,
+    //Revocation,
     Notification
 }
 

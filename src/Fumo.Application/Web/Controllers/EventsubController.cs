@@ -78,9 +78,11 @@ public class EventsubController : ControllerBase
         {
             case MessageTypeRevocation:
                 {
-                    var command = EventsubCommandFactory.Create(EventsubCommandType.Revocation, subscriptionType, jsonBody);
-                    if (command is not null)
-                        await Bus.Send(command, ct);
+                    var subscription = jsonBody.GetProperty("subscription");
+                    var reason = subscription.GetProperty("status").GetString()!;
+                    var condition = subscription.GetProperty("condition").ToString();
+
+                    Logger.Information("Subscription {SubscriptionType} was revoked {Condition} ({Reason})", subscriptionType, condition, reason);
                 }
                 break;
 
