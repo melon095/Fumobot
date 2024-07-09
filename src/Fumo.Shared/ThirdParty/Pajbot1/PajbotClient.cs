@@ -8,6 +8,7 @@ public class PajbotClient
 {
     private static readonly string Endpoint = "api/v1/banphrases/test";
     private static readonly MediaTypeHeaderValue ContentType = new("application/x-www-form-urlencoded");
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     private HttpClient HttpClient { get; set; }
 
@@ -15,7 +16,7 @@ public class PajbotClient
     {
         HttpClient = new()
         {
-            Timeout = TimeSpan.FromSeconds(10),
+            Timeout = DefaultTimeout
         };
     }
 
