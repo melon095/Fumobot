@@ -99,6 +99,16 @@ internal class ChatMessageNotificationCommandHandler(
     private readonly ILifetimeScope LifetimeScope = lifetimeScope;
     private readonly MetricsTracker MetricsTracker = metricsTracker;
 
+    private static List<string> ParseMessage(string input)
+    {
+        const char ACTION_DENOTER = '\u0001';
+
+        if (input.Length > 9 && input[0] == ACTION_DENOTER && input[^1] == ACTION_DENOTER)
+            input = input[8..^1];
+
+        return [.. input.Split(' ', StringSplitOptions.RemoveEmptyEntries)];
+    }
+
     public async Task Handle(ChatMessageNotificationCommand request, CancellationToken cancellationToken)
     {
         try
@@ -120,9 +130,7 @@ internal class ChatMessageNotificationCommandHandler(
                 await UserRepository.SaveChanges(cancellationToken);
             }
 
-            var input = request.Message.Text
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
+            var input = ParseMessage(request.Message.Text);
 
             var isBroadcaster = user.TwitchID == channel.TwitchID;
 
