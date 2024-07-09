@@ -90,6 +90,8 @@ public static class Setup
                 x.Cookie.Name = "Fumo.Token";
                 x.Cookie.HttpOnly = true;
                 x.ExpireTimeSpan = TimeSpan.FromDays(30);
+                x.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                x.Cookie.SameSite = SameSiteMode.Strict;
             })
             .AddTwitch(x =>
             {
