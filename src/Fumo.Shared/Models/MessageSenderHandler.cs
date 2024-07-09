@@ -22,6 +22,12 @@ public interface IMessageSenderHandler
     void ScheduleMessage(MessageSendSpec spec);
 
     /// <summary>
+    /// It's <see cref="ScheduleMessage"/> but will run <see cref="CheckBanphrase"/> before sending.
+    /// This will send the <see cref="BanphraseReason"/> if the message is banned.
+    /// </summary>
+    ValueTask ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Will directly send a message to chat without obeying the message queue
     /// </summary>
     ValueTask SendMessage(MessageSendSpec spec);
@@ -122,6 +128,27 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
 
         queue.Enqueue(spec);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var bancheckResult = await CheckBanphrase(channel, spec.Message, cancellationToken);
+            var finalSpec = bancheckResult switch
+            {
+                BanphraseReason.None => spec,
+                BanphraseReason.PajbotTimeout => spec with { Message = $"⚠ {spec.Message}" },
+                _ => spec with { Message = bancheckResult.ToReasonString() },
+            };
+
+            ScheduleMessage(finalSpec);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", spec.ChannelId);
+        }
     }
 
     /// <inheritdoc/>

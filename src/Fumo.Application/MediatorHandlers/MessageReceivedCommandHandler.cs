@@ -191,16 +191,9 @@ public class MessageReceivedCommandHandler(
         var result = await Execute(commandInstance, message, commandName, cancellationToken);
         if (result is null || result.Message.Length == 0) return;
 
-        var bancheckResult = await MessageSenderHandler.CheckBanphrase(message.Channel, result.Message, cancellationToken);
-        var responseMsg = bancheckResult switch
-        {
-            BanphraseReason.None => result.Message,
-            BanphraseReason.PajbotTimeout => $"⚠ {result.Message}",
-            BanphraseReason reason => reason.ToReasonString(),
-        };
+        var responseSpec = new MessageSendSpec(message.Channel.TwitchID, result.Message, result.ReplyID);
 
-        var responseSpec = new MessageSendSpec(message.Channel.TwitchID, responseMsg, result.ReplyID);
 
-        MessageSenderHandler.ScheduleMessage(responseSpec);
+        await MessageSenderHandler.ScheduleMessageWithBanphraseCheck(responseSpec, message.Channel, cancellationToken);
     }
 }
