@@ -54,7 +54,7 @@ public class ChannelRenameJob : IJob
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
-                if (channel.GetSetting(ChannelSettingKey.ConnectedWithEventsub) == false.ToString())
+                if (channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == false)
                 {
                     await IrcClient.PartChannel(oldName, context.CancellationToken);
                     await IrcClient.JoinChannel(channel.TwitchName, context.CancellationToken);

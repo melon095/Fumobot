@@ -39,7 +39,7 @@ public class ChannelRemoverJob : IJob
             {
                 Logger.Information("Removing channel {ChannelName} from the database", channel.TwitchName);
 
-                if (channel.GetSetting(ChannelSettingKey.ConnectedWithEventsub) == true.ToString())
+                if (channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == true)
                     await EventsubManager.Unsubscribe(channel.TwitchID, EventsubType.ChannelChatMessage, context.CancellationToken);
                 else
                     await IrcClient.PartChannel(channel.TwitchName, context.CancellationToken);
