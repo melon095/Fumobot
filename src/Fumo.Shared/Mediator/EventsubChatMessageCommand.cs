@@ -20,16 +20,26 @@ internal record ChannelChatMessageSubscribedCommand(CreatedSubscription.Info Inf
 
 internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<ChannelChatMessageSubscribedCommand>
 {
+    private const string MigratedMessage = ":) 👋 Hi again.";
+    private const string JoinMessage = "FeelsDankMan 👋 Hi.";
+
     private readonly ILogger Logger;
     private readonly IChannelRepository ChannelRepository;
     private readonly IUserRepository UserRepository;
+    private readonly IMessageSenderHandler MessageSenderHandler;
     private readonly IrcClient IrcClient;
 
-    public ChannelChatMessageSubscribedCommandHandler(ILogger logger, IChannelRepository channelRepository, IUserRepository userRepository, IrcClient ircClient)
+    public ChannelChatMessageSubscribedCommandHandler(
+        ILogger logger,
+        IChannelRepository channelRepository,
+        IUserRepository userRepository,
+        IMessageSenderHandler messageSenderHandler,
+        IrcClient ircClient)
     {
         Logger = logger.ForContext<ChannelChatMessageSubscribedCommandHandler>();
         ChannelRepository = channelRepository;
         UserRepository = userRepository;
+        MessageSenderHandler = messageSenderHandler;
         IrcClient = ircClient;
     }
 
@@ -44,6 +54,7 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
 
         Logger.Information("Received chat message verification: {UserID} {UserName}", user.TwitchID, user.TwitchName);
 
+        var joinMessage = string.Empty;
         var channel = ChannelRepository.GetByID(user.TwitchID);
         if (channel is not null)
         {
@@ -51,6 +62,8 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
             channel.SetSetting(ChannelSettingKey.ConnectedWithEventsub, true.ToString());
 
             Logger.Information("Parted previous channel {ChannelName} from IRC", channel.TwitchName);
+
+            joinMessage = MigratedMessage;
         }
         else
         {
@@ -68,11 +81,13 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
             channel = await ChannelRepository.Create(newChannel, ct);
 
             Logger.Information("Created new channel {ChannelName} in database", channel.TwitchName);
+
+            joinMessage = JoinMessage;
         }
 
         await ChannelRepository.Update(channel, ct);
 
-        // TODO: Send message to chat.
+        MessageSenderHandler.ScheduleMessage(new(channel.TwitchID, joinMessage));
     }
 }
 

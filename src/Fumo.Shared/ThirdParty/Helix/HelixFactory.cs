@@ -86,7 +86,6 @@ public class HelixFactory : IHelixFactory
             Helix?.SetAccessToken(token);
         }
 
-        // TODO: Clean this
         Helix ??= new(token, UserId, LoggerFactory.CreateLogger<HelixWrapper>());
 
         return Helix;
