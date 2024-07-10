@@ -61,7 +61,7 @@ public class SevenTVRemoveCommand : ChatCommand
             Input.ForEach(x => output.Append($" {x}"));
 
             MessageSender.ScheduleMessageWithBanphraseCheck(
-                new(Channel.TwitchName, output.ToString()), Channel);
+                new(Channel.TwitchID, output.ToString()), Channel);
 
             output.Clear();
 

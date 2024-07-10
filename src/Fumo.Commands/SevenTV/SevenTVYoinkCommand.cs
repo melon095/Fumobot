@@ -139,7 +139,7 @@ public class SevenTVYoinkCommand : ChatCommand
                     ?? throw new Exception("Idk what happened");
 
                 MessageSender.ScheduleMessageWithBanphraseCheck(
-                    new(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}"), Channel);
+                    new(Channel.TwitchID, $"👍 Added {name} {writeChannelPrompt}"), Channel);
             }
             catch (Exception ex)
             {
@@ -150,7 +150,7 @@ public class SevenTVYoinkCommand : ChatCommand
                 }
 
                 MessageSender.ScheduleMessageWithBanphraseCheck(
-                    new(Channel.TwitchName, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}"), Channel);
+                    new(Channel.TwitchID, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}"), Channel);
             }
         }
 
