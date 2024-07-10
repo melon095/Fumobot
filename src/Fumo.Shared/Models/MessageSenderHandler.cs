@@ -175,14 +175,20 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
             var helix = await HelixFactory.Create(CancellationToken);
 
-            SentMessage sendResult = await helix.SendChatMessage(new(long.Parse(spec.ChannelId), message, replyParentMessageId: spec.ReplyId));
-            var sendValue = sendResult.Data[0];
+            var sendResult = await helix.SendChatMessage(new(long.Parse(spec.ChannelId), message, replyParentMessageId: spec.ReplyId));
+            if (!sendResult.Success)
+            {
+                Logger.Error("Failed to send message to {ChannelId}. {Error}", spec.ChannelId, sendResult.Message);
+                return;
+            }
+
+            var sendValue = sendResult.Value.Data[0];
 
             MetricsTracker.TotalMessagesSent.Inc();
 
             if (sendValue.IsSent) return;
 
-            Logger.Warning("Failed to send message '{Message}' to {ChannelId} {DropReason}", message, sendValue.DropReason);
+            Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
         }
         catch (Exception ex)
         {
