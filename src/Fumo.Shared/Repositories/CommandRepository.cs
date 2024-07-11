@@ -50,9 +50,6 @@ public class CommandRepository
         return default;
     }
 
-    public ChatCommand? GetCommand(string identifier)
-        => Search(identifier, x => Activator.CreateInstance(x) as ChatCommand);
-
-    public ILifetimeScope? CreateCommandScope(string identifier, ILifetimeScope lifetimeScope)
-        => Search(identifier, type => lifetimeScope.BeginLifetimeScope(x => x.RegisterType(type).As<ChatCommand>()));
+    public Type? GetCommandType(string identifier)
+        => Search(identifier, type => type);
 }

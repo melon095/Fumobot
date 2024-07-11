@@ -1,5 +1,4 @@
 ﻿using Fumo.Shared.Enums;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
@@ -9,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using System.Text;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands.SevenTV;
 

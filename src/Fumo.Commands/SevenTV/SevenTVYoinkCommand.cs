@@ -1,13 +1,13 @@
 ﻿using Fumo.Database;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Utils;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using System.Collections.Immutable;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -135,9 +135,11 @@ public class SevenTVYoinkCommand : ChatCommand
             {
                 var aliasName = keepAlias ? emote.Name : null;
 
-                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.ID, aliasName, ct) ?? throw new Exception("Idk what happened");
+                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.ID, aliasName, ct)
+                    ?? throw new Exception("Idk what happened");
 
-                MessageSender.ScheduleMessage(Channel.TwitchName, $"👍 Added {name} {writeChannelPrompt}");
+                var method = MessageSender.Prepare($"👍 Added {name} {writeChannelPrompt}", Channel);
+                MessageSender.ScheduleMessageWithBanphraseCheck(method, Channel);
             }
             catch (Exception ex)
             {
@@ -147,7 +149,8 @@ public class SevenTVYoinkCommand : ChatCommand
                     e += $" (alias of {emote.Name})";
                 }
 
-                MessageSender.ScheduleMessage(Channel.TwitchName, $"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}");
+                var method = MessageSender.Prepare($"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}", Channel);
+                MessageSender.ScheduleMessageWithBanphraseCheck(method, Channel);
             }
         }
 

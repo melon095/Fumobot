@@ -11,6 +11,8 @@ public class DatabaseContext : DbContext
 
     public DbSet<UserDTO> Users { get; set; }
 
+    public DbSet<UserOauthDTO> UserOauth { get; set; }
+
     public DbSet<CommandExecutionLogsDTO> CommandExecutionLogs { get; set; }
 
     // For migrations
@@ -64,6 +66,10 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<CommandExecutionLogsDTO>()
             .Property(x => x.Date)
             .HasDefaultValueSql("now()");
+
+        modelBuilder.Entity<UserOauthDTO>()
+            .HasIndex(x => new { x.TwitchID, x.Provider })
+            .IsUnique();
 
         modelBuilder.AddQuartz(x => x.UsePostgreSql());
 

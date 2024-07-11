@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autofac;
+﻿using Autofac;
 using Fumo.Application.Bot;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Helix;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using MiniTwitch.Irc;
 using Serilog;
@@ -21,8 +17,19 @@ internal class SingletonModule(AppSettings settings) : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
+        var commandRepository = new CommandRepository(Log.Logger);
+        commandRepository.LoadAssemblyCommands();
+
+        foreach (var command in commandRepository.Commands)
+        {
+            builder
+                .RegisterType(command.Value.GetType())
+                .AsSelf()
+                .InstancePerDependency();
+        }
+
         builder
-            .RegisterType<CommandRepository>()
+            .RegisterInstance(commandRepository)
             .AsSelf()
             .SingleInstance();
 
@@ -47,22 +54,19 @@ internal class SingletonModule(AppSettings settings) : Module
         builder.Register(x => x.Resolve<ConnectionMultiplexer>().GetDatabase().WithKeyPrefix("fumobot:"));
 
         builder
-            .RegisterType<CommandHandler>()
-            .As<ICommandHandler>()
-            .SingleInstance();
-
-        builder
             .RegisterType<IrcHandler>()
             .AsSelf()
             .SingleInstance();
 
-        builder
-            .RegisterType<CooldownHandler>()
-            .As<ICooldownHandler>()
-            .SingleInstance();
+        var messageMethod = settings.MessageSendingMethod switch
+        {
+            MessageSendingMethod.Helix => typeof(MessageSenderHandler),
+            MessageSendingMethod.Console => typeof(ConsoleMessageSenderHandler),
+            _ => throw new ArgumentException(nameof(settings.MessageSendingMethod))
+        };
 
         builder
-            .RegisterType<MessageSenderHandler>()
+            .RegisterType(messageMethod)
             .As<IMessageSenderHandler>()
             .SingleInstance();
 
@@ -83,6 +87,16 @@ internal class SingletonModule(AppSettings settings) : Module
         builder
             .RegisterType<SevenTVService>()
             .As<ISevenTVService>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<HelixFactory>()
+            .As<IHelixFactory>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<EventsubCommandRegistry>()
+            .As<IEventsubCommandRegistry>()
             .SingleInstance();
     }
 }

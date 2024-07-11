@@ -19,7 +19,7 @@ namespace Fumo.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.10")
+                .HasAnnotation("ProductVersion", "8.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -590,6 +590,39 @@ namespace Fumo.Database.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Fumo.Database.DTO.UserOauthDTO", b =>
+                {
+                    b.Property<string>("TwitchID")
+                        .HasColumnType("text")
+                        .HasColumnOrder(0);
+
+                    b.Property<string>("Provider")
+                        .HasColumnType("text")
+                        .HasColumnOrder(1);
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<List<string>>("Scopes")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.HasKey("TwitchID", "Provider");
+
+                    b.HasIndex("TwitchID", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("UserOauth");
+                });
+
             modelBuilder.Entity("AppAny.Quartz.EntityFrameworkCore.Migrations.QuartzBlobTrigger", b =>
                 {
                     b.HasOne("AppAny.Quartz.EntityFrameworkCore.Migrations.QuartzTrigger", "Trigger")
@@ -671,6 +704,17 @@ namespace Fumo.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Channel");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fumo.Database.DTO.UserOauthDTO", b =>
+                {
+                    b.HasOne("Fumo.Database.DTO.UserDTO", "User")
+                        .WithMany()
+                        .HasForeignKey("TwitchID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

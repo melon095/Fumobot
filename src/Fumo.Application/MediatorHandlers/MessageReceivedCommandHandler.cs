@@ -1,83 +1,36 @@
 ﻿using Autofac;
+using System.Diagnostics;
 using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Enums;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Exceptions;
-using System.Diagnostics;
+using MediatR;
+using Fumo.Shared.Mediator;
+using StackExchange.Redis;
 
-namespace Fumo.Application.Bot;
+namespace Fumo.Application.MediatorHandlers;
 
-internal class CommandHandler : ICommandHandler
+public class MessageReceivedCommandHandler(
+    Serilog.ILogger logger,
+    IDatabase redis,
+    IMessageSenderHandler messageSenderHandler,
+    CommandRepository commandRepository,
+    DatabaseContext databaseContext,
+    AppSettings settings)
+        : INotificationHandler<MessageReceivedCommand>
 {
-    private readonly Serilog.ILogger Logger;
-    private readonly ICooldownHandler CooldownHandler;
-    private readonly IMessageSenderHandler MessageSenderHandler;
-    private readonly CommandRepository CommandRepository;
-    private readonly DatabaseContext DatabaseContext;
-    private readonly string GlobalPrefix;
+    private readonly Serilog.ILogger Logger = logger.ForContext<MessageReceivedCommandHandler>();
+    private readonly IDatabase Redis = redis;
+    private readonly IMessageSenderHandler MessageSenderHandler = messageSenderHandler;
+    private readonly CommandRepository CommandRepository = commandRepository;
+    private readonly DatabaseContext DatabaseContext = databaseContext;
+    private readonly string GlobalPrefix = settings.GlobalPrefix;
 
-    public CommandHandler(
-        IrcHandler irc,
-        Serilog.ILogger logger,
-        ICooldownHandler cooldownHandler,
-        IMessageSenderHandler messageSenderHandler,
-        AppSettings settings,
-        CommandRepository commandRepository,
-        DatabaseContext databaseContext)
-    {
-        Logger = logger.ForContext<CommandHandler>();
-        CooldownHandler = cooldownHandler;
-        CommandRepository = commandRepository;
-        MessageSenderHandler = messageSenderHandler;
-        DatabaseContext = databaseContext;
-        GlobalPrefix = settings.GlobalPrefix;
-
-        irc.OnMessage += OnMessage;
-
-        Logger.Information("CommandHandler Initialized. Global Prefix is {GlobalPrefix}", GlobalPrefix);
-    }
-
-    // On messages that begin with the channel/global prefix are executed.
-    private async ValueTask OnMessage(ChatMessage message, CancellationToken cancellationToken)
-    {
-        var prefix = GetPrefixForChannel(message.Channel);
-        if (!message.Input[0].StartsWith(prefix)) return;
-
-        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
-        if (commandName is null) return;
-
-        message.Input.Clear();
-        message.Input.AddRange(input);
-
-        var result = await TryExecute(message, commandName, cancellationToken);
-
-        if (result is null) return;
-
-        ScheduleMessageSpecification spec = new(message.Channel.TwitchName, result.Message)
-        {
-            IgnoreBanphrase = result.IgnoreBanphrase,
-            ReplyID = result.ReplyID,
-        };
-
-        MessageSenderHandler.ScheduleMessage(spec);
-    }
-
-    private string GetPrefixForChannel(ChannelDTO channel)
-    {
-        var channelPrefix = channel.GetSetting(ChannelSettingKey.Prefix);
-
-        if (!string.IsNullOrEmpty(channelPrefix))
-        {
-            return channelPrefix;
-        }
-
-        return GlobalPrefix;
-    }
+    private static string CooldownKey(ChatMessage message, ChatCommand command) => $"channel:{message.Channel.TwitchID}:cooldown:{command.NameMatcher}:{message.User.TwitchID}";
 
     private static (string?, ArraySegment<string>) ParseMessage(string message, string prefix)
     {
@@ -110,14 +63,19 @@ internal class CommandHandler : ICommandHandler
         }
     }
 
-    public async ValueTask<CommandResult?> TryExecute(ChatMessage message, string commandName, CancellationToken cancellationToken = default)
+    private string GetPrefix(ChannelDTO channel)
+        => channel.GetSetting(ChannelSettingKey.Prefix) switch
+        {
+            string prefix when !string.IsNullOrEmpty(prefix) => prefix,
+            _ => GlobalPrefix,
+        };
+
+    private async ValueTask<CommandResult?> Execute(
+        ChatCommand command,
+        ChatMessage message,
+        string commandInvocationName,
+        CancellationToken cancellationToken = default)
     {
-        var commandScope = CommandRepository.CreateCommandScope(commandName, message.Scope);
-        if (commandScope is null) return null;
-
-        var command = commandScope.Resolve<ChatCommand>();
-
-        var stopwatch = Stopwatch.StartNew();
         CommandExecutionLogsDTO commandExecutionLogs = new()
         {
             Id = Guid.NewGuid(),
@@ -127,6 +85,8 @@ internal class CommandHandler : ICommandHandler
             Success = false,
             Input = message.Input,
         };
+
+        var stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -140,14 +100,14 @@ internal class CommandHandler : ICommandHandler
                 }
             }
 
-            bool onCooldown = await CooldownHandler.IsOnCooldown(message, command);
+            bool onCooldown = await Redis.KeyExistsAsync(CooldownKey(message, command));
             if (onCooldown) return null;
 
             command.ParseArguments(message.Input);
             command.Channel = message.Channel;
             command.User = message.User;
             command.Input = message.Input;
-            command.CommandInvocationName = commandName;
+            command.CommandInvocationName = commandInvocationName;
 
             Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 
@@ -160,7 +120,7 @@ internal class CommandHandler : ICommandHandler
 
             result.IgnoreBanphrase = command.Flags.HasFlag(ChatCommandFlags.IgnoreBanphrase);
 
-            await CooldownHandler.SetCooldown(message, command);
+            await Redis.StringSetAsync(CooldownKey(message, command), 1, expiry: command.Cooldown);
 
             if (command.Flags.HasFlag(ChatCommandFlags.Reply))
             {
@@ -184,7 +144,7 @@ internal class CommandHandler : ICommandHandler
             commandExecutionLogs.Success = false;
             commandExecutionLogs.Result = ex.Message;
 
-            Logger.Error(ex, "Failed to execute command in {Channel}", message.Channel.TwitchName);
+            Logger.Error(ex, "Failed to execute command {CommandName} in {Channel}", commandInvocationName, message.Channel.TwitchName);
 
             if (message.User.HasPermission("user.chat_error"))
             {
@@ -208,5 +168,31 @@ internal class CommandHandler : ICommandHandler
                 await DatabaseContext.SaveChangesAsync(cancellationToken);
             }
         }
+    }
+
+    public async Task Handle(MessageReceivedCommand notification, CancellationToken cancellationToken)
+    {
+        var message = notification.Message;
+
+        var prefix = GetPrefix(message.Channel);
+        if (!message.Input[0].StartsWith(prefix)) return;
+
+        var (commandName, input) = ParseMessage(string.Join(' ', message.Input), prefix);
+        if (commandName is null) return;
+
+        message.Input.Clear();
+        message.Input.AddRange(input);
+
+        var commandType = CommandRepository.GetCommandType(commandName);
+        if (commandType is null) return;
+
+        if (message.Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
+
+        var result = await Execute(commandInstance, message, commandName, cancellationToken);
+        if (result is null || result.Message.Length == 0) return;
+
+        var response = MessageSenderHandler.Prepare(result.Message, message.Channel, result.ReplyID);
+
+        MessageSenderHandler.ScheduleMessageWithBanphraseCheck(response, message.Channel);
     }
 }
