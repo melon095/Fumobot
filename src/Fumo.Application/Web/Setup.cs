@@ -14,17 +14,18 @@ namespace Fumo.Application.Web;
 
 public static class Setup
 {
+    private const string NAUGHTY_SCOPE = "user:read:email";
+
     private static readonly List<string> TWITCH_SCOPES =
     [
         "openid",
-        "user:read:email",
         "channel:bot"
     ];
+
 
     private static readonly List<string> TWITCH_BOT_SCOPES =
     [
         "openid",
-        "user:read:email",
         "user:read:chat",
         "user:write:chat",
         "user:bot",
@@ -103,6 +104,8 @@ public static class Setup
                     x.Scope.Add(scope);
                 }
 
+                x.Scope.Remove(NAUGHTY_SCOPE);
+
                 x.Events.OnCreatingTicket = async (context) =>
                 {
                     var userRepo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
@@ -158,6 +161,8 @@ public static class Setup
                 {
                     x.Scope.Add(scope);
                 }
+
+                x.Scope.Remove(NAUGHTY_SCOPE);
 
                 // Don't do anything with the token.
             });
