@@ -83,7 +83,7 @@ public class HelixFactory : IHelixFactory
 
             Logger.Information("New App Access Token has been created. Expires in {ExpiresIn} seconds", newToken.ExpiresIn);
 
-            Helix?.SetAccessToken(token);
+            Helix?.Client.ChangeToken(token, UserId);
         }
 
         Helix ??= new(token, UserId, LoggerFactory.CreateLogger<HelixWrapper>());
