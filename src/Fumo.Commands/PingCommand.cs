@@ -54,6 +54,6 @@ public class PingCommand : ChatCommand
         => builder
             .WithCache()
             .WithDisplayName("ping")
-            .WithArgument("detailed", (x) => x.Optional("detailed"))
+            .WithArgument("detailed", (x) => { })
             .Finish;
 }
