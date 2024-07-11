@@ -13,9 +13,23 @@ public class ConsoleMessageSenderHandler : IMessageSenderHandler
         Logger = logger.ForContext<ConsoleMessageSenderHandler>();
     }
 
+    public MessageSendMethod DecideSendMethod(ChannelDTO channel)
+    {
+        Logger.Debug("{Method}\t{ChannelId}", nameof(DecideSendMethod), channel.TwitchID);
+
+        return new MessageSendMethod.Irc(channel.TwitchName);
+    }
+
+    public MessageSendData Prepare(string message, ChannelDTO channel, string? replyId = null)
+    {
+        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(Prepare), channel.TwitchID, message);
+
+        return new(message, DecideSendMethod(channel), replyId);
+    }
+
     public void ScheduleMessage(MessageSendData data)
     {
-        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(ScheduleMessage), data.ChannelId, data.Message);
+        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(ScheduleMessage), data.SendMethod.Identifier, data.Message);
     }
     public void ScheduleMessage(MessageSendData data, ChannelDTO channel)
         => ScheduleMessage(data);
@@ -28,12 +42,12 @@ public class ConsoleMessageSenderHandler : IMessageSenderHandler
 
     public ValueTask SendMessage(MessageSendData data)
     {
-        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(SendMessage), data.ChannelId, data.Message);
+        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(SendMessage), data.SendMethod.Identifier, data.Message);
 
         return ValueTask.CompletedTask;
     }
 
-    public void Cleanup(string channelId) { }
+    public void Cleanup(MessageSendMethod method) { }
 
     public ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default)
     {

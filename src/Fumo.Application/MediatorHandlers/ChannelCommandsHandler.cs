@@ -1,4 +1,6 @@
 ﻿using Fumo.BackgroundJobs.SevenTV;
+using Fumo.Database;
+using Fumo.Database.Extensions;
 using Fumo.Shared.Mediator;
 using Fumo.Shared.Models;
 using MediatR;
@@ -29,7 +31,13 @@ public class OnChannelDeletedCommandHandler(IMessageSenderHandler messageSenderH
 {
     public Task Handle(OnChannelDeletedCommand request, CancellationToken ct)
     {
-        messageSenderHandler.Cleanup(request.Channel.TwitchID);
+        MessageSendMethod method = request.Channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) switch
+        {
+            true => new MessageSendMethod.Helix(request.Channel.TwitchID),
+            false => new MessageSendMethod.Irc(request.Channel.TwitchName)
+        };
+
+        messageSenderHandler.Cleanup(method);
 
         return Task.CompletedTask;
     }

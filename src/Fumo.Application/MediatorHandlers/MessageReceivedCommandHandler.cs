@@ -191,7 +191,7 @@ public class MessageReceivedCommandHandler(
         var result = await Execute(commandInstance, message, commandName, cancellationToken);
         if (result is null || result.Message.Length == 0) return;
 
-        var response = new MessageSendData(message.Channel.TwitchID, result.Message, result.ReplyID);
+        var response = MessageSenderHandler.Prepare(result.Message, message.Channel, result.ReplyID);
 
         MessageSenderHandler.ScheduleMessageWithBanphraseCheck(response, message.Channel);
     }

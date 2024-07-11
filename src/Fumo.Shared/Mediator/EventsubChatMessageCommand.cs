@@ -87,7 +87,7 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
 
         await ChannelRepository.Update(channel, ct);
 
-        MessageSenderHandler.ScheduleMessage(new(channel.TwitchID, joinMessage));
+        MessageSenderHandler.ScheduleMessage(new(joinMessage, new MessageSendMethod.Helix(channel.TwitchID)));
     }
 }
 

@@ -7,6 +7,7 @@ using Fumo.Shared.ThirdParty.Pajbot1;
 using Fumo.Shared.Enums;
 using Fumo.Shared.ThirdParty.Helix;
 using MiniTwitch.Irc;
+using System.Data;
 
 namespace Fumo.Shared.Models;
 
@@ -15,33 +16,24 @@ using MessageQueue = ConcurrentQueue<MessageSendData>;
 public abstract record MessageSendMethod(string Identifier)
 {
     public sealed record Irc(string ChannelName) : MessageSendMethod(ChannelName);
-    public sealed record Helix(string ChanneLId) : MessageSendMethod(ChanneLId);
+    public sealed record Helix(string ChannelId) : MessageSendMethod(ChannelId);
 }
 
-public record MessageSendData(
-    string ChannelId, string Message,
-    string? ReplyId = null, MessageSendMethod? SendMethod = null);
+public record MessageSendData(string Message, MessageSendMethod SendMethod, string? ReplyId = null);
 
 public interface IMessageSenderHandler
 {
-    /// <summary>
-    /// Schedule a message to be sent to a channel after the global message interval rule
-    /// </summary>
-    void ScheduleMessage(MessageSendData data);
-    void ScheduleMessage(MessageSendData data, ChannelDTO channel);
+    MessageSendMethod DecideSendMethod(ChannelDTO channel);
 
-    /// <summary>
-    /// It's <see cref="ScheduleMessage"/> but will run <see cref="CheckBanphrase"/> before sending.
-    /// This will send the <see cref="BanphraseReason"/> if the message is banned.
-    /// </summary>
+    MessageSendData Prepare(string message, ChannelDTO channel, string? replyId = null);
+
+    void ScheduleMessage(MessageSendData data);
+
     void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel);
 
-    /// <summary>
-    /// Will directly send a message to chat without obeying the message queue
-    /// </summary>
     ValueTask SendMessage(MessageSendData data);
 
-    void Cleanup(string channelId);
+    void Cleanup(MessageSendMethod method);
 
     ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default);
 }
@@ -134,13 +126,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     private static long Unix() => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-    private static MessageSendMethod DecideSendMethod(ChannelDTO channel)
-        => channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) switch
-        {
-            true => new MessageSendMethod.Helix(channel.TwitchID),
-            false => new MessageSendMethod.Irc(channel.TwitchName),
-        };
-
     private static string CleanTheMessage(string input)
     {
         var message = input.Trim();
@@ -153,28 +138,28 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         return message;
     }
 
-    private async ValueTask<bool> SendIrc(MessageSendData data, MessageSendMethod method)
+    private async ValueTask<bool> SendIrc(MessageSendData data)
     {
         var message = CleanTheMessage(data.Message);
 
         if (data.ReplyId is string replyId)
-            await Irc.ReplyTo(replyId, method.Identifier, message, cancellationToken: CancellationToken);
+            await Irc.ReplyTo(replyId, data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
         else
-            await Irc.SendMessage(method.Identifier, message, cancellationToken: CancellationToken);
+            await Irc.SendMessage(data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
 
         return true;
     }
 
-    private async ValueTask<bool> SendHelix(MessageSendData data, MessageSendMethod method)
+    private async ValueTask<bool> SendHelix(MessageSendData data)
     {
         var message = CleanTheMessage(data.Message);
 
         var helix = await HelixFactory.Create(CancellationToken);
 
-        var sendResult = await helix.SendChatMessage(new(long.Parse(method.Identifier), message, replyParentMessageId: data.ReplyId));
+        var sendResult = await helix.SendChatMessage(new(long.Parse(data.SendMethod.Identifier), message, replyParentMessageId: data.ReplyId));
         if (!sendResult.Success)
         {
-            Logger.Error("Failed to send message to {ChannelId}. {Error}", method.Identifier, sendResult.Message);
+            Logger.Error("Failed to send message to {ChannelId}. {Error}", data.SendMethod.Identifier, sendResult.Message);
             return false;
         }
 
@@ -187,28 +172,29 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         return false;
     }
 
-    /// <inheritdoc/>
+    public MessageSendMethod DecideSendMethod(ChannelDTO channel)
+         => channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) switch
+         {
+             true => new MessageSendMethod.Helix(channel.TwitchID),
+             false => new MessageSendMethod.Irc(channel.TwitchName),
+         };
+
+    public MessageSendData Prepare(string message, ChannelDTO channel, string? replyId = null)
+        => new(message, DecideSendMethod(channel), replyId);
+
     public void ScheduleMessage(MessageSendData data)
     {
-        SendHistory[data.ChannelId] = Unix();
+        SendHistory[data.SendMethod.Identifier] = Unix();
 
-        if (!Queues.TryGetValue(data.ChannelId, out var queue))
+        if (!Queues.TryGetValue(data.SendMethod.Identifier, out var queue))
         {
             queue = new MessageQueue();
-            Queues[data.ChannelId] = queue;
+            Queues[data.SendMethod.Identifier] = queue;
         }
 
         queue.Enqueue(data);
     }
 
-    public void ScheduleMessage(MessageSendData data, ChannelDTO channel)
-    {
-        var sendMethod = DecideSendMethod(channel);
-
-        ScheduleMessage(data with { SendMethod = sendMethod });
-    }
-
-    /// <inheritdoc/>
     public async void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel)
     {
         try
@@ -221,20 +207,19 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                 _ => data with { Message = bancheckResult.ToReasonString() },
             };
 
-            ScheduleMessage(finalData, channel);
+            ScheduleMessage(finalData);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", data.ChannelId);
+            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", data.SendMethod.Identifier);
         }
     }
 
-    /// <inheritdoc/>
     public async ValueTask SendMessage(MessageSendData data)
     {
         if (string.IsNullOrEmpty(data.Message)) return;
 
-        SendHistory[data.ChannelId] = Unix();
+        SendHistory[data.SendMethod.Identifier] = Unix();
 
         bool success = false;
         try
@@ -243,13 +228,13 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             {
                 case MessageSendMethod.Irc:
                     {
-                        success = await SendIrc(data, data.SendMethod);
+                        success = await SendIrc(data);
                     }
                     break;
 
                 case MessageSendMethod.Helix:
                     {
-                        success = await SendHelix(data, data.SendMethod);
+                        success = await SendHelix(data);
                     }
                     break;
 
@@ -259,7 +244,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to send message to {ChannelId}", data.ChannelId);
+            Logger.Error(ex, "Failed to send message to {ChannelId}", data.SendMethod.Identifier);
         }
         finally
         {
@@ -268,12 +253,12 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
     }
 
-    public void Cleanup(string channelId)
+    public void Cleanup(MessageSendMethod method)
     {
-        Logger.Information("Cleaning queue for {ChannelId}", channelId);
+        Logger.Information("Cleaning queue for {ChannelId}", method.Identifier);
 
-        SendHistory.TryRemove(channelId, out _);
-        if (Queues.TryRemove(channelId, out var queue))
+        SendHistory.TryRemove(method.Identifier, out _);
+        if (Queues.TryRemove(method.Identifier, out var queue))
             queue.Clear();
     }
 
