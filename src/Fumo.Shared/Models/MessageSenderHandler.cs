@@ -6,31 +6,40 @@ using Fumo.Database.Extensions;
 using Fumo.Shared.ThirdParty.Pajbot1;
 using Fumo.Shared.Enums;
 using Fumo.Shared.ThirdParty.Helix;
-using MiniTwitch.Helix.Responses;
+using MiniTwitch.Irc;
 
 namespace Fumo.Shared.Models;
 
-using MessageQueue = ConcurrentQueue<MessageSendSpec>;
+using MessageQueue = ConcurrentQueue<MessageSendData>;
 
-public record MessageSendSpec(string ChannelId, string Message, string? ReplyId = null);
+public abstract record MessageSendMethod(string Identifier)
+{
+    public sealed record Irc(string ChannelName) : MessageSendMethod(ChannelName);
+    public sealed record Helix(string ChanneLId) : MessageSendMethod(ChanneLId);
+}
+
+public record MessageSendData(
+    string ChannelId, string Message,
+    string? ReplyId = null, MessageSendMethod? SendMethod = null);
 
 public interface IMessageSenderHandler
 {
     /// <summary>
     /// Schedule a message to be sent to a channel after the global message interval rule
     /// </summary>
-    void ScheduleMessage(MessageSendSpec spec);
+    void ScheduleMessage(MessageSendData data);
+    void ScheduleMessage(MessageSendData data, ChannelDTO channel);
 
     /// <summary>
     /// It's <see cref="ScheduleMessage"/> but will run <see cref="CheckBanphrase"/> before sending.
     /// This will send the <see cref="BanphraseReason"/> if the message is banned.
     /// </summary>
-    void ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel);
+    void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel);
 
     /// <summary>
     /// Will directly send a message to chat without obeying the message queue
     /// </summary>
-    ValueTask SendMessage(MessageSendSpec spec);
+    ValueTask SendMessage(MessageSendData data);
 
     void Cleanup(string channelId);
 
@@ -54,17 +63,20 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private readonly PajbotClient Pajbot = new();
     private readonly Serilog.ILogger Logger;
     private readonly IHelixFactory HelixFactory;
+    private readonly IrcClient Irc;
 
     public MessageSenderHandler(
         CancellationTokenSource cancellationTokenSource,
         MetricsTracker metricsTracker,
         Serilog.ILogger logger,
-        IHelixFactory helixFactory)
+        IHelixFactory helixFactory,
+        IrcClient irc)
     {
         Logger = logger.ForContext<MessageSenderHandler>();
         MetricsTracker = metricsTracker;
         CancellationToken = cancellationTokenSource.Token;
         HelixFactory = helixFactory;
+        Irc = irc;
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
@@ -122,77 +134,137 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     private static long Unix() => DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-    /// <inheritdoc/>
-    public void ScheduleMessage(MessageSendSpec spec)
-    {
-        SendHistory[spec.ChannelId] = Unix();
+    private static MessageSendMethod DecideSendMethod(ChannelDTO channel)
+        => channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) switch
+        {
+            true => new MessageSendMethod.Helix(channel.TwitchID),
+            false => new MessageSendMethod.Irc(channel.TwitchName),
+        };
 
-        if (!Queues.TryGetValue(spec.ChannelId, out var queue))
+    private static string CleanTheMessage(string input)
+    {
+        var message = input.Trim();
+
+        if (message.Length > MaxMessageLength)
+        {
+            message = message[..(MaxMessageLength - Ellipsis.Length)] + Ellipsis;
+        }
+
+        return message;
+    }
+
+    private async ValueTask<bool> SendIrc(MessageSendData data, MessageSendMethod method)
+    {
+        var message = CleanTheMessage(data.Message);
+
+        if (data.ReplyId is string replyId)
+            await Irc.ReplyTo(replyId, method.Identifier, message, cancellationToken: CancellationToken);
+        else
+            await Irc.SendMessage(method.Identifier, message, cancellationToken: CancellationToken);
+
+        return true;
+    }
+
+    private async ValueTask<bool> SendHelix(MessageSendData data, MessageSendMethod method)
+    {
+        var message = CleanTheMessage(data.Message);
+
+        var helix = await HelixFactory.Create(CancellationToken);
+
+        var sendResult = await helix.SendChatMessage(new(long.Parse(method.Identifier), message, replyParentMessageId: data.ReplyId));
+        if (!sendResult.Success)
+        {
+            Logger.Error("Failed to send message to {ChannelId}. {Error}", method.Identifier, sendResult.Message);
+            return false;
+        }
+
+        var sendValue = sendResult.Value.Data[0];
+
+        if (sendValue.IsSent) return true;
+
+        Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public void ScheduleMessage(MessageSendData data)
+    {
+        SendHistory[data.ChannelId] = Unix();
+
+        if (!Queues.TryGetValue(data.ChannelId, out var queue))
         {
             queue = new MessageQueue();
-            Queues[spec.ChannelId] = queue;
+            Queues[data.ChannelId] = queue;
         }
 
-        queue.Enqueue(spec);
+        queue.Enqueue(data);
+    }
+
+    public void ScheduleMessage(MessageSendData data, ChannelDTO channel)
+    {
+        var sendMethod = DecideSendMethod(channel);
+
+        ScheduleMessage(data with { SendMethod = sendMethod });
     }
 
     /// <inheritdoc/>
-    public async void ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel)
+    public async void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel)
     {
         try
         {
-            var bancheckResult = await CheckBanphrase(channel, spec.Message, CancellationToken);
-            var finalSpec = bancheckResult switch
+            var bancheckResult = await CheckBanphrase(channel, data.Message, CancellationToken);
+            var finalData = bancheckResult switch
             {
-                BanphraseReason.None => spec,
-                BanphraseReason.PajbotTimeout => spec with { Message = $"⚠ {spec.Message}" },
-                _ => spec with { Message = bancheckResult.ToReasonString() },
+                BanphraseReason.None => data,
+                BanphraseReason.PajbotTimeout => data with { Message = $"⚠ {data.Message}" },
+                _ => data with { Message = bancheckResult.ToReasonString() },
             };
 
-            ScheduleMessage(finalSpec);
+            ScheduleMessage(finalData, channel);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", spec.ChannelId);
+            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", data.ChannelId);
         }
     }
 
     /// <inheritdoc/>
-    public async ValueTask SendMessage(MessageSendSpec spec)
+    public async ValueTask SendMessage(MessageSendData data)
     {
+        if (string.IsNullOrEmpty(data.Message)) return;
+
+        SendHistory[data.ChannelId] = Unix();
+
+        bool success = false;
         try
         {
-            if (string.IsNullOrEmpty(spec.Message)) return;
-
-            SendHistory[spec.ChannelId] = Unix();
-
-            var message = spec.Message.Trim();
-
-            if (message.Length > MaxMessageLength)
+            switch (data.SendMethod)
             {
-                message = message[..(MaxMessageLength - Ellipsis.Length)] + Ellipsis;
+                case MessageSendMethod.Irc:
+                    {
+                        success = await SendIrc(data, data.SendMethod);
+                    }
+                    break;
+
+                case MessageSendMethod.Helix:
+                    {
+                        success = await SendHelix(data, data.SendMethod);
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Unknown send method {data.SendMethod}");
             }
-
-            var helix = await HelixFactory.Create(CancellationToken);
-
-            var sendResult = await helix.SendChatMessage(new(long.Parse(spec.ChannelId), message, replyParentMessageId: spec.ReplyId));
-            if (!sendResult.Success)
-            {
-                Logger.Error("Failed to send message to {ChannelId}. {Error}", spec.ChannelId, sendResult.Message);
-                return;
-            }
-
-            var sendValue = sendResult.Value.Data[0];
-
-            MetricsTracker.TotalMessagesSent.Inc();
-
-            if (sendValue.IsSent) return;
-
-            Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to send message to {ChannelId}", spec.ChannelId);
+            Logger.Error(ex, "Failed to send message to {ChannelId}", data.ChannelId);
+        }
+        finally
+        {
+            if (success)
+                MetricsTracker.TotalMessagesSent.Inc();
         }
     }
 

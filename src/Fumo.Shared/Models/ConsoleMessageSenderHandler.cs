@@ -13,20 +13,22 @@ public class ConsoleMessageSenderHandler : IMessageSenderHandler
         Logger = logger.ForContext<ConsoleMessageSenderHandler>();
     }
 
-    public void ScheduleMessage(MessageSendSpec spec)
+    public void ScheduleMessage(MessageSendData data)
     {
-        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(ScheduleMessage), spec.ChannelId, spec.Message);
+        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(ScheduleMessage), data.ChannelId, data.Message);
+    }
+    public void ScheduleMessage(MessageSendData data, ChannelDTO channel)
+        => ScheduleMessage(data);
+
+    public async void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel)
+    {
+        await CheckBanphrase(channel, data.Message, default);
+        ScheduleMessage(data);
     }
 
-    public async void ScheduleMessageWithBanphraseCheck(MessageSendSpec spec, ChannelDTO channel)
+    public ValueTask SendMessage(MessageSendData data)
     {
-        await CheckBanphrase(channel, spec.Message, default);
-        ScheduleMessage(spec);
-    }
-
-    public ValueTask SendMessage(MessageSendSpec spec)
-    {
-        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(SendMessage), spec.ChannelId, spec.Message);
+        Logger.Debug("{Method}\t{ChannelId}\t{Message}", nameof(SendMessage), data.ChannelId, data.Message);
 
         return ValueTask.CompletedTask;
     }
