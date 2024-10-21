@@ -5,7 +5,7 @@ namespace Fumo.Shared.Regexes;
 public static partial class ExtractSevenTVIDRegex
 {
     [GeneratedRegex(
-        @"\b6\d[a-f0-9]{22}\b",
+       @"\b(?:6\d[a-f\d]{22}|[0-7][\dA-HJKMNP-TV-Z]{25})\b",
         RegexOptions.CultureInvariant,
         matchTimeoutMilliseconds: 100
         )]
