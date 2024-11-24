@@ -198,7 +198,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         var response = await Send<SevenTVModifyEmoteSetRoot>(request, ct);
 
-        return response.EmoteSet.Emotes.Where(x => x.ID == emoteID).FirstOrDefault()?.Name ?? default;
+        return response.EmoteSet.Emotes.LastOrDefault(x => x.ID == emoteID)?.Name ?? default;
     }
 
     public async ValueTask<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
