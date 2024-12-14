@@ -1,4 +1,5 @@
-﻿using Serilog.Events;
+﻿using System.Text.Json.Serialization;
+using Serilog.Events;
 
 namespace Fumo.Shared.Models;
 
@@ -10,7 +11,8 @@ public record AppSettings(
     MetricsSettings Metrics,
     WebsiteSettings Website,
     bool DebugTMI,
-    string GlobalPrefix = "!"
+    string GlobalPrefix = "!",
+    MessageSendingMethod MessageSendingMethod = MessageSendingMethod.Helix
 );
 
 public record ConnectionsSettings(
@@ -37,10 +39,25 @@ public record TwitchSettings(
     string UserID,
     string Token,
     string ThreeLetterAPI,
+    string ClientID,
+    string ClientSecret,
     bool Verified
 );
 
 public record WebsiteSettings(
-    string PublicURL
+    Uri PublicURL,
+    DataProtectionSettings DataProtection
 );
 
+public record DataProtectionSettings(
+    string RedisKey,
+    string CertificateFile,
+    string CertificatePass
+);
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MessageSendingMethod
+{
+    Helix,
+    Console
+}

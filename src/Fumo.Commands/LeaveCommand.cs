@@ -1,6 +1,6 @@
 ﻿using Fumo.Shared.Enums;
 using Fumo.Shared.Models;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Repositories;
 using MiniTwitch.Irc;
 using Serilog;
 
@@ -29,14 +29,14 @@ public class LeaveCommand : ChatCommand
     {
         try
         {
+            await IrcClient.PartChannel(Channel.TwitchName, ct);
             await ChannelRepository.Delete(Channel, ct);
-
-            await this.IrcClient.PartChannel(Channel.TwitchName, ct);
         }
         catch (Exception ex)
         {
-            this.Logger.Error(ex, "Failed to leave {Channel}", Channel.TwitchName);
-            return "An error occured, try again later";
+            Logger.Error(ex, "Failed to leave {Channel}", Channel.TwitchName);
+
+            return "An error occured, try again later :)";
         }
 
         return "👍";

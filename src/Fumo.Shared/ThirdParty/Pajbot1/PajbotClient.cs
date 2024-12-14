@@ -7,6 +7,8 @@ namespace Fumo.Shared.ThirdParty.Pajbot1;
 public class PajbotClient
 {
     private static readonly string Endpoint = "api/v1/banphrases/test";
+    private static readonly MediaTypeHeaderValue ContentType = new("application/x-www-form-urlencoded");
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     private HttpClient HttpClient { get; set; }
 
@@ -14,7 +16,7 @@ public class PajbotClient
     {
         HttpClient = new()
         {
-            Timeout = TimeSpan.FromSeconds(10),
+            Timeout = DefaultTimeout
         };
     }
 
@@ -53,9 +55,9 @@ public class PajbotClient
     }
 
     /// <exception cref="Exception"></exception>
-    public async ValueTask<(bool Banned, string Reason)> Check(string message, string baseURL, CancellationToken cancellationToken)
+    public async ValueTask<bool> Check(string message, string baseURL, CancellationToken cancellationToken)
     {
-        var url = $"{baseURL}/{Endpoint}";
+        Uri url = new(new Uri(baseURL), Endpoint);
 
         Dictionary<string, string> formData = new()
         {
@@ -64,20 +66,13 @@ public class PajbotClient
 
         var content = new FormUrlEncodedContent(formData);
 
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+        content.Headers.ContentType = ContentType;
 
-        // Not going to catch the exceptions. I would rather have the caller worry about it.
         var result = await HttpClient.PostAsync(url, content, cancellationToken);
-
-        if (!result.IsSuccessStatusCode)
-        {
-            return (true, $"bad Status Code: {result.StatusCode}");
-        }
+        result.EnsureSuccessStatusCode();
 
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(FumoJson.SnakeCase, cancellationToken: cancellationToken);
 
-        return response is null
-            ? (true, "FeelsOkayMan blocked by Pajbot")
-            : (response.Banned, "FeelsOkayMan blocked by Pajbot");
+        return response?.Banned ?? false;
     }
 }

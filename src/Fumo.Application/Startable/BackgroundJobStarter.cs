@@ -21,7 +21,7 @@ internal class BackgroundJobStarter : IAsyncStartable
 
     public BackgroundJobStarter(Serilog.ILogger logger, IScheduler scheduler)
     {
-        Logger = logger;
+        Logger = logger.ForContext<BackgroundJobStarter>();
         Scheduler = scheduler;
     }
 

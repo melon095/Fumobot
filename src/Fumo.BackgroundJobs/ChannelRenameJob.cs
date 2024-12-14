@@ -1,4 +1,6 @@
-﻿using Fumo.Shared.Interfaces;
+﻿using Fumo.Database;
+using Fumo.Database.Extensions;
+using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
@@ -52,9 +54,12 @@ public class ChannelRenameJob : IJob
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
-                await IrcClient.PartChannel(oldName, context.CancellationToken);
-                await IrcClient.JoinChannel(channel.TwitchName, context.CancellationToken);
-                await IrcClient.SendMessage(channel.TwitchName, "FeelsDankMan TeaTime", cancellationToken: context.CancellationToken);
+                if (channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == false)
+                {
+                    await IrcClient.PartChannel(oldName, context.CancellationToken);
+                    await IrcClient.JoinChannel(channel.TwitchName, context.CancellationToken);
+                    await IrcClient.SendMessage(channel.TwitchName, "FeelsDankMan TeaTime", cancellationToken: context.CancellationToken);
+                }
             }
             catch (Exception ex)
             {

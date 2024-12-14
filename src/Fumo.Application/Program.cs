@@ -2,7 +2,13 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Fumo.Application.AutofacModule;
 using Fumo.Application.Startable;
+using Fumo.Application.Web;
+using Fumo.Shared.Eventsub;
 using Fumo.Shared.Models;
+using Fumo.Web;
+using MediatR.Extensions.Autofac.DependencyInjection;
+using MediatR.Extensions.Autofac.DependencyInjection.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 var configPath = args.FirstOrDefault("config.json");
@@ -36,10 +42,22 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterModule(new ScopedModule(appsettings));
         x.RegisterModule(new QuartzModule(appsettings));
         x.RegisterModule(new StartableModule());
+
+        var mediatrConfig = MediatRConfigurationBuilder
+            .Create(typeof(EventsubCommandType).Assembly, typeof(Program).Assembly)
+            .WithAllOpenGenericHandlerTypesRegistered()
+            .Build();
+
+        x.RegisterMediatR(mediatrConfig);
     }));
 
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
+
+builder
+    .SetupDataProtection(appsettings)
+    .SetupRatelimitOptions()
+    .SetupHTTPAuthentication(appsettings);
 
 var app = builder.Build();
 
@@ -58,15 +76,27 @@ else
     app.UseStaticFiles();
 }
 
-app.UseAuthorization();
+app.UseMiddleware<IpRateLimitMiddleware>();
 
-app.UseRouting();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+app.UseRouting()
+    .UseAuthentication()
+    .UseAuthorization();
+
 app.MapControllers();
 
 var token = app.Services.GetRequiredService<CancellationToken>();
 
+app.Start();
+
 await RunStartup(app, token);
-await app.RunAsync(token);
+
+await app.WaitForShutdownAsync(token);
+Environment.Exit(0);
 
 static async Task RunStartup(WebApplication app, CancellationToken ct)
 {
@@ -90,6 +120,8 @@ static async Task RunStartup(WebApplication app, CancellationToken ct)
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "Error starting {ClassName}", startup.Name);
+
+            throw;
         }
     }
 }

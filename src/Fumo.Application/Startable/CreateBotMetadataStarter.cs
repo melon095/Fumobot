@@ -1,10 +1,10 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Database;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Fumo.Shared.Models;
+using Fumo.Shared.Repositories;
 
 namespace Fumo.Application.Startable;
 

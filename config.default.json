@@ -12,6 +12,8 @@
         "UserID": "",
         "Token": "",
         "ThreeLetterAPI": "",
+        "ClientID": "",
+        "ClientSecret": "",
         "Verified": false
     },
     "SevenTV": {
@@ -22,11 +24,17 @@
         "Enabled": false
     },
     "Website": {
-        "PublicURL": "https://yeah.com"
+        "PublicURL": "https://yeah.com",
+        "DataProtection": {
+            "RedisKey": "DataProtection-Keys",
+            "CertificateFile": "certificate.pfx",
+            "CertificatePass": ""
+        }
     },
     "GlobalPrefix": "buh",
     "DebugTMI": false,
     "Curl": {
         "TwitchCookies": "auth-token:...;persistent=..."
-    }
+    },
+    "MessageSendingMethod": "Helix|Console"
 }

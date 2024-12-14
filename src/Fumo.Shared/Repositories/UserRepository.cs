@@ -1,7 +1,6 @@
 ﻿using Fumo.Database;
 using Fumo.Database.DTO;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.Interfaces;
 using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
@@ -9,6 +8,19 @@ using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fumo.Shared.Repositories;
+
+public interface IUserRepository
+{
+    /// <exception cref="UserNotFoundException"></exception>
+    public ValueTask<UserDTO> SearchName(string username, CancellationToken cancellationToken = default);
+
+    /// <exception cref="UserNotFoundException"></exception>
+    public ValueTask<UserDTO> SearchID(string id, CancellationToken cancellationToken = default);
+
+    public ValueTask<List<UserDTO>> SearchMultipleByID(IEnumerable<string> ids, CancellationToken cancellation = default);
+
+    public ValueTask SaveChanges(CancellationToken cancellationToken = default);
+}
 
 public class UserRepository : IUserRepository
 {

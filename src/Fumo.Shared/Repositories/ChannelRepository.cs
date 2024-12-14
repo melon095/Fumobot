@@ -1,27 +1,43 @@
-﻿using Fumo.Database;
+﻿using Autofac;
+using Fumo.Database;
 using Fumo.Database.DTO;
-using Fumo.Shared.Interfaces;
+using Fumo.Shared.Mediator;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MiniTwitch.Common.Extensions;
 using System.Collections.Concurrent;
 using System.Data;
-using System.Threading;
 
 namespace Fumo.Shared.Repositories;
+
+public interface IChannelRepository
+{
+    ValueTask Prepare(CancellationToken ct = default);
+
+    IEnumerable<ChannelDTO> GetAll();
+
+    ChannelDTO? GetByID(string ID);
+
+    ChannelDTO? GetByName(string Name);
+
+    ValueTask<ChannelDTO> Create(ChannelDTO channelDTO, CancellationToken ct = default);
+
+    ValueTask Delete(ChannelDTO channelDTO, CancellationToken ct = default);
+
+    ValueTask Update(ChannelDTO channelDTO, CancellationToken ct = default);
+}
 
 public class ChannelRepository : IChannelRepository
 {
     // TODO: Look into using IDbContextFactory
     private readonly DatabaseContext Database;
-
-    public event Func<ChannelDTO, ValueTask> OnChannelCreated = default!;
-    public event Func<ChannelDTO, ValueTask> OnChannelDeleted = default!;
+    private readonly ILifetimeScope LifetimeScope;
 
     private static ConcurrentDictionary<string, ChannelDTO> Channels { get; set; }
 
-    public ChannelRepository(DatabaseContext database)
+    public ChannelRepository(DatabaseContext database, ILifetimeScope lifetimeScope)
     {
         Database = database;
+        LifetimeScope = lifetimeScope;
     }
 
     public async ValueTask Prepare(CancellationToken ct = default)
@@ -51,13 +67,16 @@ public class ChannelRepository : IChannelRepository
     }
 
     public ChannelDTO? GetByID(string ID)
-        => Channels.Where(x => x.Value.TwitchID == ID).Select(x => x.Value).FirstOrDefault();
+        => Channels.Values.FirstOrDefault(x => x.TwitchID == ID);
 
     public ChannelDTO? GetByName(string Name)
         => Channels[Name];
 
-    public async ValueTask Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
+    public async ValueTask<ChannelDTO> Create(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
+        using var scope = LifetimeScope.BeginLifetimeScope();
+        var bus = scope.Resolve<IMediator>();
+
         using (var transaction = await Database.Database.BeginTransactionAsync(cancellationToken))
         {
             await Database.Channels.AddAsync(channelDTO, cancellationToken);
@@ -71,24 +90,26 @@ public class ChannelRepository : IChannelRepository
 
         Channels[newlyAdded.TwitchName] = newlyAdded;
 
-        OnChannelCreated
-            .Invoke(newlyAdded)
-            .StepOver();
+        await bus.Publish(new OnChannelCreatedCommand(newlyAdded), cancellationToken);
+
+        return newlyAdded;
     }
 
     public async ValueTask Delete(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
     {
-        using var transaction = await Database.Database.BeginTransactionAsync(cancellationToken);
+        using var scope = LifetimeScope.BeginLifetimeScope();
+        var bus = scope.Resolve<IMediator>();
 
-        channelDTO.SetForDeletion = true;
-        await Database.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        using (var transaction = await Database.Database.BeginTransactionAsync(cancellationToken))
+        {
+            channelDTO.SetForDeletion = true;
+            await Database.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         Channels.TryRemove(channelDTO.TwitchName, out _);
 
-        OnChannelDeleted
-            .Invoke(channelDTO)
-            .StepOver();
+        await bus.Publish(new OnChannelDeletedCommand(channelDTO), cancellationToken);
     }
 
     public async ValueTask Update(ChannelDTO channelDTO, CancellationToken cancellationToken = default)
