@@ -4,7 +4,6 @@ using Serilog.Events;
 namespace Fumo.Shared.Models;
 
 public record AppSettings(
-    LoggingSettings Logging,
     ConnectionsSettings Connections,
     TwitchSettings Twitch,
     SevenTVSettings SevenTV,
@@ -18,11 +17,6 @@ public record AppSettings(
 public record ConnectionsSettings(
     string Postgres,
     string Redis
-);
-
-public record LoggingSettings(
-    LogEventLevel LogLevel,
-    string OutputFolder
 );
 
 public record MetricsSettings(

@@ -35,9 +35,9 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterInstance(config).As<IConfiguration>();
         x.RegisterInstance(appsettings).SingleInstance();
 
+        x.RegisterModule(new LoggerModule(config));
         x.RegisterModule(new WebModule());
         x.RegisterModule(new CancellationTokenModule());
-        x.RegisterModule(new LoggerModule(appsettings));
         x.RegisterModule(new SingletonModule(appsettings));
         x.RegisterModule(new ScopedModule(appsettings));
         x.RegisterModule(new QuartzModule(appsettings));

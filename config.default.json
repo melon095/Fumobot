@@ -1,7 +1,44 @@
 {
-    "Logging": {
-        "LogLevel": "Information",
-        "OutputFolder": "/var/log/fumobot"
+    "Serilog": {
+        "Using": [
+            "Serilog",
+            "Serilog.Expressions",
+            "Serilog.Sinks.Console",
+            "Serilog.Sinks.File"
+        ],
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+                "Microsoft": "Warning",
+                "System": "Warning",
+                "Quartz": "Information"
+            }
+        },
+        "WriteTo": [
+            {
+                "Name": "Console",
+                "Args": {
+                    "formatter": {
+                        "type": "Serilog.Templates.ExpressionTemplate, Serilog.Expressions",
+                        "template": "[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}",
+                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions"
+                    }
+                }
+            },
+            {
+                "Name": "File",
+                "Args": {
+                    "formatter": {
+                        "type": "Serilog.Templates.ExpressionTemplate, Serilog.Expressions",
+                        "template": "[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}",
+                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions"
+                    },
+                    "path": "/var/log/fumobot/fumobot.log",
+                    "rollingInterval": "Day",
+                    "retainedFileCountLimit": 7
+                }
+            }
+        ]
     },
     "Connections": {
         "Postgres": "Host=my_host;Database=my_database;Username=my_user;Password=my_pw;Port=my_port;",
