@@ -8,16 +8,16 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVAliasCommand : ChatCommand
 {
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "(7tv)?alias",
+        Description = "Set or Reset the alias of an emote",
+        Flags = ChatCommandFlags.Reply,
+    };
+
     private readonly ISevenTVService SevenTVService;
 
-    public SevenTVAliasCommand()
-    {
-        SetName("(7tv)?alias");
-        SetDescription("Set or Reset the alias of an emote");
-        SetFlags(ChatCommandFlags.Reply);
-    }
-
-    public SevenTVAliasCommand(ISevenTVService sevenTVService) : this()
+    public SevenTVAliasCommand(ISevenTVService sevenTVService)
     {
         SevenTVService = sevenTVService;
     }

@@ -2,13 +2,14 @@
 using Fumo.Shared.Models;
 using Serilog;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Fumo.Shared.Repositories;
 
 public class CommandRepository
 {
-    public readonly Dictionary<Regex, ChatCommand> Commands = new();
+    public readonly Dictionary<Regex, ChatCommand> Commands = [];
 
     public ILogger Logger { get; }
 
@@ -30,7 +31,7 @@ public class CommandRepository
             .ToList()
             .ForEach(x =>
             {
-                if (Activator.CreateInstance(x) is ChatCommand c)
+                if (RuntimeHelpers.GetUninitializedObject(x) is ChatCommand c)
                     Commands.Add(c.NameMatcher, c);
             });
 

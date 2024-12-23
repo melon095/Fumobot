@@ -9,6 +9,17 @@ namespace Fumo.Commands;
 
 public class PingCommand : ChatCommand
 {
+    protected override List<Parameter> Parameters =>
+    [
+        MakeParameter<bool>("detailed")
+    ];
+
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "[Pp]ing",
+        Flags = ChatCommandFlags.Reply,
+    };
+
     private static DateTime Start;
 
     public PingCommand()
@@ -17,10 +28,6 @@ public class PingCommand : ChatCommand
         {
             Start = DateTime.Now;
         }
-
-        SetName("[Pp]ing");
-        SetFlags(ChatCommandFlags.Reply);
-        AddParameter(new(typeof(bool), "detailed"));
     }
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)
@@ -29,7 +36,6 @@ public class PingCommand : ChatCommand
         var uptime = DateTime.Now - Start;
 
         StringBuilder builder = new();
-
 
         string time = new SecondsFormatter().SecondsFmt(uptime.TotalSeconds, limit: 4);
 
@@ -50,6 +56,7 @@ public class PingCommand : ChatCommand
             Message = builder.ToString(),
         });
     }
+
     public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
         => builder
             .WithCache()

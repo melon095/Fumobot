@@ -5,16 +5,16 @@ namespace Fumo.Commands;
 
 public class JoinCommand : ChatCommand
 {
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "join",
+        Flags = ChatCommandFlags.Reply,
+    };
+
     private readonly Uri JoinURL;
     private readonly string BotID;
 
-    public JoinCommand()
-    {
-        SetName("join");
-        SetFlags(ChatCommandFlags.Reply);
-    }
-
-    public JoinCommand(AppSettings settings) : this()
+    public JoinCommand(AppSettings settings)
     {
         JoinURL = new Uri(settings.Website.PublicURL, "/ask-join/");
         BotID = settings.Twitch.UserID;

@@ -104,10 +104,6 @@ public class MessageReceivedCommandHandler(
             if (onCooldown) return null;
 
             command.ParseArguments(message.Input);
-            command.Channel = message.Channel;
-            command.User = message.User;
-            command.Input = message.Input;
-            command.CommandInvocationName = commandInvocationName;
 
             Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 
@@ -188,6 +184,7 @@ public class MessageReceivedCommandHandler(
 
         if (message.Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
 
+        commandInstance.Context = message;
         var result = await Execute(commandInstance, message, commandName, cancellationToken);
         if (result is null || result.Message.Length == 0) return;
 

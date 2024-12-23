@@ -14,6 +14,14 @@ namespace Fumo.Commands.SevenTV;
 
 public partial class SevenTVUserCommand : ChatCommand
 {
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "7tvu(ser)?",
+        Description = "Display information about you or another 7TV user",
+        Flags = ChatCommandFlags.Reply,
+        Cooldown = TimeSpan.FromSeconds(10)
+    };
+
     [GeneratedRegex("\\B(?=(\\d{3})+(?!\\d))", RegexOptions.Multiline | RegexOptions.Compiled)]
     private static partial Regex MaxSlotsRegex();
 
@@ -21,15 +29,7 @@ public partial class SevenTVUserCommand : ChatCommand
     private readonly ISevenTVService SevenTV;
     private readonly IDatabase Redis;
 
-    public SevenTVUserCommand()
-    {
-        SetName("7tvu(ser)?");
-        SetDescription("Display information about you or another 7TV user");
-        SetFlags(ChatCommandFlags.Reply);
-        SetCooldown(TimeSpan.FromSeconds(10));
-    }
-
-    public SevenTVUserCommand(IUserRepository userRepository, ISevenTVService sevenTV, IDatabase redis) : this()
+    public SevenTVUserCommand(IUserRepository userRepository, ISevenTVService sevenTV, IDatabase redis)
     {
         UserRepository = userRepository;
         SevenTV = sevenTV;

@@ -10,18 +10,21 @@ namespace Fumo.Commands;
 
 public class BotCommand : ChatCommand
 {
+    protected override List<Parameter> Parameters =>
+    [
+        MakeParameter<bool>("remove")
+    ];
+
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "bot",
+        Description = "Set various data related to you or your channel within the bot",
+        Flags = ChatCommandFlags.Reply,
+    };
+
     private readonly IChannelRepository ChannelRepository;
 
-    public BotCommand()
-    {
-        SetName("bot");
-        SetDescription("Set various data related to you or your channel within the bot");
-        SetFlags(ChatCommandFlags.Reply);
-
-        AddParameter(new(typeof(bool), "remove"));
-    }
-
-    public BotCommand(IChannelRepository channelRepository) : this()
+    public BotCommand(IChannelRepository channelRepository)
     {
         ChannelRepository = channelRepository;
     }

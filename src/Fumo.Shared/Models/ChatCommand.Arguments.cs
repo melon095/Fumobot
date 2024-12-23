@@ -3,22 +3,27 @@ using System.Text;
 
 namespace Fumo.Shared.Models;
 
-public class ChatCommandArguments
+public partial class ChatCommand
 {
     private const string CLRString = nameof(String);
     private const string CLRInt32 = nameof(Int32);
     private const string CLRBoolean = nameof(Boolean);
 
-    private readonly List<Parameter> parameters = new();
-    private readonly Dictionary<string, object> parsedParameters = new();
+    private const char DoubleQuote = '"';
+    private const char SingleQuote = '\'';
+
+    private readonly Dictionary<string, object> parsedParameters = [];
 
     /// <exception cref="InvalidCommandArgumentException">Invalid input</exception>
     /// <exception cref="Exception">Internal error</exception>
     public void ParseArguments(List<string> input)
     {
+        if (Parameters.Count == 0)
+            return;
+
         for (int idx = 0; idx < input.Count; idx++)
         {
-            Parameter? param = parameters.FirstOrDefault(x => $"--{x.Name}" == input[idx] || $"-{x.Name[0]}" == input[idx]);
+            Parameter? param = Parameters.FirstOrDefault(x => $"--{x.Name}" == input[idx] || $"-{x.Name[0]}" == input[idx]);
 
             if (param is null)
                 continue;
@@ -29,7 +34,7 @@ public class ChatCommandArguments
                     {
                         var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, "expected a text value");
 
-                        if (value.StartsWith("\"") || value.StartsWith("'"))
+                        if (value.StartsWith(DoubleQuote) || value.StartsWith(SingleQuote))
                         {
                             var usedQuote = value[0];
 
@@ -94,13 +99,11 @@ public class ChatCommandArguments
         }
     }
 
-    protected void AddParameter(Parameter parameter)
-    {
-        parameters.Add(parameter);
-    }
+    protected virtual List<Parameter> Parameters { get; } = [];
 
-    //protected TValue GetArgument<TValue>(string name) => (TValue)this.parsedParameters.GetValueOrDefault(name, default(TValue));
-    // TODO: Maybe remove this, idk if checking typeof is slow or not. But the default of string is null so yeah.
+    protected static Parameter MakeParameter<TValue>(string name)
+        => new(typeof(TValue), name);
+
     protected TValue GetArgument<TValue>(string name)
     {
         if (typeof(TValue) == typeof(string))
@@ -125,5 +128,5 @@ public class ChatCommandArguments
         return false;
     }
 
-    protected record Parameter(Type Type, string Name);
+    public record Parameter(Type Type, string Name);
 }

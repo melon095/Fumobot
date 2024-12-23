@@ -5,32 +5,29 @@ using System.Text.RegularExpressions;
 
 namespace Fumo.Shared.Models;
 
-public abstract class ChatCommand : ChatCommandArguments
+public abstract partial class ChatCommand
 {
     #region Properties
 
-    public ChannelDTO Channel { get; set; }
-    public UserDTO User { get; set; }
-    public List<string> Input { get; set; }
+    protected virtual ChatCommandMetadata Metadata { get; } = new();
 
-    /// <summary>
-    /// The command invocation is the part of the message that matches the command name
-    /// </summary>
-    public string CommandInvocationName { get; set; }
+    public ChatMessage Context { private get; set; }
 
-    /// <summary>
-    /// Regex that matches the command
-    /// </summary>
-    public Regex NameMatcher { get; protected set; }
+    public ChannelDTO Channel => Context.Channel;
 
-    /// <summary>
-    /// Flags that change behaviour
-    /// </summary>
-    public ChatCommandFlags Flags { get; protected set; } = ChatCommandFlags.None;
+    public UserDTO User => Context.User;
 
-    public List<string> Permissions { get; protected set; } = ["default"];
+    public List<string> Input => Context.Input;
 
-    public string Description { get; protected set; } = "No description provided";
+    public Regex NameMatcher => Metadata._name;
+
+    public ChatCommandFlags Flags => Metadata.Flags;
+
+    public IReadOnlyList<string> Permissions => Metadata.Permissions;
+
+    public string Description => Metadata.Description;
+
+    public TimeSpan Cooldown => Metadata.Cooldown;
 
     /// <summary>
     /// If Moderators and Broadcasters are the only ones that can execute this command in a chat
@@ -42,30 +39,29 @@ public abstract class ChatCommand : ChatCommandArguments
     /// </summary>
     public bool BroadcasterOnly => Flags.HasFlag(ChatCommandFlags.BroadcasterOnly);
 
-    public TimeSpan Cooldown { get; protected set; } = TimeSpan.FromSeconds(5);
-
     #endregion
 
     public abstract ValueTask<CommandResult> Execute(CancellationToken ct);
 
     public abstract ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct);
+}
 
-    #region Setters
+public class ChatCommandMetadata
+{
+    // Not the prettiest
+    public Regex _name;
 
-    protected void SetName([StringSyntax(StringSyntaxAttribute.Regex)] string regex)
-        => this.NameMatcher = new($"^{regex}", RegexOptions.Compiled);
+    public string Name
+    {
+        get => _name.ToString();
+        init => _name = new Regex($"^{value}", RegexOptions.Compiled);
+    }
 
-    protected void SetCooldown(TimeSpan cd)
-        => this.Cooldown = cd;
+    public string Description { get; init; } = "No description provided";
 
-    protected void SetFlags(ChatCommandFlags flags)
-        => Flags = flags;
+    public ChatCommandFlags Flags { get; init; } = ChatCommandFlags.None;
 
-    protected void AddPermission(string permission)
-        => this.Permissions.Add(permission);
+    public IReadOnlyList<string> Permissions { get; init; } = ["default"];
 
-    protected void SetDescription(string description)
-        => this.Description = description;
-
-    #endregion
+    public TimeSpan Cooldown { get; init; } = TimeSpan.FromSeconds(5);
 }

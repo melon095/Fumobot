@@ -30,6 +30,7 @@ public class ChannelRepository : IChannelRepository
 {
     // TODO: Look into using IDbContextFactory
     private readonly DatabaseContext Database;
+    // TODO: Keeping a reference to the lifetime scope is a bad idea.
     private readonly ILifetimeScope LifetimeScope;
 
     private static ConcurrentDictionary<string, ChannelDTO> Channels { get; set; }

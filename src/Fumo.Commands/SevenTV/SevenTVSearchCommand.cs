@@ -11,21 +11,24 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVSearchCommand : ChatCommand
 {
+    protected override ChatCommandMetadata Metadata => new()
+    {
+        Name = "7tv$|search",
+        Description = "Search 7TV emotes"
+    };
+
+    protected override List<Parameter> Parameters =>
+    [
+        MakeParameter<string>("uploader"),
+        MakeParameter<bool>("exact")
+    ];
+
     private readonly int MaxEmoteOutput = 5;
 
     private readonly ISevenTVService SevenTV;
     private readonly IUserRepository UserRepository;
 
-    public SevenTVSearchCommand()
-    {
-        SetName("7tv$|search");
-        SetDescription("Search 7TV emotes");
-
-        AddParameter(new(typeof(string), "uploader"));
-        AddParameter(new(typeof(bool), "exact"));
-    }
-
-    public SevenTVSearchCommand(ISevenTVService sevenTV, IUserRepository userRepository) : this()
+    public SevenTVSearchCommand(ISevenTVService sevenTV, IUserRepository userRepository)
     {
         SevenTV = sevenTV;
         UserRepository = userRepository;
