@@ -4,7 +4,7 @@
             "Serilog",
             "Serilog.Expressions",
             "Serilog.Sinks.Console",
-            "Serilog.Sinks.File"
+            "Serilog.Sinks.Seq"
         ],
         "MinimumLevel": {
             "Default": "Information",
@@ -26,16 +26,11 @@
                 }
             },
             {
-                "Name": "File",
+                "Name": "Seq",
                 "Args": {
-                    "formatter": {
-                        "type": "Serilog.Templates.ExpressionTemplate, Serilog.Expressions",
-                        "template": "[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}",
-                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions"
-                    },
-                    "path": "/var/log/fumobot/fumobot.log",
-                    "rollingInterval": "Day",
-                    "retainedFileCountLimit": 7
+                    "serverUrl": "http://localhost:5341",
+                    "apiKey": "",
+                    "restrictedToMinimumLevel": "Information"
                 }
             }
         ]
