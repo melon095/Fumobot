@@ -155,7 +155,6 @@ internal class ChatMessageNotificationCommandHandler(
                 input,
                 isBroadcaster,
                 request.IsMod,
-                LifetimeScope,
                 request.MessageId);
 
             await Bus.Publish(message, cancellationToken);

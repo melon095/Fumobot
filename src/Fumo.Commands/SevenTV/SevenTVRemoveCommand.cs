@@ -11,7 +11,7 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVRemoveCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "(7tv)?remove",
         Description = "Remove 7TV emotes"

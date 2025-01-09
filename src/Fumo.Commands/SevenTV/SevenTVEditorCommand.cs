@@ -12,7 +12,7 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVEditorCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "(7tv)?(?(1)e|editor)",
         Description = "Add and Remove 7TV editors from the channel",

@@ -14,7 +14,7 @@ public class PingCommand : ChatCommand
         MakeParameter<bool>("detailed")
     ];
 
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "[Pp]ing",
         Flags = ChatCommandFlags.Reply,
@@ -22,12 +22,9 @@ public class PingCommand : ChatCommand
 
     private static DateTime Start;
 
-    public PingCommand()
+    public override void OnInit()
     {
-        if (Start == DateTime.MinValue)
-        {
-            Start = DateTime.Now;
-        }
+        Start = DateTime.Now;
     }
 
     public override ValueTask<CommandResult> Execute(CancellationToken ct)

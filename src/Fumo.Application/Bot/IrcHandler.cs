@@ -102,7 +102,7 @@ public class IrcHandler
             bool isBroadcaster = user.TwitchID == channel.TwitchID;
             bool isMod = privmsg.Author.IsMod || isBroadcaster;
 
-            MessageReceivedCommand message = new ChatMessage(channel, user, input, isBroadcaster, isMod, messageScope, privmsg.Id);
+            MessageReceivedCommand message = new ChatMessage(channel, user, input, isBroadcaster, isMod, privmsg.Id);
 
             await bus.Publish(message, token).ConfigureAwait(false);
         }

@@ -5,7 +5,7 @@ namespace Fumo.Commands;
 
 public class JoinCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "join",
         Flags = ChatCommandFlags.Reply,

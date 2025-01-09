@@ -8,7 +8,7 @@ namespace Fumo.Commands;
 
 public class LeaveCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "leave|part",
         Flags = ChatCommandFlags.BroadcasterOnly,

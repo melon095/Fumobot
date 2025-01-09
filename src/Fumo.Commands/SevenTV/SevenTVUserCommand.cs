@@ -14,7 +14,7 @@ namespace Fumo.Commands.SevenTV;
 
 public partial class SevenTVUserCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "7tvu(ser)?",
         Description = "Display information about you or another 7TV user",

@@ -13,7 +13,7 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVYoinkCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "(7tv)?yoink|steal",
         Description = "Yoink emotes from another channel"

@@ -11,7 +11,7 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVSearchCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "7tv$|search",
         Description = "Search 7TV emotes"

@@ -15,7 +15,7 @@ public class BotCommand : ChatCommand
         MakeParameter<bool>("remove")
     ];
 
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "bot",
         Description = "Set various data related to you or your channel within the bot",

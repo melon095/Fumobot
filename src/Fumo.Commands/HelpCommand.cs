@@ -6,7 +6,7 @@ namespace Fumo.Commands;
 
 public class HelpCommand : ChatCommand
 {
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "help",
         Description = "Get a list of all available commands",

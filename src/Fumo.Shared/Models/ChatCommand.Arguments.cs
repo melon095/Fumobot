@@ -14,6 +14,8 @@ public partial class ChatCommand
 
     private readonly Dictionary<string, object> parsedParameters = [];
 
+    #region Implementation
+
     /// <exception cref="InvalidCommandArgumentException">Invalid input</exception>
     /// <exception cref="Exception">Internal error</exception>
     public void ParseArguments(List<string> input)
@@ -23,81 +25,90 @@ public partial class ChatCommand
 
         for (int idx = 0; idx < input.Count; idx++)
         {
-            Parameter? param = Parameters.FirstOrDefault(x => $"--{x.Name}" == input[idx] || $"-{x.Name[0]}" == input[idx]);
+            var param = Parameters.FirstOrDefault(x => $"--{x.Name}" == input[idx] || $"-{x.Name[0]}" == input[idx]);
 
             if (param is null)
                 continue;
 
-            switch (param.Type.Name)
+            var value = input.ElementAtOrDefault(idx + 1);
+
+            parsedParameters[param.Name] = param.Type.Name switch
             {
-                case CLRString:
-                    {
-                        var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, "expected a text value");
+                // Parse quoted strings
+                CLRString when value is not null && (value.StartsWith(DoubleQuote) || value.StartsWith(SingleQuote)) =>
+                    ParseQuotedString(input, ref idx, param, value),
 
-                        if (value.StartsWith(DoubleQuote) || value.StartsWith(SingleQuote))
-                        {
-                            var usedQuote = value[0];
+                // Parse strings
+                CLRString when value is not null =>
+                    ParseString(input, ref idx, param, value),
 
-                            var endIdx = input.FindIndex(idx + 1, x => x.EndsWith(usedQuote));
-                            if (endIdx == -1)
-                                throw new InvalidCommandArgumentException(param.Name, $"is missing a closing quote (--{param.Name} \"value\")");
+                // Strings when missing value
+                CLRString when value is null =>
+                    throw new InvalidCommandArgumentException(param.Name, "expected a text value"),
 
-                            var sb = new StringBuilder();
-                            for (int i = idx + 1; i <= endIdx; i++)
-                            {
-                                sb.Append(input[i]);
-                                sb.Append(' ');
-                            }
+                // Parse integers
+                CLRInt32 when value is not null && int.TryParse(value, out var number) =>
+                    ParseInt(input, ref idx, param, number),
 
-                            // Range thingy removes quotes
-                            parsedParameters[param.Name] = sb.ToString().Trim()[1..^1];
-                            input.RemoveRange(idx, endIdx);
-                            idx--;
-                        }
-                        else
-                        {
-                            parsedParameters[param.Name] = value;
-                            input.RemoveRange(idx, 2);
-                            if (idx < input.Count)
-                            {
-                                idx--;
-                            }
-                        }
-                    }
-                    break;
+                // Integers when missing value
+                CLRInt32 when value is null =>
+                    throw new InvalidCommandArgumentException(param.Name, "expected a number"),
 
-                case CLRInt32:
-                    {
-                        var value = input.ElementAtOrDefault(idx + 1) ?? throw new InvalidCommandArgumentException(param.Name, $"is missing a number (--{param.Name} 42)");
-                        if (int.TryParse(value, out var number))
-                        {
-                            parsedParameters[param.Name] = number;
+                // Parse booleans
+                CLRBoolean =>
+                    ParseBoolean(input, ref idx, param),
 
-                            input.RemoveRange(idx, 2);
-                        }
-                        else
-                        {
-                            throw new InvalidCommandArgumentException(param.Name, "expected a number");
-                        }
-                    }
-                    break;
-
-                case CLRBoolean:
-                    {
-                        parsedParameters[param.Name] = true;
-
-                        input.RemoveAt(idx);
-                        idx--;
-                    }
-                    break;
-
-                default:
-                    {
-                        throw new Exception($"Type {param.Type.Name} is not parsable");
-                    }
-            }
+                _ => throw new InvalidCommandArgumentException(param.Name, "Invalid argument type or missing value")
+            };
         }
     }
+
+    private static string ParseQuotedString(List<string> input, ref int idx, Parameter param, string value)
+    {
+        var usedQuote = value[0];
+        var endIdx = input.FindIndex(idx + 1, x => x.EndsWith(usedQuote));
+        if (endIdx == -1)
+            throw new InvalidCommandArgumentException(param.Name, $"is missing a closing quote (--{param.Name} \"value\")");
+
+        var sb = new StringBuilder();
+        for (int i = idx + 1; i <= endIdx; i++)
+        {
+            sb.Append(input[i]);
+            sb.Append(' ');
+        }
+
+        input.RemoveRange(idx, endIdx);
+        idx--;
+
+        return sb.ToString().Trim()[1..^1];
+    }
+
+    private static string ParseString(List<string> input, ref int idx, Parameter param, string value)
+    {
+        input.RemoveRange(idx, 2);
+        if (idx < input.Count)
+        {
+            idx--;
+        }
+        return value;
+    }
+
+    private static int ParseInt(List<string> input, ref int idx, Parameter param, int number)
+    {
+        input.RemoveRange(idx, 2);
+        return number;
+    }
+
+    private static bool ParseBoolean(List<string> input, ref int idx, Parameter param)
+    {
+        input.RemoveAt(idx);
+        idx--;
+        return true;
+    }
+
+    #endregion
+
+    #region Public
 
     protected virtual List<Parameter> Parameters { get; } = [];
 
@@ -129,4 +140,6 @@ public partial class ChatCommand
     }
 
     public record Parameter(Type Type, string Name);
+
+    #endregion
 }

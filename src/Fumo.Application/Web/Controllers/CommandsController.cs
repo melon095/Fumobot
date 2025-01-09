@@ -20,14 +20,14 @@ public class CommandsController : ControllerBase
         => DescriptionService.GetAll().Select(x => new BasicCommandDTO
         {
             Name = x.Key,
-            Description = x.Value.Instance.Description,
-            Cooldown = (int)x.Value.Instance.Cooldown.TotalSeconds,
+            Description = x.Value.Metadata.Description,
+            Cooldown = (int)x.Value.Metadata.Cooldown.TotalSeconds,
         }).ToList();
 
     [HttpGet("{name}")]
     public async ValueTask<ActionResult<IndepthCommandDTO>> GetByName(string name, CancellationToken ct)
     {
-        var command = DescriptionService.GetByDisplayName(name);
+        var command = DescriptionService.GetMetadataByDisplayName(name);
         if (command is null)
             return NotFound();
 
@@ -35,7 +35,7 @@ public class CommandsController : ControllerBase
 
         return Ok(new IndepthCommandDTO
         {
-            Regex = command.NameMatcher.ToString(),
+            Regex = command.Name,
             Permission = command.Permissions,
             Description = description,
         });

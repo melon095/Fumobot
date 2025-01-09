@@ -9,7 +9,7 @@ public abstract partial class ChatCommand
 {
     #region Properties
 
-    protected virtual ChatCommandMetadata Metadata { get; } = new();
+    public virtual ChatCommandMetadata Metadata { get; } = new();
 
     public ChatMessage Context { private get; set; }
 
@@ -41,6 +41,8 @@ public abstract partial class ChatCommand
 
     #endregion
 
+    public virtual void OnInit() { }
+
     public abstract ValueTask<CommandResult> Execute(CancellationToken ct);
 
     public abstract ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct);
@@ -51,6 +53,7 @@ public class ChatCommandMetadata
     // Not the prettiest
     public Regex _name;
 
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     public string Name
     {
         get => _name.ToString();

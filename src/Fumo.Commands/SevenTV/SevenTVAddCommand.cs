@@ -16,7 +16,7 @@ public class SevenTVAddCommand : ChatCommand
         new(typeof(bool), "exact")
     ];
 
-    protected override ChatCommandMetadata Metadata => new()
+    public override ChatCommandMetadata Metadata => new()
     {
         Name = "(7tv)?add",
         Description = "Adds a 7TV emote to the channel.",

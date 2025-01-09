@@ -23,8 +23,9 @@ internal class SingletonModule(AppSettings settings) : Module
         foreach (var command in commandRepository.Commands)
         {
             builder
-                .RegisterType(command.Value.GetType())
+                .RegisterType(command.Value)
                 .AsSelf()
+                .As<ChatCommand>()
                 .InstancePerDependency();
         }
 

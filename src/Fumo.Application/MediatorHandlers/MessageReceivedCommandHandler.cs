@@ -18,6 +18,7 @@ public class MessageReceivedCommandHandler(
     Serilog.ILogger logger,
     IDatabase redis,
     IMessageSenderHandler messageSenderHandler,
+    ILifetimeScope scope,
     CommandRepository commandRepository,
     DatabaseContext databaseContext,
     AppSettings settings)
@@ -26,6 +27,7 @@ public class MessageReceivedCommandHandler(
     private readonly Serilog.ILogger Logger = logger.ForContext<MessageReceivedCommandHandler>();
     private readonly IDatabase Redis = redis;
     private readonly IMessageSenderHandler MessageSenderHandler = messageSenderHandler;
+    private readonly ILifetimeScope Scope = scope;
     private readonly CommandRepository CommandRepository = commandRepository;
     private readonly DatabaseContext DatabaseContext = databaseContext;
     private readonly string GlobalPrefix = settings.GlobalPrefix;
@@ -182,7 +184,7 @@ public class MessageReceivedCommandHandler(
         var commandType = CommandRepository.GetCommandType(commandName);
         if (commandType is null) return;
 
-        if (message.Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
+        if (Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
 
         commandInstance.Context = message;
         var result = await Execute(commandInstance, message, commandName, cancellationToken);

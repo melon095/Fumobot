@@ -8,6 +8,8 @@ using Fumo.Shared.Models;
 using Fumo.Web;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
@@ -88,6 +90,17 @@ app.UseRouting()
     .UseAuthorization();
 
 app.MapControllers();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var server = app.Services.GetRequiredService<IServer>();
+    var serverAddressesFeature = server.Features.Get<IServerAddressesFeature>();
+
+    if (serverAddressesFeature is null) return;
+
+    foreach (var address in serverAddressesFeature.Addresses)
+        app.Logger.LogInformation("Listening on {Address}", address);
+});
 
 var token = app.Services.GetRequiredService<CancellationToken>();
 
