@@ -162,12 +162,12 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     {
         Logger.Information("Sending to {ChannelId} with IRC");
 
-        //var message = CleanTheMessage(data.Message);
+        var message = CleanTheMessage(data.Message);
 
-        //if (data.ReplyId is string replyId)
-        //    await Irc.ReplyTo(replyId, data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
-        //else
-        //    await Irc.SendMessage(data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
+        if (data.ReplyId is string replyId)
+            await Irc.ReplyTo(replyId, data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
+        else
+            await Irc.SendMessage(data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
 
         return true;
     }
@@ -176,22 +176,22 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     {
         Logger.Information("Sending to {ChannelId} with Helix", data.SendMethod.Identifier);
 
-        //var message = CleanTheMessage(data.Message);
+        var message = CleanTheMessage(data.Message);
 
-        //var helix = await HelixFactory.Create(CancellationToken);
+        var helix = await HelixFactory.Create(CancellationToken);
 
-        //var sendResult = await helix.SendChatMessage(new(long.Parse(data.SendMethod.Identifier), message, replyParentMessageId: data.ReplyId));
-        //if (!sendResult.Success)
-        //{
-        //    Logger.Error("Failed to send message to {ChannelId}. {Error}", data.SendMethod.Identifier, sendResult.Message);
-        //    return false;
-        //}
+        var sendResult = await helix.SendChatMessage(new(long.Parse(data.SendMethod.Identifier), message, replyParentMessageId: data.ReplyId));
+        if (!sendResult.Success)
+        {
+            Logger.Error("Failed to send message to {ChannelId}. {Error}", data.SendMethod.Identifier, sendResult.Message);
+            return false;
+        }
 
-        //var sendValue = sendResult.Value.Data[0];
+        var sendValue = sendResult.Value.Data[0];
 
-        //if (sendValue.IsSent) return true;
+        if (sendValue.IsSent) return true;
 
-        //Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
+        Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
 
         return false;
     }
