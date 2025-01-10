@@ -1,23 +1,34 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Fumo.Shared.Models;
+using Serilog;
 
 namespace Fumo.Shared.ThirdParty.Pajbot1;
 
-public class PajbotClient
+public class PajbotClient : IDisposable
 {
     private static readonly string Endpoint = "api/v1/banphrases/test";
     private static readonly MediaTypeHeaderValue ContentType = new("application/x-www-form-urlencoded");
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
-    private HttpClient HttpClient { get; set; }
+    private readonly ILogger Logger;
+    private readonly HttpClient HttpClient;
 
-    public PajbotClient()
+    public PajbotClient(ILogger logger)
     {
+        Logger = logger.ForContext<PajbotClient>();
+
         HttpClient = new()
         {
             Timeout = DefaultTimeout
         };
+    }
+
+    public void Dispose()
+    {
+        HttpClient?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     public static string NormalizeDomain(string input)
@@ -73,6 +84,10 @@ public class PajbotClient
 
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(FumoJson.SnakeCase, cancellationToken: cancellationToken);
 
-        return response?.Banned ?? false;
+        if (response is null || response.Banned == false) return false;
+
+        Logger.Information("Pajbot Banphrase triggered: {BanphraseName} {Message}", response.BanphraseData.Name, message);
+
+        return true;
     }
 }

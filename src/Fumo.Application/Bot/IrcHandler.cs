@@ -1,12 +1,15 @@
 ﻿using Autofac;
 using Fumo.Database;
 using Fumo.Database.Extensions;
+using Fumo.Shared;
 using Fumo.Shared.Mediator;
 using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using MediatR;
 using MiniTwitch.Irc;
 using MiniTwitch.Irc.Models;
+using Serilog.Events;
+using SerilogTracing;
 
 namespace Fumo.Application.Bot;
 
@@ -71,12 +74,20 @@ public class IrcHandler
 
     private async ValueTask IrcClient_OnMessage(Privmsg privmsg)
     {
+        using var enrich = Logger.PushProperties(
+            ("ChannelId", privmsg.Channel.Id.ToString()),
+            ("ChannelName", privmsg.Channel.Name),
+            ("UserId", privmsg.Author.Id.ToString()),
+            ("UserName", privmsg.Author.Name)
+        );
+
+        using var activity = Logger.StartActivity(LogEventLevel.Verbose, "IRC Message for {Channel}", privmsg.Channel.Name);
+
         try
         {
             var token = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token).Token;
 
-            // TODO: Figure out if memory leak and if 'using' would break.
-            var messageScope = Scope.BeginLifetimeScope();
+            using var messageScope = Scope.BeginLifetimeScope();
             var userRepo = messageScope.Resolve<IUserRepository>();
             var bus = messageScope.Resolve<IMediator>();
 
@@ -109,6 +120,7 @@ public class IrcHandler
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to handle message in {Channel}", privmsg.Channel.Name);
+            activity.Complete(LogEventLevel.Error, ex);
         }
     }
 }

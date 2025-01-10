@@ -6,6 +6,9 @@ using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Instructions;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Context;
+using SerilogTracing;
 
 namespace Fumo.Shared.Repositories;
 
@@ -24,21 +27,23 @@ public interface IUserRepository
 
 public class UserRepository : IUserRepository
 {
-
-    public readonly DatabaseContext Database;
-
     // FIXME: In memory caching
+    private readonly ILogger Logger;
+    private readonly DatabaseContext Database;
+    private readonly IThreeLetterAPI ThreeLetterAPI;
 
-    public readonly IThreeLetterAPI ThreeLetterAPI;
 
-    public UserRepository(DatabaseContext database, IThreeLetterAPI threeLetterAPI)
+    public UserRepository(ILogger logger, DatabaseContext database, IThreeLetterAPI threeLetterAPI)
     {
+        Logger = logger.ForContext<UserRepository>();
         Database = database;
         ThreeLetterAPI = threeLetterAPI;
     }
 
     private async ValueTask<UserDTO?> SearchWithThreeLetterAPI(string? id = null, string? login = null, CancellationToken cancellationToken = default)
     {
+        using var activity = Logger.StartActivity("Searching for user {UserIdentifier}");
+
         var tlaUser = await ThreeLetterAPI.Send<BasicUserResponse>(new BasicUserInstruction(id, login), cancellationToken);
 
         if (tlaUser is null || tlaUser.User is null)
@@ -75,6 +80,7 @@ public class UserRepository : IUserRepository
             return dbUser;
         }
 
+        using var _ = LogContext.PushProperty("UserIdentifier", id);
         return await SearchWithThreeLetterAPI(id, cancellationToken: cancellationToken) switch
         {
             null => throw new UserNotFoundException($"The user with the id {id} does not exist"),
@@ -96,6 +102,7 @@ public class UserRepository : IUserRepository
             return dbUser;
         }
 
+        using var _ = LogContext.PushProperty("UserIdentifier", cleanedUsername);
         return await SearchWithThreeLetterAPI(login: cleanedUsername, cancellationToken: cancellationToken) switch
         {
             null => throw new UserNotFoundException($"The user with the name {cleanedUsername} does not exist"),
@@ -115,6 +122,8 @@ public class UserRepository : IUserRepository
         {
             return dbUsers;
         }
+
+        using var activity = Logger.StartActivity("Searching for multiple users {UserIdentifiers}", missing);
 
         BasicBatchUserInstruction request = new(missing);
 

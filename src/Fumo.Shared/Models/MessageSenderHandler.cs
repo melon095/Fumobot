@@ -7,11 +7,14 @@ using Fumo.Shared.ThirdParty.Pajbot1;
 using Fumo.Shared.Enums;
 using Fumo.Shared.ThirdParty.Helix;
 using MiniTwitch.Irc;
-using System.Data;
+using SerilogTracing;
+using Serilog.Context;
+using Serilog.Core;
+using System.Diagnostics;
 
 namespace Fumo.Shared.Models;
 
-using MessageQueue = ConcurrentQueue<MessageSendData>;
+using MessageQueue = ConcurrentQueue<(MessageSendData, ILogEventEnricher, LoggerActivity)>;
 
 public abstract record MessageSendMethod(string Identifier)
 {
@@ -52,7 +55,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private readonly CancellationToken CancellationToken;
 
     private readonly MetricsTracker MetricsTracker;
-    private readonly PajbotClient Pajbot = new();
+    private readonly PajbotClient Pajbot;
     private readonly Serilog.ILogger Logger;
     private readonly IHelixFactory HelixFactory;
     private readonly IrcClient Irc;
@@ -69,15 +72,17 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         CancellationToken = cancellationTokenSource.Token;
         HelixFactory = helixFactory;
         Irc = irc;
+        Pajbot = new(Logger);
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
 
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
-
         MessageTask.Wait();
+        Pajbot.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     private async Task SendTask()
@@ -89,7 +94,34 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                 long now = Unix();
                 foreach (var (channelId, queue) in Queues)
                 {
-                    while (queue.TryDequeue(out var value))
+                    await ProcessQueue(channelId, queue, now);
+                }
+
+                await Task.Delay(QueueCheckInterval, CancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                Logger.Information("Message sender task was cancelled");
+                return;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error in message sender task");
+            }
+        }
+    }
+
+    private async Task ProcessQueue(string channelId, MessageQueue queue, long now)
+    {
+        while (queue.TryDequeue(out var item))
+        {
+            var (value, enrichers, activity) = item;
+
+            using (LogContext.Push(enrichers))
+            {
+                using (Activity.Current = activity.Activity)
+                {
+                    using (activity)
                     {
                         if (SendHistory.TryGetValue(channelId, out var lastSent))
                         {
@@ -108,18 +140,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
                         await SendMessage(value);
                     }
                 }
-
-                await Task.Delay(QueueCheckInterval, CancellationToken);
-            }
-            catch (TaskCanceledException)
-            {
-                Logger.Information("Message sender task was cancelled");
-
-                return;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error in message sender task");
             }
         }
     }
@@ -140,34 +160,38 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     private async ValueTask<bool> SendIrc(MessageSendData data)
     {
-        var message = CleanTheMessage(data.Message);
+        Logger.Information("Sending to {ChannelId} with IRC");
 
-        if (data.ReplyId is string replyId)
-            await Irc.ReplyTo(replyId, data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
-        else
-            await Irc.SendMessage(data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
+        //var message = CleanTheMessage(data.Message);
+
+        //if (data.ReplyId is string replyId)
+        //    await Irc.ReplyTo(replyId, data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
+        //else
+        //    await Irc.SendMessage(data.SendMethod.Identifier, message, cancellationToken: CancellationToken);
 
         return true;
     }
 
     private async ValueTask<bool> SendHelix(MessageSendData data)
     {
-        var message = CleanTheMessage(data.Message);
+        Logger.Information("Sending to {ChannelId} with Helix", data.SendMethod.Identifier);
 
-        var helix = await HelixFactory.Create(CancellationToken);
+        //var message = CleanTheMessage(data.Message);
 
-        var sendResult = await helix.SendChatMessage(new(long.Parse(data.SendMethod.Identifier), message, replyParentMessageId: data.ReplyId));
-        if (!sendResult.Success)
-        {
-            Logger.Error("Failed to send message to {ChannelId}. {Error}", data.SendMethod.Identifier, sendResult.Message);
-            return false;
-        }
+        //var helix = await HelixFactory.Create(CancellationToken);
 
-        var sendValue = sendResult.Value.Data[0];
+        //var sendResult = await helix.SendChatMessage(new(long.Parse(data.SendMethod.Identifier), message, replyParentMessageId: data.ReplyId));
+        //if (!sendResult.Success)
+        //{
+        //    Logger.Error("Failed to send message to {ChannelId}. {Error}", data.SendMethod.Identifier, sendResult.Message);
+        //    return false;
+        //}
 
-        if (sendValue.IsSent) return true;
+        //var sendValue = sendResult.Value.Data[0];
 
-        Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
+        //if (sendValue.IsSent) return true;
+
+        //Logger.Warning("Tried sending '{Message}' to {ChannelId} but got dropped. {DropReason}", message, sendValue.DropReason);
 
         return false;
     }
@@ -192,7 +216,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
             Queues[data.SendMethod.Identifier] = queue;
         }
 
-        queue.Enqueue(data);
+        queue.Enqueue((data, LogContext.Clone(), Logger.StartActivity("Schedule Message {ChannelId}")));
     }
 
     public async void ScheduleMessageWithBanphraseCheck(MessageSendData data, ChannelDTO channel)
@@ -211,7 +235,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}", data.SendMethod.Identifier);
+            Logger.Error(ex, "Failed to schedule message with banphrase check for {ChannelId}");
         }
     }
 
@@ -244,7 +268,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to send message to {ChannelId}", data.SendMethod.Identifier);
+            Logger.Error(ex, "Failed to send message to {ChannelId}");
         }
         finally
         {
@@ -264,10 +288,14 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
 
     public async ValueTask<BanphraseReason> CheckBanphrase(ChannelDTO channel, string message, CancellationToken cancellationToken = default)
     {
+        using var activity = Logger.StartActivity("Banphrase check for {ChannelId}");
+
         foreach (var func in BanphraseRegex.GlobalRegexes)
         {
             if (func(message))
             {
+                Logger.Information("Global Banphrase detected");
+
                 return BanphraseReason.Global;
             }
         }
@@ -281,11 +309,14 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         try
         {
             if (await Pajbot.Check(message, pajbotUrl, cancellationToken) is true)
+            {
+                Logger.Information("Pajbot Banphrase detected");
                 return BanphraseReason.Pajbot;
+            }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to query pajbot for '{ChannelName} {ChannelId}'", channel.TwitchName, channel.TwitchID);
+            Logger.Error(ex, "Failed to query pajbot for '{ChannelName} {ChannelId}'");
 
             return BanphraseReason.PajbotTimeout;
         }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
+using SerilogTracing;
 
 namespace Fumo.BackgroundJobs;
 
@@ -26,7 +27,7 @@ public class ChannelRemoverJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        Logger.Information("Running Cron");
+        using var activity = Logger.StartActivity("ChannelRemoverJob");
 
         try
         {
@@ -37,7 +38,7 @@ public class ChannelRemoverJob : IJob
 
             foreach (var channel in channelsToRemove)
             {
-                Logger.Information("Removing channel {ChannelName} from the database", channel.TwitchName);
+                Logger.Information("Removing channel {ChannelName} ({ChannelId}) from the database", channel.TwitchName, channel.TwitchID);
 
                 if (channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) == true)
                     await EventsubManager.Unsubscribe(channel.TwitchID, EventsubType.ChannelChatMessage, context.CancellationToken);

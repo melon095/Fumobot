@@ -12,7 +12,7 @@ internal class IrcStarter : IAsyncStartable
                       MetricsTracker metricsTracker, IrcHandler ircHandler)
     {
         // TODO: Can we use AutoActivate here?
-        _ = messageSenderHandler;
+        var _ = messageSenderHandler;
         MetricsTracker = metricsTracker;
         IrcHandler = ircHandler;
     }

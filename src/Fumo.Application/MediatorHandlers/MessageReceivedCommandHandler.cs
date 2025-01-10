@@ -11,6 +11,8 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using MediatR;
 using Fumo.Shared.Mediator;
 using StackExchange.Redis;
+using SerilogTracing;
+using Serilog.Context;
 
 namespace Fumo.Application.MediatorHandlers;
 
@@ -103,7 +105,12 @@ public class MessageReceivedCommandHandler(
             }
 
             bool onCooldown = await Redis.KeyExistsAsync(CooldownKey(message, command));
-            if (onCooldown) return null;
+            if (onCooldown)
+            {
+                Logger.Debug("On cooldown");
+
+                return null;
+            }
 
             command.ParseArguments(message.Input);
 
@@ -185,6 +192,9 @@ public class MessageReceivedCommandHandler(
         if (commandType is null) return;
 
         if (Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
+
+        using var commandNamePush = LogContext.PushProperty("CommandName", commandName);
+        using var activity = Logger.StartActivity("Command {CommandName} in {ChannelName}");
 
         commandInstance.Context = message;
         var result = await Execute(commandInstance, message, commandName, cancellationToken);

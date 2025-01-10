@@ -11,7 +11,8 @@
             "Override": {
                 "Microsoft": "Warning",
                 "System": "Warning",
-                "Quartz": "Information"
+                "Quartz": "Information",
+                "Npgsql": "Warning"
             }
         },
         "WriteTo": [
@@ -20,8 +21,11 @@
                 "Args": {
                     "formatter": {
                         "type": "Serilog.Templates.ExpressionTemplate, Serilog.Expressions",
-                        "template": "[{@t:HH:mm:ss} {@l,-11}] {Coalesce(SourceContext, '<none>')} {@m}\n{@x}",
-                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions"
+                        "template": "[{@t:HH:mm:ss} {@l,-11}] {#if IsRootSpan()}\u2514\u2500 {#else if IsSpan()}\u251c {#else if @sp is not null}\u2502 {#else}\u250A {#end}{@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}\n{@x}",
+                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions",
+                        "nameResolver": {
+                            "type": "SerilogTracing.Expressions.TracingNameResolver, SerilogTracing.Expressions"
+                        }
                     }
                 }
             },
@@ -33,6 +37,14 @@
                     "restrictedToMinimumLevel": "Information"
                 }
             }
+        ],
+        "Properties": {
+            "Application": "Fumo.Application"
+        },
+        "Enrich": [
+            "WithHttpRequestId",
+            "WithExceptionDetails",
+            "FromLogContext"
         ]
     },
     "Connections": {

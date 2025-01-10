@@ -5,6 +5,7 @@ using Fumo.Shared.Eventsub;
 using Fumo.Shared.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Serilog.Context;
 
 namespace Fumo.Application.Web.Controllers;
 

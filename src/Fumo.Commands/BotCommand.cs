@@ -93,7 +93,7 @@ public class BotCommand : ChatCommand
         pajbotUrl = PajbotClient.NormalizeDomain(pajbotUrl);
 
         // TODO: Should this be DI injected.
-        var pajbot = new PajbotClient();
+        var pajbot = new PajbotClient(Serilog.Log.Logger);
         var exists = await pajbot.ValidateDomain(pajbotUrl, ct);
 
         if (!exists)

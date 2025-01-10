@@ -7,6 +7,7 @@ using Quartz;
 using StackExchange.Redis;
 using Serilog;
 using Fumo.Shared.Repositories;
+using SerilogTracing;
 
 namespace Fumo.BackgroundJobs.SevenTV;
 
@@ -40,6 +41,8 @@ public class FetchChannelEditorsJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
+        using var activity = Logger.StartActivity("7TV FetchChannelEditorsJob");
+
         var botEmoteSets = (await SevenTV.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken))
             .EditorOf
             .Where(x => x.User.Connections.GetTwitchConnection() is not null);

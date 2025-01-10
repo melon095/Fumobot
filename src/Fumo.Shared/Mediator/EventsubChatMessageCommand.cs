@@ -9,16 +9,18 @@ using MediatR;
 using MiniTwitch.Helix.Responses;
 using MiniTwitch.Irc;
 using Serilog;
+using Serilog.Events;
+using SerilogTracing;
 
 namespace Fumo.Shared.Mediator;
 
 #region Subscribed
 
 [EventsubCommand(EventsubCommandType.Subscribed, "channel.chat.message")]
-internal record ChannelChatMessageSubscribedCommand(CreatedSubscription.Info Info)
+public record ChannelChatMessageSubscribedCommand(CreatedSubscription.Info Info)
     : EventsubVerificationCommand<EventsubBasicCondition>(Info.Condition);
 
-internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<ChannelChatMessageSubscribedCommand>
+internal class ChannelChatMessageSubscribedCommandHandler : INotificationHandler<ChannelChatMessageSubscribedCommand>
 {
     private const string MigratedMessage = ":) 👋 Hi again.";
     private const string JoinMessage = "FeelsDankMan 👋 Hi.";
@@ -96,7 +98,7 @@ internal class ChannelChatMessageSubscribedCommandHandler : IRequestHandler<Chan
 #region Notification
 
 [EventsubCommand(EventsubCommandType.Notification, "channel.chat.message")]
-internal class ChatMessageNotificationCommand : ChannelChatMessageBody, IRequest;
+public class ChatMessageNotificationCommand : ChannelChatMessageBody, INotification;
 
 internal class ChatMessageNotificationCommandHandler(
     ILogger logger,
@@ -105,7 +107,7 @@ internal class ChatMessageNotificationCommandHandler(
     IMediator bus,
     ILifetimeScope lifetimeScope,
     MetricsTracker metricsTracker)
-    : IRequestHandler<ChatMessageNotificationCommand>
+    : INotificationHandler<ChatMessageNotificationCommand>
 {
     private readonly ILogger Logger = logger.ForContext<ChatMessageNotificationCommandHandler>();
     private readonly IUserRepository UserRepository = userRepository;
@@ -126,6 +128,15 @@ internal class ChatMessageNotificationCommandHandler(
 
     public async Task Handle(ChatMessageNotificationCommand request, CancellationToken cancellationToken)
     {
+        using var enrich = Logger.PushProperties(
+            ("ChannelId", request.BroadcasterId),
+            ("ChannelName", request.BroadcasterLogin),
+            ("UserId", request.ChatterId),
+            ("UserName", request.ChatterLogin)
+        );
+
+        using var activity = Logger.StartActivity(LogEventLevel.Verbose, "Eventsub Message for {ChannelName}", request.ChatterLogin);
+
         try
         {
             var channel = ChannelRepository.GetByID(request.BroadcasterId);
@@ -158,6 +169,12 @@ internal class ChatMessageNotificationCommandHandler(
                 request.MessageId);
 
             await Bus.Publish(message, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to handle message in {Channel}", request.BroadcasterName);
+
+            activity.Complete(LogEventLevel.Error, ex);
         }
         finally
         {

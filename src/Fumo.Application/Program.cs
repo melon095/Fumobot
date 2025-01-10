@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
+using SerilogTracing;
 
 var configPath = args.FirstOrDefault("config.json");
 var config = new ConfigurationBuilder()
@@ -90,6 +91,12 @@ app.UseRouting()
     .UseAuthorization();
 
 app.MapControllers();
+app.MapChatDebuggerEndpoint();
+
+using var _ = new ActivityListenerConfiguration()
+    .Instrument.AspNetCoreRequests()
+    .Instrument.HttpClientRequests()
+    .TraceToSharedLogger();
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
@@ -108,8 +115,16 @@ app.Start();
 
 await RunStartup(app, token);
 
-await app.WaitForShutdownAsync(token);
-Environment.Exit(0);
+try
+{
+    await app.WaitForShutdownAsync(token);
+}
+finally
+{
+    Log.CloseAndFlush();
+
+    Environment.Exit(0);
+}
 
 static async Task RunStartup(WebApplication app, CancellationToken ct)
 {

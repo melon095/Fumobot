@@ -8,6 +8,7 @@ using MiniTwitch.Helix.Models;
 using MiniTwitch.Helix.Requests;
 using MiniTwitch.Helix.Responses;
 using Serilog;
+using Serilog.Context;
 using StackExchange.Redis;
 using static MiniTwitch.Helix.Requests.UpdateConduitRequest;
 

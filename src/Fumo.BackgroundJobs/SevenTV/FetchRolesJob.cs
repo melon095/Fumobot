@@ -3,6 +3,7 @@ using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
+using SerilogTracing;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -23,6 +24,8 @@ public class FetchRolesJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
+        using var activity = Logger.StartActivity("7TV FetchRolesJob");
+
         try
         {
             var roles = await SevenTV.GetGlobalRoles(context.CancellationToken);
