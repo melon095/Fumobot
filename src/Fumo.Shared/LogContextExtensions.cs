@@ -16,7 +16,7 @@ public static class LogContextExtensions
         return context;
     }
 
-    public static IDisposable PushProperties(this ILogger logger, params (string Key, object Value)[] properties)
+    public static IDisposable PushProperties(this ILogger logger, params (string Key, object? Value)[] properties)
     {
         var enrichers = new ILogEventEnricher[properties.Length];
         for (int i = 0; i < properties.Length; i++)
