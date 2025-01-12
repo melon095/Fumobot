@@ -107,19 +107,19 @@ public class EventsubManager(
     public async ValueTask<bool> Subscribe<TCondition>(EventsubSubscriptionRequest<TCondition> request, CancellationToken ct)
         where TCondition : class
     {
-        var log = Logger.ForContext("UserId", request.UserId).ForContext("SubscriptionType", request.Type.Name);
+        using var enrich = Logger.PushProperties(("UserId", request.UserId), ("SubscriptionType", request.Type.Name));
 
         HelixResult<CreatedSubscription> response;
         try
         {
-            log.Information("Subscribing to {SubscriptionType} for {UserId}");
+            Logger.Information("Subscribing to {SubscriptionType} for {UserId}");
 
             var helix = await HelixFactory.Create(ct);
             var conduit = await GetConduitID(ct);
 
             if (conduit is null)
             {
-                log.Error("Failed to get conduit ID");
+                Logger.Error("Failed to get conduit ID");
                 return false;
             }
 
@@ -129,18 +129,18 @@ public class EventsubManager(
             response = await helix.CreateEventSubSubscription(helixRequest, ct);
             if (!response.Success)
             {
-                log.ForContext("Error", response.Message).Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}");
+                Logger.ForContext("Error", response.Message).Error("Failed to subscribe to {SubscriptionType} for {UserId}: {Error}");
                 return false;
             }
 
-            log.Information("Successfully subscribed to {SubscriptionType} for {UserId}");
+            Logger.Information("Successfully subscribed to {SubscriptionType} for {UserId}");
 
             if (request.Type.ShouldSetCooldown)
                 await SetCooldown(request.UserId, request.Type);
         }
         catch (Exception ex)
         {
-            log.Error(ex, "Failed to subscribe to {SubscriptionType} for {UserId}");
+            Logger.Error(ex, "Failed to subscribe to {SubscriptionType} for {UserId}");
 
             return false;
         }
@@ -153,7 +153,7 @@ public class EventsubManager(
     public async ValueTask<bool> Unsubscribe<TCondition>(string userId, EventsubType<TCondition> type, CancellationToken ct)
         where TCondition : class
     {
-        var log = Logger.ForContext("UserId", userId).ForContext("SubscriptionType", type.Name);
+        using var enrich = Logger.PushProperties(("UserId", userId), ("SubscriptionType", type.Name));
 
         try
         {
@@ -161,22 +161,22 @@ public class EventsubManager(
 
             if (subscription is null) return false;
 
-            log.Information("Unsubscribing from {SubscriptionType} for {UserId}");
+            Logger.Information("Unsubscribing from {SubscriptionType} for {UserId}");
 
             var helix = await HelixFactory.Create(ct);
             var response = await helix.DeleteEventSubSubscription(subscription.Id, ct);
 
             if (!response.Success)
             {
-                log.ForContext("Error", response.Message).Error("Failed to unsubscribe from {SubscriptionType} for {UserId}: {Error}");
+                Logger.ForContext("Error", response.Message).Error("Failed to unsubscribe from {SubscriptionType} for {UserId}: {Error}");
                 return false;
             }
 
-            log.Information("Successfully unsubscribed from {SubscriptionType} for {UserId}");
+            Logger.Information("Successfully unsubscribed from {SubscriptionType} for {UserId}");
         }
         catch (Exception ex)
         {
-            log.Error(ex, "Failed to unsubscribe from {SubscriptionType} for {UserId}");
+            Logger.Error(ex, "Failed to unsubscribe from {SubscriptionType} for {UserId}");
 
             return false;
         }
