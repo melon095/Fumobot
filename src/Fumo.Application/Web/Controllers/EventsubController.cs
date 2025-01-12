@@ -5,7 +5,6 @@ using Fumo.Shared.Eventsub;
 using Fumo.Shared.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Serilog.Context;
 
 namespace Fumo.Application.Web.Controllers;
 
@@ -54,16 +53,16 @@ public class EventsubController : ControllerBase
         }
 
         var secret = await EventsubManager.GetSecret();
-        var body = await ReadBody();
+        var body = await ReadBody(ct);
 
-        var hmacBuilder = new StringBuilder();
-        hmacBuilder.Append(messageId);
-        hmacBuilder.Append(messageTimestamp);
-        hmacBuilder.Append(body);
-
-        if (CheckSignature(hmacBuilder.ToString(), messageSignature, secret) is false)
         {
-            return Unauthorized("Invalid Signature");
+            var hmacBuilder = new StringBuilder();
+            hmacBuilder.Append(messageId);
+            hmacBuilder.Append(messageTimestamp);
+            hmacBuilder.Append(body);
+
+            if (!CheckSignature(hmacBuilder.ToString(), messageSignature, secret))
+                return Unauthorized("Invalid Signature");
         }
 
         var jsonBody = JsonSerializer.Deserialize<JsonElement>(body, FumoJson.SnakeCase)!;
@@ -106,11 +105,11 @@ public class EventsubController : ControllerBase
         return NoContent();
     }
 
-    private async Task<string> ReadBody()
+    private async Task<string> ReadBody(CancellationToken ct)
     {
         using StreamReader reader = new(Request.Body);
 
-        return await reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync(ct);
     }
 
     private static bool CheckSignature(string message, string signature, string secret)
@@ -120,7 +119,7 @@ public class EventsubController : ControllerBase
 
         using HMACSHA256 hmacGen = new(Encoding.UTF8.GetBytes(secret));
         var computedHash = hmacGen.ComputeHash(messageBytes);
-        var finalHmac = $"sha256={BitConverter.ToString(computedHash).Replace("-", "").ToLower()}";
+        var finalHmac = $"sha256={Convert.ToHexStringLower(computedHash)}";
         var finalBytes = Encoding.UTF8.GetBytes(finalHmac);
 
         return CryptographicOperations.FixedTimeEquals(finalBytes, signatureBytes);
