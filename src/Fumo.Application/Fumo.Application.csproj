@@ -15,14 +15,14 @@
 		<PackageReference Include="MediatR" Version="12.3.0" />
 		<PackageReference Include="MediatR.Extensions.Autofac.DependencyInjection" Version="12.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.3" />
-		<PackageReference Include="MiniTwitch.Common" Version="1.1.9" />
+		<PackageReference Include="MiniTwitch.Common" Version="2.0.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
 		<PackageReference Include="Serilog.Expressions" Version="5.0.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Autofac.Extras.Quartz" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-		<PackageReference Include="MiniTwitch.Irc" Version="1.2.12" />
+		<PackageReference Include="MiniTwitch.Irc" Version="2.0.0" />
 		<PackageReference Include="Npgsql" Version="8.0.3" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
 		<PackageReference Include="prometheus-net" Version="8.2.1" />
