@@ -18,22 +18,23 @@ public class HelixFactory : IHelixFactory
     private readonly IDatabase Redis;
     private readonly AppSettings Settings;
     private readonly ILoggerFactory LoggerFactory;
-    private readonly HttpClient httpClient = new();
+    private readonly IHttpClientFactory HttpFactory;
 
     private HelixWrapper? Helix = null;
     private readonly long UserId;
 
-    public HelixFactory(Serilog.ILogger logger, IDatabase redis, AppSettings settings)
+    private const string TokenEndpoint = "https://id.twitch.tv/oauth2/token";
+    private const string TokenKey = "twitch:token";
+
+    public HelixFactory(Serilog.ILogger logger, IDatabase redis, AppSettings settings, IHttpClientFactory factory)
     {
         Logger = logger.ForContext<HelixFactory>();
         Redis = redis;
         Settings = settings;
         UserId = long.Parse(settings.Twitch.UserID);
         LoggerFactory = new LoggerFactory().AddSerilog(logger);
+        HttpFactory = factory;
     }
-
-    private const string TokenEndpoint = "https://id.twitch.tv/oauth2/token";
-    private const string TokenKey = "twitch:token";
 
     private async ValueTask SaveToken(TwitchToken token)
         => await Redis.StringSetAsync(TokenKey, token.AccessToken, expiry: TimeSpan.FromSeconds(token.ExpiresIn));
@@ -47,6 +48,7 @@ public class HelixFactory : IHelixFactory
 
         try
         {
+            using var client = HttpFactory.CreateClient("HelixFactory");
             var request = new HttpRequestMessage(HttpMethod.Post, TokenEndpoint)
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -57,7 +59,7 @@ public class HelixFactory : IHelixFactory
                 }),
             };
 
-            var response = await httpClient.SendAsync(request, ct);
+            var response = await client.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
 
             return (await response.Content.ReadFromJsonAsync<TwitchToken>(FumoJson.SnakeCase, ct))!;

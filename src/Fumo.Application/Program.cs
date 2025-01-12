@@ -56,6 +56,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
 
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
+builder.Services.AddHttpClients(appsettings);
 
 builder
     .SetupDataProtection(appsettings)

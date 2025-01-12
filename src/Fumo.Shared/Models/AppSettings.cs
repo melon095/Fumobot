@@ -11,7 +11,8 @@ public record AppSettings(
     WebsiteSettings Website,
     bool DebugTMI,
     string GlobalPrefix = "!",
-    MessageSendingMethod MessageSendingMethod = MessageSendingMethod.Helix
+    MessageSendingMethod MessageSendingMethod = MessageSendingMethod.Helix,
+    string? UserAgent = null
 );
 
 public record ConnectionsSettings(

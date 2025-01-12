@@ -23,10 +23,12 @@ public class BotCommand : ChatCommand
     };
 
     private readonly IChannelRepository ChannelRepository;
+    private readonly IPajbotClient Pajbot;
 
-    public BotCommand(IChannelRepository channelRepository)
+    public BotCommand(IChannelRepository channelRepository, IPajbotClient pajbot)
     {
         ChannelRepository = channelRepository;
+        Pajbot = pajbot;
     }
 
     private void AssertBroadcaster()
@@ -90,11 +92,9 @@ public class BotCommand : ChatCommand
         var pajbotUrl = Input.ElementAtOrDefault(1)
             ?? throw new InvalidInputException("Specify a instance");
 
-        pajbotUrl = PajbotClient.NormalizeDomain(pajbotUrl);
+        pajbotUrl = Pajbot.NormalizeDomain(pajbotUrl);
 
-        // TODO: Should this be DI injected.
-        var pajbot = new PajbotClient(Serilog.Log.Logger);
-        var exists = await pajbot.ValidateDomain(pajbotUrl, ct);
+        var exists = await Pajbot.ValidateDomain(pajbotUrl, ct);
 
         if (!exists)
         {

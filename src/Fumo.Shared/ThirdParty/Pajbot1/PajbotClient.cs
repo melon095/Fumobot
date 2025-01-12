@@ -5,33 +5,32 @@ using Serilog;
 
 namespace Fumo.Shared.ThirdParty.Pajbot1;
 
-public class PajbotClient : IDisposable
+public interface IPajbotClient
+{
+    string NormalizeDomain(string input);
+
+    ValueTask<bool> ValidateDomain(string url, CancellationToken ct = default);
+
+    /// <exception cref="Exception"></exception>
+    ValueTask<bool> Check(string message, string baseURL, CancellationToken cancellationToken);
+}
+
+public class PajbotClient : IPajbotClient
 {
     private static readonly string Endpoint = "api/v1/banphrases/test";
     private static readonly MediaTypeHeaderValue ContentType = new("application/x-www-form-urlencoded");
-    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     private readonly ILogger Logger;
-    private readonly HttpClient HttpClient;
+    private readonly IHttpClientFactory Factory;
 
-    public PajbotClient(ILogger logger)
+
+    public PajbotClient(ILogger logger, IHttpClientFactory factory)
     {
         Logger = logger.ForContext<PajbotClient>();
-
-        HttpClient = new()
-        {
-            Timeout = DefaultTimeout
-        };
+        Factory = factory;
     }
 
-    public void Dispose()
-    {
-        HttpClient?.Dispose();
-
-        GC.SuppressFinalize(this);
-    }
-
-    public static string NormalizeDomain(string input)
+    public string NormalizeDomain(string input)
     {
         if (!input.StartsWith("https://"))
         {
@@ -55,7 +54,9 @@ public class PajbotClient : IDisposable
     {
         try
         {
-            await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), ct);
+            using var client = Factory.CreateClient("Pajbot");
+
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), ct);
 
             return true;
         }
@@ -65,9 +66,9 @@ public class PajbotClient : IDisposable
         }
     }
 
-    /// <exception cref="Exception"></exception>
     public async ValueTask<bool> Check(string message, string baseURL, CancellationToken cancellationToken)
     {
+        using var client = Factory.CreateClient("Pajbot");
         Uri url = new(new Uri(baseURL), Endpoint);
 
         Dictionary<string, string> formData = new()
@@ -79,7 +80,7 @@ public class PajbotClient : IDisposable
 
         content.Headers.ContentType = ContentType;
 
-        var result = await HttpClient.PostAsync(url, content, cancellationToken);
+        var result = await client.PostAsync(url, content, cancellationToken);
         result.EnsureSuccessStatusCode();
 
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(FumoJson.SnakeCase, cancellationToken: cancellationToken);

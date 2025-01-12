@@ -21,17 +21,11 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
     private readonly string BotID;
     private readonly ILogger Logger;
 
-    protected override Uri URI { get; } = new("https://7tv.io/v3/gql");
+    protected override string Name => "SevenTV";
 
-    public SevenTVService(IDatabase redis, AppSettings settings, ILogger logger)
+    public SevenTVService(IHttpClientFactory factory, IDatabase redis, AppSettings settings, ILogger logger)
+        : base(factory)
     {
-        var token = settings.SevenTV.Bearer;
-
-        if (string.IsNullOrWhiteSpace(token))
-            throw new ArgumentException("Bearer token is missing from configuration");
-
-        HttpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
-
         Redis = redis;
         BotID = settings.Twitch.UserID;
         Logger = logger.ForContext<SevenTVService>();

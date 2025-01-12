@@ -5,10 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace Fumo.Shared.ThirdParty.GraphQL;
 
-public abstract class AbstractGraphQLClient : IDisposable
+public abstract class AbstractGraphQLClient
 {
-    private static readonly string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
     private static readonly JsonSerializerOptions DefaultSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -16,38 +14,17 @@ public abstract class AbstractGraphQLClient : IDisposable
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    protected abstract Uri URI { get; }
-
-    protected HttpClient HttpClient { get; set; }
-
     protected JsonSerializerOptions SerializerOptions = DefaultSerializerOptions;
+
+    protected abstract string Name { get; }
+
+    private readonly IHttpClientFactory Factory;
 
     private bool Disposed = false;
 
-    public AbstractGraphQLClient(HttpClient? httpClient = null)
+    public AbstractGraphQLClient(IHttpClientFactory factory)
     {
-        HttpClient = httpClient ?? new HttpClient();
-
-        HttpClient.Timeout = Timeout;
-        HttpClient.BaseAddress = URI;
-    }
-
-    public void Dispose()
-    {
-        if (!Disposed)
-        {
-            GC.SuppressFinalize(this);
-
-            HttpClient.Dispose();
-        }
-
-        Disposed = true;
-    }
-
-    protected void WithBrowserUA()
-    {
-        HttpClient.DefaultRequestHeaders.Remove("User-Agent");
-        HttpClient.DefaultRequestHeaders.Add("User-Agent", UserAgent);
+        Factory = factory;
     }
 
     protected void WithSerializerOptions(JsonSerializerOptions options)
@@ -60,7 +37,9 @@ public abstract class AbstractGraphQLClient : IDisposable
 
     protected async ValueTask<TResponse> Send<TResponse>(GraphQLRequest request, CancellationToken cancellationToken)
     {
-        var response = await HttpClient.PostAsJsonAsync(string.Empty, request, cancellationToken);
+        using var client = Factory.CreateClient(Name);
+
+        var response = await client.PostAsJsonAsync(string.Empty, request, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

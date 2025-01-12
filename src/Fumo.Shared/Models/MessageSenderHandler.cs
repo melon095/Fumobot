@@ -55,7 +55,7 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     private readonly CancellationToken CancellationToken;
 
     private readonly MetricsTracker MetricsTracker;
-    private readonly PajbotClient Pajbot;
+    private readonly IPajbotClient Pajbot;
     private readonly Serilog.ILogger Logger;
     private readonly IHelixFactory HelixFactory;
     private readonly IrcClient Irc;
@@ -65,14 +65,15 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
         MetricsTracker metricsTracker,
         Serilog.ILogger logger,
         IHelixFactory helixFactory,
-        IrcClient irc)
+        IrcClient irc,
+        IPajbotClient pajbot)
     {
         Logger = logger.ForContext<MessageSenderHandler>();
         MetricsTracker = metricsTracker;
         CancellationToken = cancellationTokenSource.Token;
         HelixFactory = helixFactory;
         Irc = irc;
-        Pajbot = new(Logger);
+        Pajbot = pajbot;
 
         MessageTask = Task.Factory.StartNew(SendTask, TaskCreationOptions.LongRunning);
     }
@@ -80,7 +81,6 @@ public class MessageSenderHandler : IMessageSenderHandler, IDisposable
     public void Dispose()
     {
         MessageTask.Wait();
-        Pajbot.Dispose();
 
         GC.SuppressFinalize(this);
     }
