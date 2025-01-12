@@ -25,7 +25,6 @@ public static class ChatDebuggerEndpoint
 
             await bus.Publish(message, token).ConfigureAwait(false);
         });
-    }
 #endif
     }
 }
