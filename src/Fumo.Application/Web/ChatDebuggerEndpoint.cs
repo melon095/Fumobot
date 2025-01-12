@@ -12,7 +12,7 @@ public static class ChatDebuggerEndpoint
     {
 #if !DEBUG
         return;
-#endif
+#else
         Log.Information("Chat Debugger endpoint -> /chat-debugger");
         app.MapPost("/chat-debugger", async (
             [FromBody] ChatMessageNotificationCommand message,
@@ -25,5 +25,7 @@ public static class ChatDebuggerEndpoint
 
             await bus.Publish(message, token).ConfigureAwait(false);
         });
+    }
+#endif
     }
 }
