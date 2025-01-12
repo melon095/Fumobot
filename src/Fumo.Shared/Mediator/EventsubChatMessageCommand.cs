@@ -1,16 +1,6 @@
-﻿using Autofac;
-using Fumo.Database;
-using Fumo.Database.DTO;
-using Fumo.Database.Extensions;
-using Fumo.Shared.Eventsub;
-using Fumo.Shared.Models;
-using Fumo.Shared.Repositories;
+﻿using Fumo.Shared.Eventsub;
 using MediatR;
 using MiniTwitch.Helix.Responses;
-using MiniTwitch.Irc;
-using Serilog;
-using Serilog.Events;
-using SerilogTracing;
 
 namespace Fumo.Shared.Mediator;
 

@@ -60,11 +60,11 @@ public class EventsubManager(
 
             var instance = Activator.CreateInstance(commandType, left);
 
-            if (instance is IRequest command)
+            if (instance is INotification command)
             {
                 using var scope = LifetimeScope.BeginLifetimeScope();
                 var bus = scope.Resolve<IMediator>();
-                await bus.Send(command, ct);
+                await bus.Publish(command, ct);
             }
         }
         catch (Exception ex)

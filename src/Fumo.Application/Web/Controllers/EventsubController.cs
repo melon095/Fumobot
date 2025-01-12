@@ -92,7 +92,7 @@ public class EventsubController : ControllerBase
                     var msgEvent = jsonBody.GetProperty("event");
                     var command = EventsubCommandFactory.Create(EventsubCommandType.Notification, subscriptionType, msgEvent);
                     if (command is not null)
-                        await Bus.Send(command, ct);
+                        await Bus.Publish(command, ct);
                 }
                 break;
 

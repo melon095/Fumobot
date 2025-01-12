@@ -7,7 +7,7 @@ namespace Fumo.Shared.Eventsub;
 
 public interface IEventsubCommandFactory
 {
-    IRequest? Create(EventsubCommandType type, string name, JsonElement body);
+    INotification? Create(EventsubCommandType type, string name, JsonElement body);
 }
 
 public class EventsubCommandFactory : IEventsubCommandFactory
@@ -19,11 +19,11 @@ public class EventsubCommandFactory : IEventsubCommandFactory
         Registry = registry;
     }
 
-    public IRequest? Create(EventsubCommandType type, string name, JsonElement body)
+    public INotification? Create(EventsubCommandType type, string name, JsonElement body)
     {
         var crlType = Registry.Get((name, type));
         if (crlType is null) return null;
 
-        return (IRequest)body.Deserialize(crlType, FumoJson.SnakeCase)!;
+        return (INotification)body.Deserialize(crlType, FumoJson.SnakeCase)!;
     }
 }
