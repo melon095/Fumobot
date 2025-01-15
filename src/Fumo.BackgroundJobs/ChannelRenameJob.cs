@@ -7,6 +7,8 @@ using Fumo.Shared.ThirdParty.ThreeLetterAPI.Response;
 using MiniTwitch.Irc;
 using Quartz;
 using Serilog;
+using Serilog.Context;
+using SerilogTracing;
 
 namespace Fumo.BackgroundJobs;
 
@@ -31,12 +33,15 @@ public class ChannelRenameJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
+        using var activity = Logger.StartActivity("ChannelRenamerJob");
         var channels = ChannelRepository.GetAll();
 
         foreach (var channel in channels)
         {
             try
             {
+                using var _ = LogContext.PushProperty("ChannelName", channel.TwitchName);
+
                 var tlaUser = await ThreeLetterAPI.Send<BasicUserResponse>(new BasicUserInstruction(id: channel.TwitchID), context.CancellationToken);
 
                 if (tlaUser.User.Login == channel.TwitchName)

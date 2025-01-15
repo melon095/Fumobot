@@ -35,10 +35,11 @@ public static class Setup
     {
         var dataProtection = settings.Website.DataProtection;
         var redis = ConnectionMultiplexer.Connect(settings.Connections.Redis);
+        var certificate = X509CertificateLoader.LoadPkcs12FromFile(dataProtection.CertificateFile, dataProtection.CertificatePass);
 
         builder.Services.AddDataProtection()
             .PersistKeysToStackExchangeRedis(redis, $"fumobot:{dataProtection.RedisKey}")
-            .ProtectKeysWithCertificate(new X509Certificate2(dataProtection.CertificateFile, dataProtection.CertificatePass));
+            .ProtectKeysWithCertificate(certificate);
 
         return builder;
     }

@@ -11,20 +11,20 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVRemoveCommand : ChatCommand
 {
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "(7tv)?remove",
+        Description = "Remove 7TV emotes"
+    };
+
     private readonly ILogger Logger;
     private readonly ISevenTVService SevenTVService;
     private readonly IMessageSenderHandler MessageSender;
 
-    public SevenTVRemoveCommand()
-    {
-        SetName("(7tv)?remove");
-        SetDescription("Remove 7TV emotes");
-    }
-
     public SevenTVRemoveCommand(
         ILogger logger,
         ISevenTVService sevenTVService,
-        IMessageSenderHandler messageSender) : this()
+        IMessageSenderHandler messageSender)
     {
         Logger = logger.ForContext<SevenTVRemoveCommand>();
         SevenTVService = sevenTVService;
@@ -42,7 +42,7 @@ public class SevenTVRemoveCommand : ChatCommand
             throw new InvalidInputException("Provide emotes to remove");
         }
 
-        List<SevenTVEnabledEmote> emotesToRemove = new();
+        List<SevenTVEnabledEmote> emotesToRemove = [];
         var currentEmotes = await SevenTVService.GetEnabledEmotes(aaaa.EmoteSet, ct);
 
         foreach (var emote in currentEmotes)
@@ -71,7 +71,7 @@ public class SevenTVRemoveCommand : ChatCommand
             }
         }
 
-        List<string> failedToRemove = new();
+        List<string> failedToRemove = [];
 
         foreach (var emote in emotesToRemove)
         {

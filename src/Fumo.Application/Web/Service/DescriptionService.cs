@@ -1,5 +1,5 @@
-﻿using Fumo.Shared.Models;
-using Fumo.Shared.Repositories;
+﻿using Autofac;
+using Fumo.Shared.Models;
 using System.Collections.Concurrent;
 
 namespace Fumo.Application.Web.Service;
@@ -8,25 +8,26 @@ using HelpStoreDictionary = ConcurrentDictionary<string, DescriptionService.Help
 
 public class DescriptionService
 {
-    private readonly HelpStoreDictionary HelpStore = [];
-    private readonly CommandRepository CommandRepository;
+    private static readonly HelpStoreDictionary HelpStore = [];
+
+    private readonly ILifetimeScope LifetimeScope;
     private readonly string GlobalPrefix;
 
-    public DescriptionService(CommandRepository commandRepository, AppSettings settings)
+    public DescriptionService(ILifetimeScope lifetimeScope, AppSettings settings)
     {
-        CommandRepository = commandRepository;
+        LifetimeScope = lifetimeScope;
         GlobalPrefix = settings.GlobalPrefix;
     }
 
     public async Task Prepare(CancellationToken ct)
     {
-        foreach (var command in CommandRepository.Commands)
+        foreach (var command in LifetimeScope.Resolve<IEnumerable<ChatCommand>>())
         {
-            HelpEntry entry = new(null, command.Value);
+            HelpEntry entry = new(null, command.Metadata, command.GetType());
 
             ChatCommandHelpBuilder helpBuilder = new(GlobalPrefix);
 
-            await command.Value.BuildHelp(helpBuilder, ct);
+            await command.BuildHelp(helpBuilder, ct);
 
             var markdown = helpBuilder.BuildMarkdown();
 
@@ -39,7 +40,7 @@ public class DescriptionService
 
     public HelpStoreDictionary GetAll() => HelpStore;
 
-    public ChatCommand? GetByDisplayName(string name) => HelpStore.GetValueOrDefault(name)?.Instance ?? null;
+    public ChatCommandMetadata? GetMetadataByDisplayName(string name) => HelpStore.GetValueOrDefault(name)?.Metadata;
 
     public async ValueTask<string> CreateHelp(string name, CancellationToken ct)
     {
@@ -49,22 +50,21 @@ public class DescriptionService
         if (entry.CachedHelp is not null)
             return entry.CachedHelp;
 
+        var command = (ChatCommand)LifetimeScope.Resolve(entry.Type);
+
         ChatCommandHelpBuilder helpBuilder = new(GlobalPrefix);
 
-        await entry.Instance.BuildHelp(helpBuilder, ct);
+        await command.BuildHelp(helpBuilder, ct);
 
         return helpBuilder.BuildMarkdown();
     }
 
-    public class HelpEntry(string? cachedHelp, ChatCommand instance)
+    public class HelpEntry(string? cachedHelp, ChatCommandMetadata metadata, Type type)
     {
-        public string? CachedHelp = cachedHelp;
-        public ChatCommand Instance = instance;
+        public string? CachedHelp { get; set; } = cachedHelp;
+
+        public ChatCommandMetadata Metadata { get; } = metadata;
+
+        public Type Type { get; } = type;
     }
 }
-
-//    private static string CleanDescription(string dirt, string prefix)
-//        => dirt
-//            .Replace("%PREFIX%", prefix)
-//            .Replace("<", "&lt;")
-//            .Replace(">", "&gt;");

@@ -8,17 +8,17 @@ namespace Fumo.Commands;
 
 public class LeaveCommand : ChatCommand
 {
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "leave|part",
+        Flags = ChatCommandFlags.BroadcasterOnly,
+    };
+
     private readonly ILogger Logger;
     private readonly IChannelRepository ChannelRepository;
     private readonly IrcClient IrcClient;
 
-    public LeaveCommand()
-    {
-        SetName("leave|part");
-        SetFlags(ChatCommandFlags.BroadcasterOnly);
-    }
-
-    public LeaveCommand(ILogger logger, IChannelRepository channelRepository, IrcClient ircClient) : this()
+    public LeaveCommand(ILogger logger, IChannelRepository channelRepository, IrcClient ircClient)
     {
         Logger = logger.ForContext<LeaveCommand>();
         ChannelRepository = channelRepository;

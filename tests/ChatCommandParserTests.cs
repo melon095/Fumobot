@@ -4,13 +4,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Fumo.Tests;
 
-public class ChatCommandParserTests : ChatCommandArguments
+public class TestCommand : ChatCommand
+{
+    public override ValueTask BuildHelp(ChatCommandHelpBuilder builder, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override ValueTask<CommandResult> Execute(CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class ChatCommandParserTests : TestCommand
 {
     [Fact]
     public void CommandParser_CanParseString()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string> { "bad", "data", "--foo", "bar" };
         var expectedInput = new List<string> { "bad", "data" };
 
@@ -27,7 +40,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParseBoolean()
     {
         // Arrange
-        this.AddParameter(new(typeof(bool), "foo"));
+        this.Parameters.Add(MakeParameter<bool>("foo"));
         var input = new List<string> { "lol", "--foo", "bar" };
         var expectedInput = new List<string> { "lol", "bar" };
 
@@ -44,7 +57,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParseNumber()
     {
         // Arrange
-        this.AddParameter(new(typeof(int), "foo"));
+        this.Parameters.Add(MakeParameter<int>("foo"));
         var input = new List<string> { "--foo", "42" };
         var expectedInput = Array.Empty<string>();
 
@@ -60,8 +73,8 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParsMultipleArguments()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
-        this.AddParameter(new(typeof(bool), "bar"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
+        this.Parameters.Add(MakeParameter<bool>("bar"));
         var input = new List<string> { "lol", "--foo", "bar", "--bar", "xd" };
         var expectedInput = new List<string> { "lol", "xd" };
 
@@ -93,7 +106,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParseShort()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string> { "-f", "xd" };
         var expectedInput = new List<string> { };
 
@@ -109,8 +122,8 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParseIndependentlyOfDefinitionOrder()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "baz"));
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("baz"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string>
         {
             "hi", "--foo", "bar", "xd", "--baz", "qux"
@@ -133,7 +146,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CanParseSentences()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string> { "hi", "--foo", "\"hi", "a", "sentence\"" };
         var expectedInput = new List<string> { "hi" };
 
@@ -149,7 +162,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_CannotParseQuoteMismatch()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string> { "--foo", "\"hi", "lol'" };
 
         // Act
@@ -160,7 +173,7 @@ public class ChatCommandParserTests : ChatCommandArguments
     public void CommandParser_MissingString_CorrectException()
     {
         // Arrange
-        this.AddParameter(new(typeof(string), "foo"));
+        this.Parameters.Add(MakeParameter<string>("foo"));
         var input = new List<string> { "--foo" };
 
         // Act

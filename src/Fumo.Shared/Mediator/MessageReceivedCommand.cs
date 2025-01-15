@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Fumo.Shared.Mediator;
 
-public record MessageReceivedCommand(ChatMessage Message) : INotification
+public record struct MessageReceivedCommand(ChatMessage Message) : INotification
 {
     public static implicit operator MessageReceivedCommand(ChatMessage message) => new(message);
 }

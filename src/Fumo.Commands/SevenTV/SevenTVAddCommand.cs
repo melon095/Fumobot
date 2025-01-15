@@ -10,18 +10,21 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVAddCommand : ChatCommand
 {
+    protected override List<Parameter> Parameters =>
+    [
+        new(typeof(string), "alias"),
+        new(typeof(bool), "exact")
+    ];
+
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "(7tv)?add",
+        Description = "Adds a 7TV emote to the channel.",
+    };
+
     private readonly ISevenTVService SevenTVService;
 
-    public SevenTVAddCommand()
-    {
-        SetName("(7tv)?add");
-        SetDescription("Adds a 7TV emote to the channel.");
-
-        AddParameter(new(typeof(string), "alias"));
-        AddParameter(new(typeof(bool), "exact"));
-    }
-
-    public SevenTVAddCommand(ISevenTVService sevenTVService) : this()
+    public SevenTVAddCommand(ISevenTVService sevenTVService)
     {
         SevenTVService = sevenTVService;
     }

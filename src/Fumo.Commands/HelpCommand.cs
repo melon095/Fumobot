@@ -6,17 +6,17 @@ namespace Fumo.Commands;
 
 public class HelpCommand : ChatCommand
 {
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "help",
+        Description = "Get a list of all available commands",
+        Flags = ChatCommandFlags.Reply | ChatCommandFlags.IgnoreBanphrase,
+        Cooldown = TimeSpan.FromSeconds(10)
+    };
+
     private readonly string CommandUrl;
 
-
-    public HelpCommand()
-    {
-        SetName("help");
-        SetFlags(ChatCommandFlags.Reply | ChatCommandFlags.IgnoreBanphrase);
-        SetCooldown(TimeSpan.FromSeconds(10));
-    }
-
-    public HelpCommand(AppSettings settings) : this()
+    public HelpCommand(AppSettings settings)
     {
         CommandUrl = new Uri(settings.Website.PublicURL, "/commands/").ToString();
     }

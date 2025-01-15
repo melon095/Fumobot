@@ -5,6 +5,9 @@ using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using Quartz;
 using Serilog;
+using Serilog.Context;
+using Serilog.Events;
+using SerilogTracing;
 
 namespace Fumo.BackgroundJobs.SevenTV;
 
@@ -23,12 +26,15 @@ public class FetchEmoteSetsJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
+        using var activity = Logger.StartActivity("7TV FetchEmoteSetsJob");
         var channels = ChannelRepository.GetAll();
 
         foreach (var channel in channels)
         {
             try
             {
+                using var _ = LogContext.PushProperty("ChannelId", channel.TwitchID);
+
                 var currentEmoteSetId = channel.GetSetting(ChannelSettingKey.SevenTV_EmoteSet);
 
                 var sevenTvUser = await SevenTVService.GetUserInfo(channel.TwitchID, context.CancellationToken);

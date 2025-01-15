@@ -12,25 +12,23 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVEditorCommand : ChatCommand
 {
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "(7tv)?(?(1)e|editor)",
+        Description = "Add and Remove 7TV editors from the channel",
+        Flags = ChatCommandFlags.BroadcasterOnly | ChatCommandFlags.Reply,
+    };
+
     private readonly IDatabase Redis;
     private readonly ISevenTVService SevenTV;
     private readonly IUserRepository UserRepository;
     private readonly string BotID;
 
-    public SevenTVEditorCommand()
-    {
-        // Surely this works
-        SetName("(7tv)?(?(1)e|editor)");
-        SetDescription("Add and Remove 7TV editors from the channel");
-
-        SetFlags(ChatCommandFlags.BroadcasterOnly | ChatCommandFlags.Reply);
-    }
-
     public SevenTVEditorCommand(
         AppSettings settings,
         IDatabase redis,
         ISevenTVService sevenTVService,
-        IUserRepository userRepository) : this()
+        IUserRepository userRepository)
     {
         Redis = redis;
         SevenTV = sevenTVService;

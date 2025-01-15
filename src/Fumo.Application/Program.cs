@@ -8,8 +8,11 @@ using Fumo.Shared.Models;
 using Fumo.Web;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
+using SerilogTracing;
 
 var configPath = args.FirstOrDefault("config.json");
 var config = new ConfigurationBuilder()
@@ -35,9 +38,9 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
         x.RegisterInstance(config).As<IConfiguration>();
         x.RegisterInstance(appsettings).SingleInstance();
 
+        x.RegisterModule(new LoggerModule(config));
         x.RegisterModule(new WebModule());
         x.RegisterModule(new CancellationTokenModule());
-        x.RegisterModule(new LoggerModule(appsettings));
         x.RegisterModule(new SingletonModule(appsettings));
         x.RegisterModule(new ScopedModule(appsettings));
         x.RegisterModule(new QuartzModule(appsettings));
@@ -53,6 +56,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(x =>
 
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
+builder.Services.AddHttpClients(appsettings);
 
 builder
     .SetupDataProtection(appsettings)
@@ -88,6 +92,23 @@ app.UseRouting()
     .UseAuthorization();
 
 app.MapControllers();
+app.MapChatDebuggerEndpoint();
+
+using var _ = new ActivityListenerConfiguration()
+    .Instrument.AspNetCoreRequests()
+    .Instrument.HttpClientRequests()
+    .TraceToSharedLogger();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var server = app.Services.GetRequiredService<IServer>();
+    var serverAddressesFeature = server.Features.Get<IServerAddressesFeature>();
+
+    if (serverAddressesFeature is null) return;
+
+    foreach (var address in serverAddressesFeature.Addresses)
+        app.Logger.LogInformation("Listening on {Address}", address);
+});
 
 var token = app.Services.GetRequiredService<CancellationToken>();
 
@@ -95,8 +116,16 @@ app.Start();
 
 await RunStartup(app, token);
 
-await app.WaitForShutdownAsync(token);
-Environment.Exit(0);
+try
+{
+    await app.WaitForShutdownAsync(token);
+}
+finally
+{
+    Log.CloseAndFlush();
+
+    Environment.Exit(0);
+}
 
 static async Task RunStartup(WebApplication app, CancellationToken ct)
 {

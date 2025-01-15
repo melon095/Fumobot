@@ -11,6 +11,8 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using MediatR;
 using Fumo.Shared.Mediator;
 using StackExchange.Redis;
+using SerilogTracing;
+using Serilog.Context;
 
 namespace Fumo.Application.MediatorHandlers;
 
@@ -18,6 +20,7 @@ public class MessageReceivedCommandHandler(
     Serilog.ILogger logger,
     IDatabase redis,
     IMessageSenderHandler messageSenderHandler,
+    ILifetimeScope scope,
     CommandRepository commandRepository,
     DatabaseContext databaseContext,
     AppSettings settings)
@@ -26,6 +29,7 @@ public class MessageReceivedCommandHandler(
     private readonly Serilog.ILogger Logger = logger.ForContext<MessageReceivedCommandHandler>();
     private readonly IDatabase Redis = redis;
     private readonly IMessageSenderHandler MessageSenderHandler = messageSenderHandler;
+    private readonly ILifetimeScope Scope = scope;
     private readonly CommandRepository CommandRepository = commandRepository;
     private readonly DatabaseContext DatabaseContext = databaseContext;
     private readonly string GlobalPrefix = settings.GlobalPrefix;
@@ -101,13 +105,14 @@ public class MessageReceivedCommandHandler(
             }
 
             bool onCooldown = await Redis.KeyExistsAsync(CooldownKey(message, command));
-            if (onCooldown) return null;
+            if (onCooldown)
+            {
+                Logger.Debug("On cooldown");
+
+                return null;
+            }
 
             command.ParseArguments(message.Input);
-            command.Channel = message.Channel;
-            command.User = message.User;
-            command.Input = message.Input;
-            command.CommandInvocationName = commandInvocationName;
 
             Logger.Debug("Executing command {CommandName}", command.NameMatcher);
 
@@ -186,8 +191,12 @@ public class MessageReceivedCommandHandler(
         var commandType = CommandRepository.GetCommandType(commandName);
         if (commandType is null) return;
 
-        if (message.Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
+        if (Scope.Resolve(commandType) is not ChatCommand commandInstance) return;
 
+        using var commandNamePush = LogContext.PushProperty("CommandName", commandName);
+        using var activity = Logger.StartActivity("Command {CommandName} in {ChannelName}");
+
+        commandInstance.Context = message;
         var result = await Execute(commandInstance, message, commandName, cancellationToken);
         if (result is null || result.Message.Length == 0) return;
 

@@ -9,6 +9,5 @@ public record ChatMessage(
     List<string> Input,
     bool IsBroadcaster,
     bool IsMod,
-    ILifetimeScope Scope,
     string? ReplyID = null
 );

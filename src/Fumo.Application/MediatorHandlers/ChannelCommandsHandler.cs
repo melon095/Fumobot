@@ -27,10 +27,15 @@ public class OnChannelCreatedCommandHandler(ISchedulerFactory schedulerFactory) 
 
 #region Deleted
 
-public class OnChannelDeletedCommandHandler(IMessageSenderHandler messageSenderHandler) : INotificationHandler<OnChannelDeletedCommand>
+public class OnChannelDeletedCommandHandler(Serilog.ILogger logger, IMessageSenderHandler messageSenderHandler)
+    : INotificationHandler<OnChannelDeletedCommand>
 {
     public Task Handle(OnChannelDeletedCommand request, CancellationToken ct)
     {
+        var log = logger.ForContext<OnChannelDeletedCommandHandler>();
+
+        log.Information("Channel {ChannelName} deleted", request.Channel.TwitchName);
+
         MessageSendMethod method = request.Channel.GetSettingBool(ChannelSettingKey.ConnectedWithEventsub) switch
         {
             true => new MessageSendMethod.Helix(request.Channel.TwitchID),

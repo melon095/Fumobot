@@ -1,26 +1,36 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Fumo.Shared.Models;
+using Serilog;
 
 namespace Fumo.Shared.ThirdParty.Pajbot1;
 
-public class PajbotClient
+public interface IPajbotClient
+{
+    string NormalizeDomain(string input);
+
+    ValueTask<bool> ValidateDomain(string url, CancellationToken ct = default);
+
+    /// <exception cref="Exception"></exception>
+    ValueTask<bool> Check(string message, string baseURL, CancellationToken cancellationToken);
+}
+
+public class PajbotClient : IPajbotClient
 {
     private static readonly string Endpoint = "api/v1/banphrases/test";
     private static readonly MediaTypeHeaderValue ContentType = new("application/x-www-form-urlencoded");
-    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
-    private HttpClient HttpClient { get; set; }
+    private readonly ILogger Logger;
+    private readonly IHttpClientFactory Factory;
 
-    public PajbotClient()
+
+    public PajbotClient(ILogger logger, IHttpClientFactory factory)
     {
-        HttpClient = new()
-        {
-            Timeout = DefaultTimeout
-        };
+        Logger = logger.ForContext<PajbotClient>();
+        Factory = factory;
     }
 
-    public static string NormalizeDomain(string input)
+    public string NormalizeDomain(string input)
     {
         if (!input.StartsWith("https://"))
         {
@@ -44,7 +54,9 @@ public class PajbotClient
     {
         try
         {
-            await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), ct);
+            using var client = Factory.CreateClient("Pajbot");
+
+            await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url), ct);
 
             return true;
         }
@@ -54,9 +66,9 @@ public class PajbotClient
         }
     }
 
-    /// <exception cref="Exception"></exception>
     public async ValueTask<bool> Check(string message, string baseURL, CancellationToken cancellationToken)
     {
+        using var client = Factory.CreateClient("Pajbot");
         Uri url = new(new Uri(baseURL), Endpoint);
 
         Dictionary<string, string> formData = new()
@@ -68,11 +80,15 @@ public class PajbotClient
 
         content.Headers.ContentType = ContentType;
 
-        var result = await HttpClient.PostAsync(url, content, cancellationToken);
+        var result = await client.PostAsync(url, content, cancellationToken);
         result.EnsureSuccessStatusCode();
 
         var response = await result.Content.ReadFromJsonAsync<PajbotResponse>(FumoJson.SnakeCase, cancellationToken: cancellationToken);
 
-        return response?.Banned ?? false;
+        if (response is null || response.Banned == false) return false;
+
+        Logger.Information("Pajbot Banphrase triggered: {BanphraseName} {Message}", response.BanphraseData.Name, message);
+
+        return true;
     }
 }

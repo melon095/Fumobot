@@ -5,6 +5,7 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Helix;
+using Fumo.Shared.ThirdParty.Pajbot1;
 using Fumo.Shared.ThirdParty.ThreeLetterAPI;
 using MiniTwitch.Irc;
 using Serilog;
@@ -23,8 +24,9 @@ internal class SingletonModule(AppSettings settings) : Module
         foreach (var command in commandRepository.Commands)
         {
             builder
-                .RegisterType(command.Value.GetType())
+                .RegisterType(command.Value)
                 .AsSelf()
+                .As<ChatCommand>()
                 .InstancePerDependency();
         }
 
@@ -97,6 +99,11 @@ internal class SingletonModule(AppSettings settings) : Module
         builder
             .RegisterType<EventsubCommandRegistry>()
             .As<IEventsubCommandRegistry>()
+            .SingleInstance();
+
+        builder
+            .RegisterType<PajbotClient>()
+            .As<IPajbotClient>()
             .SingleInstance();
     }
 }

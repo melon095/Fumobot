@@ -9,7 +9,7 @@ public class WebModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
-        builder.RegisterType<DescriptionService>().SingleInstance();
+        builder.RegisterType<DescriptionService>().InstancePerLifetimeScope();
         builder.RegisterType<HttpUserService>().InstancePerLifetimeScope();
     }
 }

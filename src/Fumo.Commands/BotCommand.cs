@@ -10,20 +10,25 @@ namespace Fumo.Commands;
 
 public class BotCommand : ChatCommand
 {
-    private readonly IChannelRepository ChannelRepository;
+    protected override List<Parameter> Parameters =>
+    [
+        MakeParameter<bool>("remove")
+    ];
 
-    public BotCommand()
+    public override ChatCommandMetadata Metadata => new()
     {
-        SetName("bot");
-        SetDescription("Set various data related to you or your channel within the bot");
-        SetFlags(ChatCommandFlags.Reply);
+        Name = "bot",
+        Description = "Set various data related to you or your channel within the bot",
+        Flags = ChatCommandFlags.Reply,
+    };
 
-        AddParameter(new(typeof(bool), "remove"));
-    }
+    private readonly IChannelRepository ChannelRepository;
+    private readonly IPajbotClient Pajbot;
 
-    public BotCommand(IChannelRepository channelRepository) : this()
+    public BotCommand(IChannelRepository channelRepository, IPajbotClient pajbot)
     {
         ChannelRepository = channelRepository;
+        Pajbot = pajbot;
     }
 
     private void AssertBroadcaster()
@@ -87,11 +92,9 @@ public class BotCommand : ChatCommand
         var pajbotUrl = Input.ElementAtOrDefault(1)
             ?? throw new InvalidInputException("Specify a instance");
 
-        pajbotUrl = PajbotClient.NormalizeDomain(pajbotUrl);
+        pajbotUrl = Pajbot.NormalizeDomain(pajbotUrl);
 
-        // TODO: Should this be DI injected.
-        var pajbot = new PajbotClient();
-        var exists = await pajbot.ValidateDomain(pajbotUrl, ct);
+        var exists = await Pajbot.ValidateDomain(pajbotUrl, ct);
 
         if (!exists)
         {

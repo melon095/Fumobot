@@ -1,7 +1,51 @@
 {
-    "Logging": {
-        "LogLevel": "Information",
-        "OutputFolder": "/var/log/fumobot"
+    "Serilog": {
+        "Using": [
+            "Serilog",
+            "Serilog.Expressions",
+            "Serilog.Sinks.Console",
+            "Serilog.Sinks.Seq"
+        ],
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+                "Microsoft": "Warning",
+                "System": "Warning",
+                "Quartz": "Information",
+                "Npgsql": "Warning"
+            }
+        },
+        "WriteTo": [
+            {
+                "Name": "Console",
+                "Args": {
+                    "formatter": {
+                        "type": "Serilog.Templates.ExpressionTemplate, Serilog.Expressions",
+                        "template": "[{@t:HH:mm:ss} {@l,-11}] {#if IsRootSpan()}\u2514\u2500 {#else if IsSpan()}\u251c {#else if @sp is not null}\u2502 {#else}\u250A {#end}{@m}{#if IsSpan()} ({Milliseconds(Elapsed()):0.###} ms){#end}\n{@x}",
+                        "theme": "Serilog.Templates.Themes.TemplateTheme::Code, Serilog.Expressions",
+                        "nameResolver": {
+                            "type": "SerilogTracing.Expressions.TracingNameResolver, SerilogTracing.Expressions"
+                        }
+                    }
+                }
+            },
+            {
+                "Name": "Seq",
+                "Args": {
+                    "serverUrl": "http://localhost:5341",
+                    "apiKey": "",
+                    "restrictedToMinimumLevel": "Information"
+                }
+            }
+        ],
+        "Properties": {
+            "Application": "Fumo.Application"
+        },
+        "Enrich": [
+            "WithHttpRequestId",
+            "WithExceptionDetails",
+            "FromLogContext"
+        ]
     },
     "Connections": {
         "Postgres": "Host=my_host;Database=my_database;Username=my_user;Password=my_pw;Port=my_port;",

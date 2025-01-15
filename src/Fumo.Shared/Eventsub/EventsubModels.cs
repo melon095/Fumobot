@@ -16,7 +16,7 @@ public record MessageTypeRevocationBody(EventsubSubscription Subscription);
 public record EventsubSubscriptionRequest<TCondition>(string UserId, EventsubType<TCondition> Type, TCondition Condition)
     where TCondition : class;
 
-public record EventsubVerificationCommand<TCondition>(TCondition Condition) : IRequest;
+public record EventsubVerificationCommand<TCondition>(TCondition Condition) : INotification;
 public record EventsubBasicCondition(
     [property: JsonPropertyName("broadcaster_user_id")] string BroadcasterId,
     string UserId)

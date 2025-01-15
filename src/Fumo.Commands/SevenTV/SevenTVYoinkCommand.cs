@@ -13,25 +13,28 @@ namespace Fumo.Commands.SevenTV;
 
 public class SevenTVYoinkCommand : ChatCommand
 {
+    public override ChatCommandMetadata Metadata => new()
+    {
+        Name = "(7tv)?yoink|steal",
+        Description = "Yoink emotes from another channel"
+    };
+
+    protected override List<Parameter> Parameters =>
+    [
+        MakeParameter<bool>("alias"),
+        MakeParameter<bool>("case")
+    ];
+
     private static readonly char[] ChannelPrefixes = ['@', '#'];
 
     private readonly ISevenTVService SevenTVService;
     private readonly IMessageSenderHandler MessageSender;
     private readonly IUserRepository UserRepository;
 
-    public SevenTVYoinkCommand()
-    {
-        SetName("(7tv)?yoink|steal");
-        SetDescription("Yoink emotes from another channel");
-
-        AddParameter(new(typeof(bool), "alias"));
-        AddParameter(new(typeof(bool), "case"));
-    }
-
     public SevenTVYoinkCommand(
         ISevenTVService sevenTVService,
         IMessageSenderHandler messageSender,
-        IUserRepository userRepository) : this()
+        IUserRepository userRepository)
     {
         SevenTVService = sevenTVService;
         MessageSender = messageSender;
