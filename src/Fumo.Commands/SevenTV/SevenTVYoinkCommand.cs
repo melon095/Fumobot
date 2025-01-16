@@ -47,9 +47,9 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var seventvUser = await SevenTVService.GetUserInfo(user.TwitchID, ct);
 
-        var con = seventvUser.Connections.GetTwitchConnection();
+        if (seventvUser is null || seventvUser.IsDeletedUser()) throw new InvalidInputException("User or Channel does not have a 7TV account");
 
-        if (string.IsNullOrEmpty(con.EmoteSetId)) throw new InvalidInputException("User or Channel does not have a 7TV account");
+        var con = seventvUser.Connections.GetTwitchConnection();
 
         return con.EmoteSetId;
     }

@@ -44,4 +44,7 @@ public record SevenTVUser(
         result = emoteSet;
         return true;
     }
+
+    public bool IsDeletedUser()
+        => Username == "*DeletedUser" || ID.All(x => x == '0');
 }
