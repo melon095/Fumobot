@@ -22,7 +22,7 @@ public interface ISevenTVService
 
     ValueTask<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default!);
 
-    ValueTask<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct = default!);
+    ValueTask<SevenTVBasicEmote?> SearchEmoteByID(string Id, CancellationToken ct = default!);
 
     ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default!);
 

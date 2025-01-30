@@ -33,11 +33,13 @@ public class SevenTVAddCommand : ChatCommand
     {
         var id = ExtractSevenTVIDRegex.Extract(search);
 
-        return id switch
-        {
-            string => await SevenTVService.SearchEmoteByID(id, ct),
-            null => await GetEmoteFromName(search, ct)
-        };
+        if (id is null)
+            return await GetEmoteFromName(search, ct);
+
+        var emote = await SevenTVService.SearchEmoteByID(id, ct);
+        if (emote is null) throw new InvalidInputException("No emote found");
+
+        return emote;
     }
 
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)

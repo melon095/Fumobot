@@ -135,7 +135,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return (await Send<SevenTVEditorsRoot>(request, ct)).UserByConnection;
     }
 
-    public async ValueTask<SevenTVBasicEmote> SearchEmoteByID(string Id, CancellationToken ct)
+    public async ValueTask<SevenTVBasicEmote?> SearchEmoteByID(string Id, CancellationToken ct)
     {
         using var enrich = LogContext.PushProperty("RequestedEmoteID", Id);
         using var activity = Logger.StartActivity("SevenTVService.SearchEmoteByID");
