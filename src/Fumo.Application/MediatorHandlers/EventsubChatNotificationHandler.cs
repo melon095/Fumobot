@@ -55,9 +55,9 @@ internal class ChatMessageNotificationCommandHandler(
 
             var user = await UserRepository.SearchID(request.ChatterId, cancellationToken);
 
-            if (user.TwitchName != request.ChatterName)
+            if (user.TwitchName != request.ChatterLogin)
             {
-                user.TwitchName = request.ChatterName;
+                user.TwitchName = request.ChatterLogin;
                 user.UsernameHistory.Add(new(user.TwitchName, DateTime.Now));
 
                 await UserRepository.SaveChanges(cancellationToken);
