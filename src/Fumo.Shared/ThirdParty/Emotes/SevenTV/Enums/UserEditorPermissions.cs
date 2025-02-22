@@ -1,19 +1,18 @@
 ﻿namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 
+// https://github.com/SevenTV/SevenTV/blob/main/shared/src/old_types/mod.rs#L310
+[Flags]
 public enum UserEditorPermissions
 {
-    /// <summary>
-    /// Can mutate emotes
-    /// </summary>
-    Default = 17,
+    None = 0,
+    Default = ModifyEmotes | ManageEmoteSets,
 
-    /// <summary>
-    /// Can mutate emotes and add/remove editors
-    /// </summary>
-    Editor = 81,
-
-    /// <summary>
-    /// Removes the user from the editor list
-    /// </summary>
-    None = 0
+    ModifyEmotes = 1 << 0,
+    UsePrivateEmotes = 1 << 1,
+    ManageProfile = 1 << 2,
+    ManageOwnedEmotes = 1 << 3,
+    ManageEmoteSets = 1 << 4,
+    ManageBilling = 1 << 5,
+    ManageEditors = 1 << 6,
+    ViewMessages = 1 << 7,
 }
