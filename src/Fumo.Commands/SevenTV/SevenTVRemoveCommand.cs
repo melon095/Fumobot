@@ -47,7 +47,8 @@ public class SevenTVRemoveCommand : ChatCommand
 
         foreach (var emote in currentEmotes)
         {
-            if (!Input.Remove(emote.Name)) continue;
+            if (!Input.Remove(emote.Name) || !Input.Remove(emote.ID))
+                continue;
 
             emotesToRemove.Add(emote);
 
