@@ -41,7 +41,7 @@ internal class SingletonModule(AppSettings settings) : Module
             {
                 x.Username = settings.Twitch.Username;
                 x.OAuth = settings.Twitch.Token;
-                x.Logger = new LoggerFactory().AddSerilog(Log.Logger.ForContext("IsSubLogger", true).ForContext("Client", "Main")).CreateLogger<IrcClient>();
+                x.Logger = new LoggerFactory().AddSerilog(Log.Logger).CreateLogger<IrcClient>();
 
                 // https://dev.twitch.tv/docs/irc/#rate-limits
                 if (settings.Twitch.Verified)
