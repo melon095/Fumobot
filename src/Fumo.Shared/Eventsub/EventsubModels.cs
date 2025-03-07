@@ -55,8 +55,7 @@ public class ChannelChatMessageBody
 
     public List<Badge> Badges { get; set; } = [];
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public ChatMessageType MessageType { get; set; }
+    public string MessageType { get; set; }
 
     public ChatReply? Reply { get; set; }
 
@@ -77,16 +76,6 @@ public class ChannelChatMessageBody
         string ThreadUserName,
         string ThreadUserLogin
     );
-
-    public enum ChatMessageType
-    {
-        Text,
-        ChannelPointsHighlighted,
-        ChannelPointsSubOnly,
-        UserIntro,
-        Animated,
-        GigantifiedEmote
-    }
 
     public record ChatMessage(string Text);
 
