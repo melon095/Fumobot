@@ -1,4 +1,5 @@
-﻿using Fumo.Database;
+﻿using System.Net;
+using Fumo.Database;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Repositories;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
@@ -38,22 +39,20 @@ public class FetchEmoteSetsJob : IJob
                 var currentEmoteSetId = channel.GetSetting(ChannelSettingKey.SevenTV_EmoteSet);
 
                 var sevenTvUser = await SevenTVService.GetUserInfo(channel.TwitchID, context.CancellationToken);
+                if (sevenTvUser.EmoteSet is null) continue;
 
-                if (!sevenTvUser.TryDefaultEmoteSet(out var emoteSet))
-                {
-                    continue;
-                }
+                var emoteSetId = sevenTvUser.EmoteSet.ID;
 
-                if (currentEmoteSetId == emoteSet.ID) continue;
+                if (currentEmoteSetId == emoteSetId) continue;
 
-                channel.SetSetting(ChannelSettingKey.SevenTV_EmoteSet, emoteSet.ID);
-                channel.SetSetting(ChannelSettingKey.SevenTV_UserID, sevenTvUser.ID);
+                channel.SetSetting(ChannelSettingKey.SevenTV_EmoteSet, emoteSetId);
+                channel.SetSetting(ChannelSettingKey.SevenTV_UserID, sevenTvUser.SevenTVID);
 
                 await ChannelRepository.Update(channel, context.CancellationToken);
 
-                Logger.Information("Channel {ChannelName} Emote Set update {EmoteSet}", channel.TwitchName, emoteSet.ID);
+                Logger.Information("Channel {ChannelName} Emote Set update {EmoteSet}", channel.TwitchName, emoteSetId);
             }
-            catch (GraphQLException ex) when (ex.StatusCode != System.Net.HttpStatusCode.OK)
+            catch (GraphQLException ex) when (ex.StatusCode != HttpStatusCode.OK)
             {
                 continue;
             }

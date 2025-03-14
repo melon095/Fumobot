@@ -6,6 +6,7 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using System.Text;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.Repositories;
+using System.Collections.Immutable;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -57,16 +58,6 @@ public class SevenTVSearchCommand : ChatCommand
             }
         }
 
-        if (!exact)
-        {
-            SevenTVFilter.ByTags(searchTerm, emotes.Items);
-
-            if (Check() is string result2)
-            {
-                return result2;
-            }
-        }
-
         StringBuilder builder = new();
 
         var emotesToDisplay = emotes.Items.Take(MaxEmoteOutput);
@@ -111,7 +102,7 @@ public class SevenTVSearchCommand : ChatCommand
         }
     }
 
-    private async ValueTask FilterByUploader(List<SevenTVEmoteByNameItem> emotes, string uploader, CancellationToken ct)
+    private async ValueTask FilterByUploader(IImmutableList<SevenTVEmoteByName.Item> emotes, string uploader, CancellationToken ct)
     {
         if (string.IsNullOrEmpty(uploader))
             return;
@@ -119,9 +110,8 @@ public class SevenTVSearchCommand : ChatCommand
         var user = await UserRepository.SearchName(uploader, ct);
         var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
-        emotes.RemoveAll(x => x.Owner.ID != seventvUser.ID);
+        emotes.RemoveAll(x => x.Owner.TwitchID != seventvUser.TwitchID);
     }
-
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {

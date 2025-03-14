@@ -1,5 +1,5 @@
-﻿using Fumo.Database.DTO;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+﻿using System.Collections.Immutable;
+using Fumo.Database.DTO;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 
@@ -16,19 +16,21 @@ public interface ISevenTVService
 
     ValueTask<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default!);
 
-    ValueTask<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default!);
-
-    ValueTask<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default!);
-
-    ValueTask<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default!);
+    ValueTask<SevenTVBotEditors> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default!);
 
     ValueTask<SevenTVBasicEmote?> SearchEmoteByID(string Id, CancellationToken ct = default!);
 
     ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default!);
 
-    ValueTask<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default!);
+    ValueTask<string?> AddEmote(string setID, string emoteID, string? alias = null, CancellationToken ct = default!);
 
-    ValueTask<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default!);
+    ValueTask RemoveEmote(string setID, SevenTVBasicEmote emote, CancellationToken ct = default!);
 
-    ValueTask ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default!);
+    ValueTask AliasEmote(string setID, SevenTVBasicEmote emote, string newName, CancellationToken ct = default!);
+
+    ValueTask<IImmutableList<SevenTVBasicEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default!);
+
+    ValueTask RemoveEditor(string channelId, string editorId, CancellationToken ct = default!);
+
+    ValueTask AddEditor(string channelId, string editorId, CancellationToken ct = default!);
 }

@@ -36,16 +36,6 @@ public partial class SevenTVUserCommand : ChatCommand
         Redis = redis;
     }
 
-    private async ValueTask<IEnumerable<string>> GetRoles(IEnumerable<string> userRoles)
-    {
-        var roles = await Redis.StringGetAsync("seventv:roles");
-
-        return JsonSerializer.Deserialize<SevenTVRoles>(roles!, FumoJson.CamelCase)!
-            .Roles
-            .Where(x => userRoles.Contains(x.ID) && x.Name != "Default")
-            .Select(x => x.Name);
-    }
-
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var user = User;
@@ -57,10 +47,9 @@ public partial class SevenTVUserCommand : ChatCommand
         }
 
         SevenTVUser seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
+        var emoteSet = seventvUser.EmoteSet;
 
-        var roles = string.Join(", ", await GetRoles(seventvUser.Roles));
-
-        var emoteSet = seventvUser.DefaultEmoteSet();
+        var roles = string.Join(", ", seventvUser.Roles);
 
         var slots = emoteSet?.Emotes?.Count ?? 0;
         var maxSlots = emoteSet?.Capacity ?? slots;
@@ -70,7 +59,7 @@ public partial class SevenTVUserCommand : ChatCommand
 
         return new StringBuilder()
             .Append($"{seventvUser.Username} ({user.TwitchID}) | ")
-            .Append($"https://7tv.app/users/{seventvUser.ID} | ")
+            .Append($"https://7tv.app/users/{seventvUser.SevenTVID} | ")
             .Append(string.IsNullOrEmpty(roles) ? "(No roles) | " : $"{roles} | ")
             .Append($"Joined {joinTime} ago | ")
             .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")

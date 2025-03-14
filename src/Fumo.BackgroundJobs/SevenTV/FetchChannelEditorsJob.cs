@@ -16,26 +16,20 @@ public class FetchChannelEditorsJob : IJob
     public readonly ILogger Logger;
     public readonly IDatabase Redis;
     public readonly ISevenTVService SevenTV;
-    public readonly IChannelRepository ChannelRepository;
-    public readonly IThreeLetterAPI ThreeLetterAPI;
     public readonly IUserRepository UserRepository;
     private readonly string BotID;
 
     public FetchChannelEditorsJob(
+        AppSettings settings,
         ILogger logger,
         IDatabase redis,
         ISevenTVService sevenTVService,
-        AppSettings settings,
-        IChannelRepository channelRepository,
-        IUserRepository userRepository,
-        IThreeLetterAPI threeLetterAPI)
+        IUserRepository userRepository)
     {
         Logger = logger.ForContext<FetchChannelEditorsJob>();
         Redis = redis;
         SevenTV = sevenTVService;
-        ChannelRepository = channelRepository;
         UserRepository = userRepository;
-        ThreeLetterAPI = threeLetterAPI;
         BotID = settings.Twitch.UserID;
     }
 
@@ -43,31 +37,17 @@ public class FetchChannelEditorsJob : IJob
     {
         using var activity = Logger.StartActivity("7TV FetchChannelEditorsJob");
 
-        var botEmoteSets = (await SevenTV.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken))
-            .EditorOf
-            .Where(x => x.User.Connections.GetTwitchConnection() is not null);
+        var bot = await SevenTV.GetEditorEmoteSetsOfUser(BotID, context.CancellationToken);
 
-        foreach (var editorEmoteSet in botEmoteSets)
+        foreach (var editorEmoteSet in bot.EditorOf)
         {
             try
             {
-                // FIXME: Make this not do a million "To" casting.
-
-                var twitchConnection = editorEmoteSet.User.Connections.GetTwitchConnection();
-
-                var current7TVEditors = await SevenTV.GetEditors(twitchConnection.ID, context.CancellationToken);
-
-                var idsToMap = current7TVEditors.Editors
-                    .Select(x => x.User.Connections.GetTwitchConnection())
-                    .Where(x => x is not null)
-                    .Select(x => x!.ID)
-                    .ToArray();
-
-                var mappedUsers = (await UserRepository.SearchMultipleByID(idsToMap, context.CancellationToken))
+                var mappedUsers = (await UserRepository.SearchMultipleByID(editorEmoteSet.EditorIDs, context.CancellationToken))
                     .Select(x => x.TwitchID)
                     .ToArray();
 
-                var key = SevenTVService.EditorKey(twitchConnection.ID);
+                var key = SevenTVService.EditorKey(editorEmoteSet.ID);
                 RedisValue[] items = Array.ConvertAll(mappedUsers, value => new RedisValue(value));
 
                 await Redis.KeyDeleteAsync(key);
@@ -79,7 +59,7 @@ public class FetchChannelEditorsJob : IJob
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Failed to get editors of 7TV account {SevenTVName}", editorEmoteSet.User.Username);
+                Logger.Error(ex, "Failed to get editors of 7TV account {UserId}", editorEmoteSet.ID);
             }
         }
     }

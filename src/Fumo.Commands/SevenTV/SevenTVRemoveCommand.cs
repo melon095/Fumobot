@@ -1,11 +1,10 @@
 ﻿using Fumo.Shared.Exceptions;
 using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
+using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.ThirdParty.Exceptions;
 using Serilog;
 using System.Text;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -42,10 +41,8 @@ public class SevenTVRemoveCommand : ChatCommand
             throw new InvalidInputException("Provide emotes to remove");
         }
 
-        List<SevenTVEnabledEmote> emotesToRemove = [];
-        var currentEmotes = await SevenTVService.GetEnabledEmotes(aaaa.EmoteSet, ct);
-
-        foreach (var emote in currentEmotes)
+        var emotesToRemove = new List<SevenTVBasicEmote>(Input.Count);
+        foreach (var emote in await SevenTVService.GetEnabledEmotes(aaaa.EmoteSet, ct))
         {
             if (!Input.Remove(emote.Name) && !Input.Remove(emote.ID))
                 continue;
@@ -54,6 +51,7 @@ public class SevenTVRemoveCommand : ChatCommand
 
             if (Input.Count <= 0) break;
         }
+
 
         // Some emotes could not be found
         if (Input.Count > 0)
@@ -78,7 +76,7 @@ public class SevenTVRemoveCommand : ChatCommand
         {
             try
             {
-                await SevenTVService.ModifyEmoteSet(aaaa.EmoteSet, ListItemAction.Remove, emote.ID, ct: ct);
+                await SevenTVService.RemoveEmote(aaaa.EmoteSet, emote, ct);
             }
             catch (GraphQLException ex)
             {

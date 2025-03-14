@@ -1,17 +1,16 @@
 ﻿using Fumo.Database.DTO;
 using Fumo.Database;
 using Fumo.Shared.Exceptions;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.ThirdParty.GraphQL;
 using StackExchange.Redis;
 using System.Text.Json;
 using Fumo.Database.Extensions;
 using Fumo.Shared.Models;
-using Fumo.Shared.ThirdParty.Exceptions;
 using Serilog;
 using SerilogTracing;
 using Serilog.Context;
+using System.Collections.Immutable;
 
 namespace Fumo.Shared.ThirdParty.Emotes.SevenTV;
 
@@ -69,18 +68,6 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
     #region Requests
 
-    public async ValueTask<SevenTVRoles> GetGlobalRoles(CancellationToken ct = default)
-    {
-        using var activity = Logger.StartActivity("SevenTVService.GetGlobalRoles");
-
-        GraphQLRequest request = new()
-        {
-            Query = @"query GetRoles{roles {name id}}"
-        };
-
-        return await Send<SevenTVRoles>(request, ct);
-    }
-
     public async ValueTask<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default)
     {
         using var enrich = LogContext.PushProperty("RequestedTwitchID", twitchID);
@@ -88,7 +75,34 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         GraphQLRequest request = new()
         {
-            Query = @"query GetUserByConnection($platform: ConnectionPlatform! $id: String!) {userByConnection (platform: $platform, id: $id) {id type username roles created_at connections{id platform emote_set_id}emote_sets{id emotes{id} capacity}}}",
+            Query = @"
+            query ($id: String!) {
+              users {
+                userByConnection(platform: TWITCH, platformId: $id) {
+                  id
+                  roles {
+                    name
+                  }
+                  connections {
+                    platform
+                    platformUsername
+                    platformId
+                  }
+                  style {
+                    activeEmoteSet {
+                      id
+                      emotes {
+                        items {
+                          id
+                          alias
+                        }
+                      }
+                      capacity
+                    }
+                  }
+                }
+              }
+            }",
             Variables = new
             {
                 platform = "TWITCH",
@@ -96,17 +110,39 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await Send<OuterSevenTVUser>(request, ct)).UserByConnection;
+        return await Send<SevenTVUser>(request, ct);
     }
 
-    public async ValueTask<SevenTVEditorEmoteSets> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
+    public async ValueTask<SevenTVBotEditors> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
     {
         using var enrich = LogContext.PushProperty("RequestedTwitchID", twitchID);
         using var activity = Logger.StartActivity("SevenTVService.GetEditorEmoteSetsOfUser");
 
         GraphQLRequest request = new()
         {
-            Query = @"query GetUserByConnection($platform: ConnectionPlatform!, $id: String!) {userByConnection(platform: $platform, id: $id){id username connections{id platform emote_set_id}editor_of{id user{username connections{id platform emote_set_id}}}}}",
+            Query = @"
+            query($id: String!) {
+              users {
+                userByConnection(platform: TWITCH, platformId: $id) {
+                  editorFor {
+                    user {
+                      connections {
+                        platformId
+                        platform
+                      }
+                      editors {
+                        editor {
+                          connections {
+                            platform
+                            platformId 
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }",
             Variables = new
             {
                 platform = "TWITCH",
@@ -114,25 +150,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return (await Send<SevenTVEditorEmoteSetsRoot>(request, ct)).UserByConnection;
-    }
-
-    public async ValueTask<SevenTVEditors> GetEditors(string twitchID, CancellationToken ct = default)
-    {
-        using var enrich = LogContext.PushProperty("RequestedTwitchID", twitchID);
-        using var activity = Logger.StartActivity("SevenTVService.GetEditors");
-
-        GraphQLRequest request = new()
-        {
-            Query = @"query GetUserByConnection($platform: ConnectionPlatform!, $id: String!) {userByConnection(platform: $platform, id: $id) {id username editors{id user{username connections{platform id emote_set_id}}}}}",
-            Variables = new
-            {
-                platform = "TWITCH",
-                id = twitchID
-            }
-        };
-
-        return (await Send<SevenTVEditorsRoot>(request, ct)).UserByConnection;
+        return await Send<SevenTVBotEditors>(request, ct);
     }
 
     public async ValueTask<SevenTVBasicEmote?> SearchEmoteByID(string Id, CancellationToken ct)
@@ -142,14 +160,21 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         GraphQLRequest request = new()
         {
-            Query = @"query SearchEmote($id: ObjectID!){emote(id: $id){id name}}",
+            Query = @"query ($id: Id!) {
+              emotes {
+                emote(id: $id) {
+                  id
+                  defaultName
+                }
+              }
+            }",
             Variables = new
             {
                 id = Id
             }
         };
 
-        return (await Send<EmoteRoot>(request, ct)).Emote;
+        return await Send<SevenTVBasicEmote>(request, ct);
     }
 
     public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
@@ -159,73 +184,166 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         GraphQLRequest request = new()
         {
-            Query = @"query SearchEmotes($query: String! $page: Int $limit: Int $filter: EmoteSearchFilter) {emotes(query: $query page: $page limit: $limit filter: $filter){items{id name owner{username id} tags}}}",
+            Query = @"query ($query: String!, $exact: Boolean) {
+              emotes {
+                search(
+                  query: $query
+                  sort: {sortBy: TOP_ALL_TIME, order: DESCENDING}
+                  perPage: 100
+                  filters: {exactMatch: $exact}
+                ) {
+                  items {
+                    id
+                    defaultName
+                    owner {
+                      connections {
+                        platform
+                        platformUsername
+                        platformId
+                      }
+                      id
+                    }
+                    tags
+                  }
+                }
+              }
+            }",
             Variables = new
             {
                 query = name,
-                page = 1,
-                limit = 100,
-                filter = new
-                {
-                    exact_match = exact,
-                    ignore_tags = !exact
-                }
+                exact,
             }
         };
 
-        try
-        {
-            return (await Send<SevenTVEmoteByNameRoot>(request, ct)).Emotes;
-        }
-        catch (GraphQLException e)
-        {
-            if (SevenTVErrorMapper.TryErrorCodeFromGQL(e, out var ec))
-            {
-                if (ec == SevenTVErrorCode.SearchNoResult) return new([]);
-            }
-
-            throw;
-        }
+        return await Send<SevenTVEmoteByName>(request, ct);
     }
 
-    public async ValueTask<string?> ModifyEmoteSet(string emoteSet, ListItemAction action, string emoteID, string? name = null, CancellationToken ct = default)
+    public async ValueTask<string?> AddEmote(string setID, string emoteID, string? alias = null, CancellationToken ct = default)
     {
-        using var enrich = Logger.PushProperties(("EmoteSet", emoteSet), ("Action", action), ("EmoteID", emoteID), ("Name", name));
-        using var activity = Logger.StartActivity("SevenTVService.ModifyEmoteSet");
-
-        var stringAction = action switch
-        {
-            ListItemAction.Add => "ADD",
-            ListItemAction.Remove => "REMOVE",
-            ListItemAction.Update => "UPDATE",
-            _ => throw new NotImplementedException()
-        };
+        using var enrich = Logger.PushProperties(("SetID", setID), ("EmoteID", emoteID), ("Alias", alias));
+        using var activity = Logger.StartActivity("SevenTVService.AddEmote");
 
         GraphQLRequest request = new()
         {
-            Query = @"mutation ChangeEmoteInSet($id: ObjectID! $action: ListItemAction! $emote_id: ObjectID! $name: String) {emoteSet(id: $id){id emotes(id: $emote_id action: $action name: $name){id name}}}",
+            Query = @"
+            mutation ($setId: Id!, $emoteId: Id!, $alias: String) {
+              emoteSets {
+                emoteSet(id: $setId) {
+                  addEmote(id: {emoteId: $emoteId, alias: $alias}) {
+                    id
+                    emotes {
+                      items {
+                        id
+                        alias
+                      }
+                    }
+                  }
+                }
+              }
+            }",
             Variables = new
             {
-                id = emoteSet,
-                action = stringAction,
-                emote_id = emoteID,
-                name,
+                setId = setID,
+                emoteId = emoteID,
+                alias
             }
         };
 
-        var response = await Send<SevenTVModifyEmoteSetRoot>(request, ct);
+        var response = await Send<JsonDocument>(request, ct);
 
-        return response.EmoteSet.Emotes.LastOrDefault(x => x.ID == emoteID)?.Name ?? default;
+        return response
+            .RootElement
+            .GetProperty("emoteSets")
+            .GetProperty("emoteSet")
+            .GetProperty("addEmote")
+            .GetProperty("emotes")
+            .GetProperty("items")
+            .EnumerateArray()
+            .Where(x => x.GetProperty("id").GetString() == emoteID)
+            .Select(x => x.GetProperty("alias").GetString())
+            .FirstOrDefault();
     }
 
-    public async ValueTask<List<SevenTVEnabledEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
+    public async ValueTask RemoveEmote(string setID, SevenTVBasicEmote emote, CancellationToken ct = default)
+    {
+        using var enrich = Logger.PushProperties(("SetID", setID), ("EmoteID", emote.ID), ("Alias", emote.Name));
+        using var activity = Logger.StartActivity("SevenTVService.RemoveEmote");
+
+        GraphQLRequest request = new()
+        {
+            Query = @"
+            mutation ($setId: Id!, $emoteId: Id!, $alias: String) {
+              emoteSets {
+                emoteSet(id: $setId) {
+                  removeEmote(id: {emoteId: $emoteId, alias: $alias}) {
+                    __typename
+                  }
+                }
+              }
+            }",
+            Variables = new
+            {
+                setId = setID,
+                emoteId = emote.ID,
+                alias = emote.Name
+            }
+        };
+
+        await Send<JsonElement>(request, ct);
+    }
+
+    public async ValueTask AliasEmote(string setID, SevenTVBasicEmote emote, string newName, CancellationToken ct = default)
+    {
+        using var enrich = Logger.PushProperties(("SetID", setID), ("EmoteID", emote.ID), ("Name", newName));
+        using var activity = Logger.StartActivity("SevenTVService.AliasEmote");
+
+        GraphQLRequest request = new()
+        {
+            Query = @"
+            mutation($setId: Id!, $emoteId: Id!, $origAlias: String, $newAlias: String!) {
+                emoteSets {
+                    emoteSet(id: $setId) {
+                        updateEmoteAlias(id: { emoteId: $emoteId, alias: $origAlias}, alias: $newAlias) {
+                            id
+                            alias
+                        }
+                    }
+                }
+            }",
+            Variables = new
+            {
+                setId = setID,
+                emoteId = emote.ID,
+                origAlias = emote.Name,
+                newAlias = newName
+            }
+        };
+
+        await Send<JsonElement>(request, ct);
+    }
+
+    public async ValueTask<IImmutableList<SevenTVBasicEmote>> GetEnabledEmotes(string emoteSet, CancellationToken ct = default)
     {
         using var enrich = LogContext.PushProperty("EmoteSet", emoteSet);
         using var activity = Logger.StartActivity("SevenTVService.GetEnabledEmotes");
 
         GraphQLRequest request = new()
         {
-            Query = @"query GetEmoteSet($id: ObjectID!){emoteSet(id: $id){id name emotes{id name data{name}}}}",
+            Query = @"
+            query ($id: Id!) {
+              emoteSets {
+                emoteSet(id: $id) {
+                  id
+                  name
+                  emotes {
+                    items {
+                      id
+                      alias
+                    }
+                  }
+                }
+              }
+            }",
             Variables = new
             {
                 id = emoteSet
@@ -236,44 +354,80 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         return response
             .RootElement
-            .GetProperty("emoteSet")
-            .GetProperty("emotes")
-            .Deserialize<List<SevenTVEnabledEmote>>(SerializerOptions) ?? [];
+            .Deserialize<IImmutableList<SevenTVBasicEmote>>(SerializerOptions) ?? [];
     }
 
-    public async ValueTask ModifyEditorPermissions(string channelId, string userId, UserEditorPermissions permissions, CancellationToken ct = default)
+    public async ValueTask RemoveEditor(string channelId, string editorId, CancellationToken ct = default)
     {
-        using var enrich = Logger.PushProperties(("ChannelID", channelId), ("UserID", userId), ("Permissions", permissions));
-        using var activity = Logger.StartActivity("SevenTVService.ModifyEditorPermissions");
+        using var enrich = Logger.PushProperties(("ChannelID", channelId), ("EditorID", editorId));
+        using var activity = Logger.StartActivity("SevenTVService.RemoveEditor");
 
         GraphQLRequest request = new()
         {
-            Query = @"mutation UpdateUserEditors($id: ObjectID! $editor_id: ObjectID! $d: UserEditorUpdate!){user(id: $id){editors(editor_id: $editor_id data: $d){id}}}",
+            Query = @"
+            mutation ($userId: Id!, $editorId: Id!) {
+              userEditors {
+                editor(userId: $userId, editorId: $editorId) {
+                  delete
+                }
+              }
+            }",
             Variables = new
             {
-                id = channelId,
-                editor_id = userId,
-                d = new
-                {
-                    permissions
-                }
+                userId = channelId,
+                editorId
             }
         };
 
-        await Send<JsonDocument>(request, ct);
+        await Send<JsonElement>(request, ct);
+    }
+
+    public async ValueTask AddEditor(string channelId, string editorId, CancellationToken ct = default)
+    {
+        using var enrich = Logger.PushProperties(("ChannelID", channelId), ("EditorID", editorId));
+        using var activity = Logger.StartActivity("SevenTVService.AddEditor");
+
+        GraphQLRequest request = new()
+        {
+            Query = @"
+            mutation ($userId: Id!, $editorId: Id!) {
+              userEditors {
+                create(
+                  userId: $userId
+                  editorId: $editorId
+                  permissions: {
+                    superAdmin: false, 
+                    emote: {
+                        admin: false, 
+                        manage: false, 
+                        create: false, 
+                        transfer: false
+                    }, 
+                    user: {
+                        admin: false, 
+                        manageBilling: false, 
+                        manageProfile: false, 
+                        manageEditors: false, 
+                        managePersonalEmoteSet: false
+                    }, 
+                    emoteSet: {
+                        manage: true, 
+                        admin: false, 
+                        create: false
+                    }}) {
+                  __typename
+                }
+              }
+            }",
+            Variables = new
+            {
+                userId = channelId,
+                editorId
+            }
+        };
+
+        await Send<JsonElement>(request, ct);
     }
 
     #endregion
 }
-
-file record EmoteRoot(SevenTVBasicEmote Emote);
-
-file record SevenTVEditorsRoot(SevenTVEditors UserByConnection);
-
-file record SevenTVEditorEmoteSetsRoot(SevenTVEditorEmoteSets UserByConnection);
-
-file record SevenTVEmoteByNameRoot(SevenTVEmoteByName Emotes);
-
-file record SevenTVModifyEmoteSetRoot(SevenTVModifyEmoteSet EmoteSet);
-
-file record SevenTVModifyEmoteSet(string ID, IReadOnlyList<SevenTVBasicEmote> Emotes);

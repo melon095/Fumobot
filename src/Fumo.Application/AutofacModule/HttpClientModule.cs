@@ -23,7 +23,7 @@ public static class HttpClientModule
 
         builder.AddHttpClient("SevenTV", (o) =>
         {
-            o.BaseAddress = new Uri("https://7tv.io/v3/gql");
+            o.BaseAddress = new Uri("https://7tv.io/v4/gql");
             o.DefaultRequestHeaders.Authorization = new("Bearer", settings.SevenTV.Bearer);
 
             Default(o);

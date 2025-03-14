@@ -3,7 +3,6 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
@@ -37,9 +36,10 @@ public class SevenTVAddCommand : ChatCommand
             return await GetEmoteFromName(search, ct);
 
         var emote = await SevenTVService.SearchEmoteByID(id, ct);
-        if (emote is null) throw new InvalidInputException("No emote found");
 
-        return emote;
+        return emote is null
+            ? throw new InvalidInputException("No emote found")
+            : emote;
     }
 
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
@@ -47,11 +47,8 @@ public class SevenTVAddCommand : ChatCommand
         var exact = GetArgument<bool>("exact");
         var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
 
-        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
-
-        if (!exact) SevenTVFilter.ByTags(search, emotes.Items);
-
-        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
+        if (emotes.Items.Count <= 0)
+            throw new InvalidInputException("No emote found");
 
         return emotes.Items.ElementAt(0).AsBasicEmote();
     }
@@ -75,17 +72,14 @@ public class SevenTVAddCommand : ChatCommand
 
         try
         {
-            var newEmote = await SevenTVService.ModifyEmoteSet(aaaaa.EmoteSet, ListItemAction.Add, emote.ID, emoteName, ct);
+            var newEmote = await SevenTVService.AddEmote(aaaaa.EmoteSet, emote.ID, emoteName, ct);
             return $"Added emote {newEmote}";
         }
         catch (GraphQLException ex)
         {
-            if (SevenTVErrorMapper.TryErrorCodeFromGQL(ex, out var errorCode))
+            if (ex.Message == SevenTVErrors.AddEmoteNameConflict)
             {
-                if (errorCode == SevenTVErrorCode.EmoteAlreadyEnabled)
-                {
-                    return $"Emote {emote.Name} is already enabled";
-                }
+                return $"The emote is already enabled with this name.";
             }
 
             return ex.Message;

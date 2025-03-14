@@ -4,7 +4,6 @@ using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
 using StackExchange.Redis;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.Repositories;
 
@@ -47,7 +46,8 @@ public class SevenTVEditorCommand : ChatCommand
 
     private static string HumanizeError(GraphQLException ex)
     {
-        if (ex.Message.StartsWith("70403")) return "I don't have permission to do this";
+        if (ex.Message.StartsWith(SevenTVErrors.LackingPrivileges))
+            return "I don't have permission to do this 👉 https://7tv.app/settings/editors 👈";
 
         return ex.Message;
     }
@@ -57,28 +57,27 @@ public class SevenTVEditorCommand : ChatCommand
         var (_, UserID) = await SevenTV.EnsureCanModify(Channel, User);
 
         var userToMutate = await GetUser(ct);
-        var twitchId = userToMutate.Connections.GetTwitchConnection().ID;
 
-        if (twitchId == BotID)
+        if (userToMutate.TwitchID == BotID)
         {
             return "FailFish";
         }
 
         var key = SevenTVService.EditorKey(Channel.TwitchID);
-        var isAlreadyEditor = await Redis.SetContainsAsync(key, twitchId);
+        var isAlreadyEditor = await Redis.SetContainsAsync(key, userToMutate.TwitchID);
 
         if (isAlreadyEditor)
         {
             try
             {
-                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.ID, UserEditorPermissions.None, ct);
+                await SevenTV.RemoveEditor(UserID, userToMutate.SevenTVID, ct);
             }
             catch (GraphQLException ex)
             {
                 return HumanizeError(ex);
             }
 
-            await Redis.SetRemoveAsync(key, twitchId);
+            await Redis.SetRemoveAsync(key, userToMutate.TwitchID);
 
             return $"{userToMutate.Username} is no longer an editor";
         }
@@ -86,14 +85,14 @@ public class SevenTVEditorCommand : ChatCommand
         {
             try
             {
-                await SevenTV.ModifyEditorPermissions(UserID, userToMutate.ID, UserEditorPermissions.Default, ct);
+                await SevenTV.AddEditor(UserID, userToMutate.SevenTVID, ct);
             }
             catch (GraphQLException ex)
             {
                 return HumanizeError(ex);
             }
 
-            await Redis.SetAddAsync(key, twitchId);
+            await Redis.SetAddAsync(key, userToMutate.TwitchID);
 
             return $"{userToMutate.Username} is now an editor";
         }
