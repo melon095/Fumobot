@@ -4,9 +4,7 @@ using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.Utils;
 using StackExchange.Redis;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using System.Text;
 using Fumo.Shared.Repositories;
 
@@ -46,7 +44,10 @@ public partial class SevenTVUserCommand : ChatCommand
             user = await UserRepository.SearchName(username, ct);
         }
 
-        SevenTVUser seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
+        var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
+        if (seventvUser is null)
+            return "User not found";
+
         var emoteSet = seventvUser.EmoteSet;
 
         var roles = string.Join(", ", seventvUser.Roles);

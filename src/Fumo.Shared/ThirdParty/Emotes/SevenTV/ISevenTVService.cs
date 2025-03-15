@@ -14,7 +14,7 @@ public interface ISevenTVService
     /// </summary>
     ValueTask<SevenTVPermissionCheckResult> EnsureCanModify(ChannelDTO channel, UserDTO invoker);
 
-    ValueTask<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default!);
+    ValueTask<SevenTVUser?> GetUserInfo(string twitchID, CancellationToken ct = default!);
 
     ValueTask<SevenTVBotEditors> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default!);
 

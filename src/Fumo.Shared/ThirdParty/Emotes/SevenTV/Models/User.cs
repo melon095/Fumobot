@@ -4,8 +4,6 @@ using System.Text.Json.Serialization;
 
 namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
-public record OuterSevenTVUser(SevenTVUser UserByConnection);
-
 public record SevenTVUserEmote(string ID, string Alias);
 
 public record SevenTVUserEmoteSet(string ID, IReadOnlyList<SevenTVUserEmote> Emotes, int Capacity);
@@ -31,6 +29,9 @@ public record SevenTVUser(
                 .RootElement
                 .GetProperty("users")
                 .GetProperty("userByConnection");
+
+            if (user.ValueKind == JsonValueKind.Null)
+                throw new JsonException("User not found");
 
             var connection = ExtractorHelpers.Connection(user);
 
@@ -66,7 +67,7 @@ public record SevenTVUser(
                 id,
                 twitchId,
                 username,
-                roles,
+                roles!,
                 createdAt,
                 emoteSet
             );

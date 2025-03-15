@@ -35,7 +35,7 @@ public class SevenTVEditorCommand : ChatCommand
         BotID = settings.Twitch.UserID;
     }
 
-    private async ValueTask<SevenTVUser> GetUser(CancellationToken ct)
+    private async ValueTask<SevenTVUser?> GetUser(CancellationToken ct)
     {
         var username = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Provide a username to add or remove");
 
@@ -57,6 +57,10 @@ public class SevenTVEditorCommand : ChatCommand
         var (_, UserID) = await SevenTV.EnsureCanModify(Channel, User);
 
         var userToMutate = await GetUser(ct);
+        if (userToMutate is null)
+        {
+            return "User not found";
+        }
 
         if (userToMutate.TwitchID == BotID)
         {

@@ -68,7 +68,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
     #region Requests
 
-    public async ValueTask<SevenTVUser> GetUserInfo(string twitchID, CancellationToken ct = default)
+    public async ValueTask<SevenTVUser?> GetUserInfo(string twitchID, CancellationToken ct = default)
     {
         using var enrich = LogContext.PushProperty("RequestedTwitchID", twitchID);
         using var activity = Logger.StartActivity("SevenTVService.GetUserInfo");
@@ -110,7 +110,14 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return await Send<SevenTVUser>(request, ct);
+        try
+        {
+            return await Send<SevenTVUser>(request, ct);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async ValueTask<SevenTVBotEditors> GetEditorEmoteSetsOfUser(string twitchID, CancellationToken ct = default)
@@ -174,7 +181,18 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
             }
         };
 
-        return await Send<SevenTVBasicEmote>(request, ct);
+        var json = await Send<JsonDocument>(request, ct);
+        var emote = json
+            .RootElement
+            .GetProperty("emotes")
+            .GetProperty("emote");
+
+        if (emote.ValueKind == JsonValueKind.Null || emote.ValueKind == JsonValueKind.Undefined)
+        {
+            return null;
+        }
+
+        return emote.Deserialize<SevenTVBasicEmote>(SerializerOptions);
     }
 
     public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = true, CancellationToken ct = default)
