@@ -41,14 +41,16 @@ public record SevenTVBotEditors(
                 .GetProperty("user");
 
             var id = ExtractorHelpers.Connection(json)
-                .GetProperty("platformId")
-                .GetString()!;
+                .TryGetProperty("platformId", out var platformId)
+                ? platformId.GetString()!
+                : throw SevenTVErrors.NotLinkedToTwitch();
 
             var editorIDs = json
                 .GetProperty("editors")
                 .EnumerateArray()
                 .Select((x) => ExtractorHelpers.Connection(x.GetProperty("editor")))
-                .Select(x => x.GetProperty("platformId").GetString()!)
+                .Select(x => x.TryGetProperty("platformId", out var platformId) ? platformId.GetString() : null)
+                .Select(x => x!)
                 .ToImmutableList();
 
             return new(id, editorIDs);

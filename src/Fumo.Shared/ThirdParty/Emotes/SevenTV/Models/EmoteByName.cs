@@ -14,7 +14,7 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
 
         public string Name { get; init; }
 
-        public Owner Owner { get; init; }
+        public Owner? Owner { get; init; }
 
         public List<string> Tags { get; init; }
 
@@ -54,8 +54,10 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
             var id = json.GetProperty("id").GetString()!;
             var name = json.GetProperty("defaultName").GetString()!;
 
-            var owner = ExtractorHelpers.Connection(json.GetProperty("owner"))
-                .Deserialize<Owner>(options)!;
+            Owner? owner = null;
+            var ownerJ = ExtractorHelpers.Connection(json.GetProperty("owner"));
+            if (ownerJ.ValueKind != JsonValueKind.Undefined)
+                owner = ownerJ.Deserialize<Owner>(options);
 
             var tags = json
                 .GetProperty("tags")

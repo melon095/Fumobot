@@ -107,7 +107,7 @@ public class SevenTVSearchCommand : ChatCommand
         var user = await UserRepository.SearchName(uploader, ct);
         var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
-        emotes.RemoveAll(x => x.Owner.TwitchID != seventvUser.TwitchID);
+        emotes.RemoveAll(x => x.Owner?.TwitchID != seventvUser.TwitchID);
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)

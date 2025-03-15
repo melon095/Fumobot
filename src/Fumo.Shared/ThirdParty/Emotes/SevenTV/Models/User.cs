@@ -41,7 +41,7 @@ public record SevenTVUser(
             var roles = user
                 .GetProperty("roles")
                 .EnumerateArray()
-                .Select(x => x.GetProperty("name").GetString() ?? "")
+                .Select(x => x.TryGetProperty("name", out var name) ? name.GetString() : string.Empty)
                 .ToImmutableList();
 
             //var createdAt = user.GetProperty("createdAt").Deserialize<DateTime>(options)!;
