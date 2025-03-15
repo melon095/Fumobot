@@ -114,7 +114,7 @@ public class SevenTVAddCommand : ChatCommand
             .WithArgument("owner", (x) =>
             {
                 x.Description = "Search for emotes made by a specific user (Twitch Username)";
-                x.Required("owner");
+                x.Required("twitch_name");
             })
             .Finish;
 }

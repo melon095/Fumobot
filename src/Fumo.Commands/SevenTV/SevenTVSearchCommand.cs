@@ -20,7 +20,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     protected override List<Parameter> Parameters =>
     [
-        MakeParameter<string>("uploader"),
+        MakeParameter<string>("owner"),
     ];
 
     private readonly int MaxEmoteOutput = 5;
@@ -44,9 +44,9 @@ public class SevenTVSearchCommand : ChatCommand
         }
 
         {
-            if (TryGetArgument<string>("uploader", out var uploader))
+            if (TryGetArgument<string>("owner", out var owner))
             {
-                await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
+                await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(owner), ct);
             }
 
             if (Check() is string result2)
@@ -131,9 +131,9 @@ public class SevenTVSearchCommand : ChatCommand
             .WithUsage((x) => x.Required("search_term"))
             .WithExample("Apu")
             .WithExample("60aeab8df6a2c3b332d21139")
-            .WithArgument("uploader", (x) =>
+            .WithArgument("owner", (x) =>
             {
-                x.Description = "Search based on uploader. Uses the current Twitch username!";
+                x.Description = "Search based on owner. Uses the current Twitch username!";
                 x.Required("twitch_name");
             })
             .Finish;
