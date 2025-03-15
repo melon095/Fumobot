@@ -116,7 +116,10 @@ public class UserRepository : IUserRepository
             .Where(x => ids.Contains(x.TwitchID))
             .ToListAsync(cancellation);
 
-        var missing = ids.Except(dbUsers.Select(x => x.TwitchID)).ToArray();
+        var missing = ids
+            .Except(dbUsers.Select(x => x.TwitchID))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToArray();
 
         if (missing.Length <= 0)
         {
@@ -129,9 +132,14 @@ public class UserRepository : IUserRepository
 
         var response = await ThreeLetterAPI.Send<BasicBatchUserResponse>(request, cancellation);
 
-        // create dto objects from every object in response
         foreach (var twitchUser in response.Users)
         {
+            // Deleted user or something
+            if (twitchUser is null)
+            {
+                continue;
+            }
+
             UserDTO user = new()
             {
                 TwitchID = twitchUser.ID,

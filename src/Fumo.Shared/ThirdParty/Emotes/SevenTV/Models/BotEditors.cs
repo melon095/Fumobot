@@ -22,7 +22,7 @@ public record SevenTVBotEditors(
                 .GetProperty("userByConnection")
                 .GetProperty("editorFor")
                 .Deserialize<List<SevenTVBotEditorUser>>(options)!
-                .Select(x => x!)
+                .Where(x => x is not null)
                 .ToImmutableList()!;
 
             return new(editorFor);
@@ -40,22 +40,23 @@ public record SevenTVBotEditors(
                 .RootElement
                 .GetProperty("user");
 
-            var id = ExtractorHelpers.Connection(json)
-                .TryGetProperty("platformId", out var platformId)
-                ? platformId.GetString()!
-                : throw SevenTVErrors.NotLinkedToTwitch();
+            var idJ = ExtractorHelpers.Connection(json);
+            if (idJ.ValueKind == JsonValueKind.Null || idJ.ValueKind == JsonValueKind.Undefined)
+                return null;
+
+            var id = idJ.GetProperty("platformId").GetString()!;
 
             var editorIDs = json
                 .GetProperty("editors")
                 .EnumerateArray()
                 .Select((x) => ExtractorHelpers.Connection(x.GetProperty("editor")))
-                .Select(x => x.ValueKind != JsonValueKind.Null
+                .Select(x => x.ValueKind != JsonValueKind.Null && x.ValueKind != JsonValueKind.Undefined
                              ? x.GetProperty("platformId").GetString()
                              : null)
-                .Select(x => x!)
+                .Where(x => x is not null)
                 .ToImmutableList();
 
-            return new(id, editorIDs);
+            return new(id, editorIDs!);
         }
 
         public override void Write(Utf8JsonWriter writer, SevenTVBotEditorUser value, JsonSerializerOptions options)

@@ -41,6 +41,9 @@ public class FetchChannelEditorsJob : IJob
 
         foreach (var editorEmoteSet in bot.EditorOf)
         {
+            if (editorEmoteSet is null)
+                continue;
+
             try
             {
                 var mappedUsers = (await UserRepository.SearchMultipleByID(editorEmoteSet.EditorIDs, context.CancellationToken))

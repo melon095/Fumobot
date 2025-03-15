@@ -35,10 +35,10 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
                 .GetProperty("search")
                 .GetProperty("items")
                 .Deserialize<List<Item>>(options)!
-                .Select(x => x!)
+                .Where(x => x is not null)
                 .ToImmutableList();
 
-            return new(items);
+            return new(items!);
         }
 
         public override void Write(Utf8JsonWriter writer, SevenTVEmoteByName value, JsonSerializerOptions options)
@@ -62,7 +62,8 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
             var tags = json
                 .GetProperty("tags")
                 .EnumerateArray()
-                .Select(x => x.GetString()!)
+                .Select(x => x.ValueKind == JsonValueKind.String ? x.GetString()! : null)
+                .Where(x => x is not null)
                 .ToList();
 
             return new()
@@ -70,7 +71,7 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
                 ID = id,
                 Name = name,
                 Owner = owner,
-                Tags = tags
+                Tags = tags!
             };
         }
         public override void Write(Utf8JsonWriter writer, Item value, JsonSerializerOptions options)

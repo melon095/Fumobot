@@ -57,7 +57,7 @@ public record SevenTVUser(
                     set.GetProperty("emotes")
                         .GetProperty("items")
                         .Deserialize<List<SevenTVUserEmote>>(options)!
-                        .Select(x => x!)
+                        .Where(x => x is not null)
                         .ToList(),
                     set.GetProperty("capacity").GetInt32()
                 );
