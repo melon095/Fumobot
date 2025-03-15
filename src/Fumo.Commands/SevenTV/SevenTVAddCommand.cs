@@ -90,7 +90,7 @@ public class SevenTVAddCommand : ChatCommand
         {
             if (ex.Message == SevenTVErrors.AddEmoteNameConflict)
             {
-                return $"The emote is already enabled with this name.";
+                return $"An emote is already added with this name.";
             }
 
             return ex.Message;

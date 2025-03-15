@@ -143,7 +143,13 @@ public class SevenTVYoinkCommand : ChatCommand
             }
             catch (Exception ex)
             {
-                var method = MessageSender.Prepare($"👎 Failed to add {emote.Name} {ex.Message} {writeChannelPrompt}", Channel);
+                var message = ex.Message switch
+                {
+                    SevenTVErrors.AddEmoteNameConflict => "an emote with that name already exists",
+                    string msg => msg,
+                };
+
+                var method = MessageSender.Prepare($"👎 Failed to add {emote.Name} {message} {writeChannelPrompt}", Channel);
                 MessageSender.ScheduleMessageWithBanphraseCheck(method, Channel);
             }
         }
