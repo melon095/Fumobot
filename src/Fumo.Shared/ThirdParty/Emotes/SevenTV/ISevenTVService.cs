@@ -20,7 +20,7 @@ public interface ISevenTVService
 
     ValueTask<SevenTVBasicEmote?> SearchEmoteByID(string Id, CancellationToken ct = default!);
 
-    ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default!);
+    ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = true, CancellationToken ct = default!);
 
     ValueTask<string?> AddEmote(string setID, string emoteID, string? alias = null, CancellationToken ct = default!);
 

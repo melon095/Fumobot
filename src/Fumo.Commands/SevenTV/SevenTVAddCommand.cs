@@ -12,7 +12,6 @@ public class SevenTVAddCommand : ChatCommand
     protected override List<Parameter> Parameters =>
     [
         new(typeof(string), "alias"),
-        new(typeof(bool), "exact")
     ];
 
     public override ChatCommandMetadata Metadata => new()
@@ -44,8 +43,7 @@ public class SevenTVAddCommand : ChatCommand
 
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
     {
-        var exact = GetArgument<bool>("exact");
-        var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
+        var emotes = await SevenTVService.SearchEmotesByName(search, ct: ct);
 
         if (emotes.Items.Count <= 0)
             throw new InvalidInputException("No emote found");
@@ -99,10 +97,6 @@ public class SevenTVAddCommand : ChatCommand
             {
                 x.Description = "Assign an alias to this emote";
                 x.Required("alias");
-            })
-            .WithArgument("exact", (e) =>
-            {
-                e.Description = SevenTVConstants.Description.ExactFlag;
             })
             .Finish;
 }

@@ -177,7 +177,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
         return await Send<SevenTVBasicEmote>(request, ct);
     }
 
-    public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = false, CancellationToken ct = default)
+    public async ValueTask<SevenTVEmoteByName> SearchEmotesByName(string name, bool exact = true, CancellationToken ct = default)
     {
         using var enrich = Logger.PushProperties(("RequestedEmoteName", name), ("ExactMatch", exact));
         using var activity = Logger.StartActivity("SevenTVService.SearchEmotesByName");

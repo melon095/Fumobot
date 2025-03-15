@@ -21,7 +21,6 @@ public class SevenTVSearchCommand : ChatCommand
     protected override List<Parameter> Parameters =>
     [
         MakeParameter<string>("uploader"),
-        MakeParameter<bool>("exact")
     ];
 
     private readonly int MaxEmoteOutput = 5;
@@ -37,9 +36,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     private async ValueTask<CommandResult> GetEmoteFromName(string searchTerm, CancellationToken ct)
     {
-        var exact = GetArgument<bool>("exact");
-
-        var emotes = await SevenTV.SearchEmotesByName(searchTerm, exact, ct);
+        var emotes = await SevenTV.SearchEmotesByName(searchTerm, ct: ct);
 
         if (Check() is string result)
         {
@@ -134,10 +131,6 @@ public class SevenTVSearchCommand : ChatCommand
             .WithUsage((x) => x.Required("search_term"))
             .WithExample("Apu")
             .WithExample("60aeab8df6a2c3b332d21139")
-            .WithArgument("exact", (x) =>
-            {
-                x.Description = SevenTVConstants.Description.ExactFlag;
-            })
             .WithArgument("uploader", (x) =>
             {
                 x.Description = "Search based on uploader. Uses the current Twitch username!";
