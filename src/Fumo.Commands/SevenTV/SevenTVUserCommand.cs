@@ -55,14 +55,15 @@ public partial class SevenTVUserCommand : ChatCommand
         var slots = emoteSet?.Emotes?.Count ?? 0;
         var maxSlots = emoteSet?.Capacity ?? slots;
 
-        var joinOffset = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() - ((DateTimeOffset)seventvUser.CreatedAt).ToUnixTimeSeconds());
-        var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 4);
+        // TODO: Not accessible in GQL atm.
+        //var joinOffset = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() - ((DateTimeOffset)seventvUser.CreatedAt).ToUnixTimeSeconds());
+        //var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 4);
 
         return new StringBuilder()
             .Append($"{seventvUser.Username} ({user.TwitchID}) | ")
             .Append($"https://7tv.app/users/{seventvUser.SevenTVID} | ")
             .Append(string.IsNullOrEmpty(roles) ? "(No roles) | " : $"{roles} | ")
-            .Append($"Joined {joinTime} ago | ")
+            //.Append($"Joined {joinTime} ago | ")
             .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")
             .ToString();
     }
