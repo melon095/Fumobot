@@ -39,7 +39,12 @@ public class FetchEmoteSetsJob : IJob
                 var currentEmoteSetId = channel.GetSetting(ChannelSettingKey.SevenTV_EmoteSet);
 
                 var sevenTvUser = await SevenTVService.GetUserInfo(channel.TwitchID, context.CancellationToken);
-                if (sevenTvUser.EmoteSet is null) continue;
+                if (sevenTvUser is null ||
+                    sevenTvUser.IsDeletedUser() ||
+                    sevenTvUser.EmoteSet is null)
+                {
+                    continue;
+                }
 
                 var emoteSetId = sevenTvUser.EmoteSet.ID;
 
