@@ -12,6 +12,7 @@ public class SevenTVAddCommand : ChatCommand
     protected override List<Parameter> Parameters =>
     [
         new(typeof(string), "alias"),
+        new(typeof(string), "owner")
     ];
 
     public override ChatCommandMetadata Metadata => new()
@@ -47,6 +48,18 @@ public class SevenTVAddCommand : ChatCommand
 
         if (emotes.Items.Count <= 0)
             throw new InvalidInputException("No emote found");
+
+        if (TryGetArgument<string>("owner", out var ownerName))
+        {
+            var owner = emotes
+                .Items
+                .Where(x => x.Owner is not null)
+                .FirstOrDefault(x => x.Owner!.Username.Equals(ownerName, StringComparison.OrdinalIgnoreCase));
+
+            return owner is null
+                ? throw new InvalidInputException("No emote found by that user")
+                : owner.AsBasicEmote();
+        }
 
         return emotes.Items.ElementAt(0).AsBasicEmote();
     }
@@ -97,6 +110,11 @@ public class SevenTVAddCommand : ChatCommand
             {
                 x.Description = "Assign an alias to this emote";
                 x.Required("alias");
+            })
+            .WithArgument("owner", (x) =>
+            {
+                x.Description = "Search for emotes made by a specific user (Twitch Username)";
+                x.Required("owner");
             })
             .Finish;
 }
