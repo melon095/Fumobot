@@ -47,7 +47,7 @@ public class SevenTVEditorCommand : ChatCommand
     private static string HumanizeError(GraphQLException ex)
     {
         if (ex.Message.StartsWith(SevenTVErrors.LackingPrivileges))
-            return "I don't have permission to do this 👉 https://7tv.app/settings/editors 👈";
+            return "I don't have permission to do this 👉 https://7tv.app/settings/editors 👈 'Emote Sets Manage' 'Emotes Manage' and 'User Manage Editors'";
 
         return ex.Message;
     }
