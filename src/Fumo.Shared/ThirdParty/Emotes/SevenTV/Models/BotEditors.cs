@@ -49,7 +49,9 @@ public record SevenTVBotEditors(
                 .GetProperty("editors")
                 .EnumerateArray()
                 .Select((x) => ExtractorHelpers.Connection(x.GetProperty("editor")))
-                .Select(x => x.TryGetProperty("platformId", out var platformId) ? platformId.GetString() : null)
+                .Select(x => x.ValueKind != JsonValueKind.Null
+                             ? x.GetProperty("platformId").GetString()
+                             : null)
                 .Select(x => x!)
                 .ToImmutableList();
 
