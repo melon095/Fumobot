@@ -10,15 +10,14 @@ public record SevenTVBasicEmote(string ID, string Name)
     {
         public override SevenTVBasicEmote? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var json = JsonDocument.ParseValue(ref reader)
-                .RootElement
-                .GetProperty("emotes")
-                .GetProperty("emote");
+            var json = JsonDocument.ParseValue(ref reader).RootElement;
 
             var id = json.GetProperty("id").GetString()!;
-            var name = json.GetProperty("defaultName").GetString()!;
+            var name = json.TryGetProperty("defaultName", out var defaultName)
+                ? defaultName.GetString()!
+                : json.GetProperty("alias").GetString();
 
-            return new SevenTVBasicEmote(id, name);
+            return new SevenTVBasicEmote(id, name!);
         }
 
         public override void Write(Utf8JsonWriter writer, SevenTVBasicEmote value, JsonSerializerOptions options)

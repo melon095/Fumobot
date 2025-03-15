@@ -26,7 +26,8 @@ public class SevenTVAliasCommand : ChatCommand
     {
         var (EmoteSet, _) = await SevenTVService.EnsureCanModify(Channel, User);
 
-        var input = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Missing source emote");
+        var input = Input.ElementAtOrDefault(0)
+            ?? throw new InvalidInputException("Missing source emote");
 
         var srcEmote = (await SevenTVService.GetEnabledEmotes(EmoteSet, ct))
             .Where(x => x.Name == input)

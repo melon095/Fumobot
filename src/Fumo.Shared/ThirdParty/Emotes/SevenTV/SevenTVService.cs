@@ -354,6 +354,10 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
 
         return response
             .RootElement
+            .GetProperty("emoteSets")
+            .GetProperty("emoteSet")
+            .GetProperty("emotes")
+            .GetProperty("items")
             .Deserialize<IImmutableList<SevenTVBasicEmote>>(SerializerOptions) ?? [];
     }
 
