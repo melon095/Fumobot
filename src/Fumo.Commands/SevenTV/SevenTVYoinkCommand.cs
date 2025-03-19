@@ -5,8 +5,6 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Utils;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using System.Collections.Immutable;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.Repositories;
 
 namespace Fumo.Commands.SevenTV;
@@ -21,7 +19,6 @@ public class SevenTVYoinkCommand : ChatCommand
 
     protected override List<Parameter> Parameters =>
     [
-        MakeParameter<bool>("alias"),
         MakeParameter<bool>("case")
     ];
 
@@ -47,16 +44,18 @@ public class SevenTVYoinkCommand : ChatCommand
 
         var seventvUser = await SevenTVService.GetUserInfo(user.TwitchID, ct);
 
-        if (seventvUser is null || seventvUser.IsDeletedUser()) throw new InvalidInputException("User or Channel does not have a 7TV account");
+        if (seventvUser is null ||
+            seventvUser.IsDeletedUser() ||
+            seventvUser.EmoteSet is null)
+        {
+            throw new InvalidInputException("User or Channel does not have a 7TV account");
+        }
 
-        var con = seventvUser.Connections.GetTwitchConnection();
-
-        return con.EmoteSetId;
+        return seventvUser.EmoteSet.ID;
     }
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
-        var keepAlias = GetArgument<bool>("alias");
         var isCaseSensitive = GetArgument<bool>("case");
 
         var stringComparer = isCaseSensitive
@@ -136,9 +135,7 @@ public class SevenTVYoinkCommand : ChatCommand
         {
             try
             {
-                var aliasName = keepAlias ? emote.Name : null;
-
-                var name = await SevenTVService.ModifyEmoteSet(writeSet, ListItemAction.Add, emote.ID, aliasName, ct)
+                var name = await SevenTVService.AddEmote(writeSet, emote.ID, emote.Name, ct)
                     ?? throw new Exception("Idk what happened");
 
                 var method = MessageSender.Prepare($"👍 Added {name} {writeChannelPrompt}", Channel);
@@ -146,13 +143,13 @@ public class SevenTVYoinkCommand : ChatCommand
             }
             catch (Exception ex)
             {
-                var e = emote.Name;
-                if (emote.HasAlias)
+                var message = ex.Message switch
                 {
-                    e += $" (alias of {emote.Name})";
-                }
+                    SevenTVErrors.AddEmoteNameConflict => "an emote with that name already exists",
+                    string msg => msg,
+                };
 
-                var method = MessageSender.Prepare($"👎 Failed to add {e} {ex.Message} {writeChannelPrompt}", Channel);
+                var method = MessageSender.Prepare($"👎 Failed to add {emote.Name} {message} {writeChannelPrompt}", Channel);
                 MessageSender.ScheduleMessageWithBanphraseCheck(method, Channel);
             }
         }
@@ -174,10 +171,6 @@ Conversely, specifying a channel (e.g., @forsen) retrieves emotes from 'forsen' 
             .WithExample("#forsen DankG")
             .WithExample("FloppaDank FloppaL #forsen")
             .WithExample("peepoDank", "Copies the emotes provided in the current channel into your own channel.")
-            .WithArgument("alias", x =>
-            {
-                x.Description = "Preserve the original emote name as an alias";
-            })
             .WithArgument("case", x =>
             {
                 x.Description = "Takes emotes with case sensitivity in mind";

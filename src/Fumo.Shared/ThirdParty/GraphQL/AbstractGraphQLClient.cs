@@ -20,8 +20,6 @@ public abstract class AbstractGraphQLClient
 
     private readonly IHttpClientFactory Factory;
 
-    private bool Disposed = false;
-
     public AbstractGraphQLClient(IHttpClientFactory factory)
     {
         Factory = factory;

@@ -11,7 +11,6 @@ internal class BackgroundJobStarter : IAsyncStartable
     [
         CreateJob<ChannelRemoverJob>(EveryThirthyMinute),
         CreateJob<ChannelRenameJob>(EveryThirthyMinute),
-        CreateJob<FetchRolesJob>(EveryHour),
         CreateJob<FetchEmoteSetsJob>(EveryMinute(2)),
         CreateJob<FetchChannelEditorsJob>(EveryMinute(5)),
     ];

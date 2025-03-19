@@ -9,6 +9,11 @@ git pull
 service stop
 
 dotnet clean -o $OutDir
-dotnet build -c Release -o $OutDir
+
+if [ "$1" == "frontend" ]; then
+    dotnet build -c Release -o $OutDir -p:BuildFrontend=true
+else
+    dotnet build -c Release -o $OutDir
+fi
 
 service start

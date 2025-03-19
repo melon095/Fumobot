@@ -4,9 +4,7 @@ using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.Utils;
 using StackExchange.Redis;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using System.Text;
 using Fumo.Shared.Repositories;
 
@@ -36,16 +34,6 @@ public partial class SevenTVUserCommand : ChatCommand
         Redis = redis;
     }
 
-    private async ValueTask<IEnumerable<string>> GetRoles(IEnumerable<string> userRoles)
-    {
-        var roles = await Redis.StringGetAsync("seventv:roles");
-
-        return JsonSerializer.Deserialize<SevenTVRoles>(roles!, FumoJson.CamelCase)!
-            .Roles
-            .Where(x => userRoles.Contains(x.ID) && x.Name != "Default")
-            .Select(x => x.Name);
-    }
-
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
         var user = User;
@@ -56,23 +44,26 @@ public partial class SevenTVUserCommand : ChatCommand
             user = await UserRepository.SearchName(username, ct);
         }
 
-        SevenTVUser seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
+        var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
+        if (seventvUser is null)
+            return "User not found";
 
-        var roles = string.Join(", ", await GetRoles(seventvUser.Roles));
+        var emoteSet = seventvUser.EmoteSet;
 
-        var emoteSet = seventvUser.DefaultEmoteSet();
+        var roles = string.Join(", ", seventvUser.Roles);
 
         var slots = emoteSet?.Emotes?.Count ?? 0;
         var maxSlots = emoteSet?.Capacity ?? slots;
 
-        var joinOffset = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() - ((DateTimeOffset)seventvUser.CreatedAt).ToUnixTimeSeconds());
-        var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 4);
+        // TODO: Not accessible in GQL atm.
+        //var joinOffset = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() - ((DateTimeOffset)seventvUser.CreatedAt).ToUnixTimeSeconds());
+        //var joinTime = new SecondsFormatter().SecondsFmt(joinOffset, limit: 4);
 
         return new StringBuilder()
             .Append($"{seventvUser.Username} ({user.TwitchID}) | ")
-            .Append($"https://7tv.app/users/{seventvUser.ID} | ")
+            .Append($"https://7tv.app/users/{seventvUser.SevenTVID} | ")
             .Append(string.IsNullOrEmpty(roles) ? "(No roles) | " : $"{roles} | ")
-            .Append($"Joined {joinTime} ago | ")
+            //.Append($"Joined {joinTime} ago | ")
             .Append($"Slots {slots} / {MaxSlotsRegex().Replace(maxSlots.ToString(), "_")}")
             .ToString();
     }

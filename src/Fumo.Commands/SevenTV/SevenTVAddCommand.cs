@@ -3,7 +3,6 @@ using Fumo.Shared.Models;
 using Fumo.Shared.Regexes;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
 using Fumo.Shared.ThirdParty.Exceptions;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 namespace Fumo.Commands.SevenTV;
@@ -13,7 +12,7 @@ public class SevenTVAddCommand : ChatCommand
     protected override List<Parameter> Parameters =>
     [
         new(typeof(string), "alias"),
-        new(typeof(bool), "exact")
+        new(typeof(string), "owner")
     ];
 
     public override ChatCommandMetadata Metadata => new()
@@ -37,21 +36,30 @@ public class SevenTVAddCommand : ChatCommand
             return await GetEmoteFromName(search, ct);
 
         var emote = await SevenTVService.SearchEmoteByID(id, ct);
-        if (emote is null) throw new InvalidInputException("No emote found");
 
-        return emote;
+        return emote is null
+            ? throw new InvalidInputException("No emote found")
+            : emote;
     }
 
     private async ValueTask<SevenTVBasicEmote> GetEmoteFromName(string search, CancellationToken ct)
     {
-        var exact = GetArgument<bool>("exact");
-        var emotes = await SevenTVService.SearchEmotesByName(search, exact, ct);
+        var emotes = await SevenTVService.SearchEmotesByName(search, ct: ct);
 
-        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
+        if (emotes.Items.Count <= 0)
+            throw new InvalidInputException("No emote found");
 
-        if (!exact) SevenTVFilter.ByTags(search, emotes.Items);
+        if (TryGetArgument<string>("owner", out var ownerName))
+        {
+            var owner = emotes
+                .Items
+                .Where(x => x.Owner is not null)
+                .FirstOrDefault(x => x.Owner!.Username.Equals(ownerName, StringComparison.OrdinalIgnoreCase));
 
-        if (emotes.Items.Count <= 0) throw new InvalidInputException("No emote found");
+            return owner is null
+                ? throw new InvalidInputException("No emote found by that user")
+                : owner.AsBasicEmote();
+        }
 
         return emotes.Items.ElementAt(0).AsBasicEmote();
     }
@@ -75,17 +83,14 @@ public class SevenTVAddCommand : ChatCommand
 
         try
         {
-            var newEmote = await SevenTVService.ModifyEmoteSet(aaaaa.EmoteSet, ListItemAction.Add, emote.ID, emoteName, ct);
+            var newEmote = await SevenTVService.AddEmote(aaaaa.EmoteSet, emote.ID, emoteName, ct);
             return $"Added emote {newEmote}";
         }
         catch (GraphQLException ex)
         {
-            if (SevenTVErrorMapper.TryErrorCodeFromGQL(ex, out var errorCode))
+            if (ex.Message == SevenTVErrors.AddEmoteNameConflict)
             {
-                if (errorCode == SevenTVErrorCode.EmoteAlreadyEnabled)
-                {
-                    return $"Emote {emote.Name} is already enabled";
-                }
+                return $"An emote is already added with this name.";
             }
 
             return ex.Message;
@@ -106,9 +111,10 @@ public class SevenTVAddCommand : ChatCommand
                 x.Description = "Assign an alias to this emote";
                 x.Required("alias");
             })
-            .WithArgument("exact", (e) =>
+            .WithArgument("owner", (x) =>
             {
-                e.Description = SevenTVConstants.Description.ExactFlag;
+                x.Description = "Search for emotes made by a specific user (Twitch Username)";
+                x.Required("twitch_name");
             })
             .Finish;
 }

@@ -6,6 +6,7 @@ using Fumo.Shared.ThirdParty.Exceptions;
 using System.Text;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 using Fumo.Shared.Repositories;
+using System.Collections.Immutable;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -19,8 +20,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     protected override List<Parameter> Parameters =>
     [
-        MakeParameter<string>("uploader"),
-        MakeParameter<bool>("exact")
+        MakeParameter<string>("owner"),
     ];
 
     private readonly int MaxEmoteOutput = 5;
@@ -36,9 +36,7 @@ public class SevenTVSearchCommand : ChatCommand
 
     private async ValueTask<CommandResult> GetEmoteFromName(string searchTerm, CancellationToken ct)
     {
-        var exact = GetArgument<bool>("exact");
-
-        var emotes = await SevenTV.SearchEmotesByName(searchTerm, exact, ct);
+        var emotes = await SevenTV.SearchEmotesByName(searchTerm, ct: ct);
 
         if (Check() is string result)
         {
@@ -46,20 +44,10 @@ public class SevenTVSearchCommand : ChatCommand
         }
 
         {
-            if (TryGetArgument<string>("uploader", out var uploader))
+            if (TryGetArgument<string>("owner", out var owner))
             {
-                await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(uploader), ct);
+                await FilterByUploader(emotes.Items, UsernameCleanerRegex.CleanUsername(owner), ct);
             }
-
-            if (Check() is string result2)
-            {
-                return result2;
-            }
-        }
-
-        if (!exact)
-        {
-            SevenTVFilter.ByTags(searchTerm, emotes.Items);
 
             if (Check() is string result2)
             {
@@ -111,7 +99,7 @@ public class SevenTVSearchCommand : ChatCommand
         }
     }
 
-    private async ValueTask FilterByUploader(List<SevenTVEmoteByNameItem> emotes, string uploader, CancellationToken ct)
+    private async ValueTask FilterByUploader(IImmutableList<SevenTVEmoteByName.Item> emotes, string uploader, CancellationToken ct)
     {
         if (string.IsNullOrEmpty(uploader))
             return;
@@ -119,9 +107,8 @@ public class SevenTVSearchCommand : ChatCommand
         var user = await UserRepository.SearchName(uploader, ct);
         var seventvUser = await SevenTV.GetUserInfo(user.TwitchID, ct);
 
-        emotes.RemoveAll(x => x.Owner.ID != seventvUser.ID);
+        emotes.RemoveAll(x => x.Owner?.TwitchID != seventvUser.TwitchID);
     }
-
 
     public override async ValueTask<CommandResult> Execute(CancellationToken ct)
     {
@@ -144,13 +131,9 @@ public class SevenTVSearchCommand : ChatCommand
             .WithUsage((x) => x.Required("search_term"))
             .WithExample("Apu")
             .WithExample("60aeab8df6a2c3b332d21139")
-            .WithArgument("exact", (x) =>
+            .WithArgument("owner", (x) =>
             {
-                x.Description = SevenTVConstants.Description.ExactFlag;
-            })
-            .WithArgument("uploader", (x) =>
-            {
-                x.Description = "Search based on uploader. Uses the current Twitch username!";
+                x.Description = "Search based on owner. Uses the current Twitch username!";
                 x.Required("twitch_name");
             })
             .Finish;

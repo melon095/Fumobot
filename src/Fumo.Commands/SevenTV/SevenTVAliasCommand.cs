@@ -2,7 +2,7 @@
 using Fumo.Shared.Exceptions;
 using Fumo.Shared.Models;
 using Fumo.Shared.ThirdParty.Emotes.SevenTV;
-using Fumo.Shared.ThirdParty.Emotes.SevenTV.Enums;
+using Fumo.Shared.ThirdParty.Exceptions;
 
 namespace Fumo.Commands.SevenTV;
 
@@ -26,7 +26,8 @@ public class SevenTVAliasCommand : ChatCommand
     {
         var (EmoteSet, _) = await SevenTVService.EnsureCanModify(Channel, User);
 
-        var input = Input.ElementAtOrDefault(0) ?? throw new InvalidInputException("Missing source emote");
+        var input = Input.ElementAtOrDefault(0)
+            ?? throw new InvalidInputException("Missing source emote");
 
         var srcEmote = (await SevenTVService.GetEnabledEmotes(EmoteSet, ct))
             .Where(x => x.Name == input)
@@ -37,9 +38,24 @@ public class SevenTVAliasCommand : ChatCommand
             return $"{input} is not an emote";
         }
 
-        var dstEmoteName = Input.ElementAtOrDefault(1);
+        // 1. Given alias
+        // 2. Source emote for reset
+        var dstEmoteName = Input.ElementAtOrDefault(1)
+            ?? srcEmote.Name;
 
-        await SevenTVService.ModifyEmoteSet(EmoteSet, ListItemAction.Update, srcEmote.ID, dstEmoteName, ct);
+        try
+        {
+            await SevenTVService.AliasEmote(EmoteSet, srcEmote, dstEmoteName, ct);
+        }
+        catch (GraphQLException ex)
+        {
+            if (ex.Message == SevenTVErrors.UpdateAliasNameConflict)
+            {
+                return "The emote is already enabled with this name.";
+            }
+
+            throw;
+        }
 
         if (dstEmoteName is null)
         {
