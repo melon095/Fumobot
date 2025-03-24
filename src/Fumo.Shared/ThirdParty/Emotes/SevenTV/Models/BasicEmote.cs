@@ -4,8 +4,10 @@ using System.Text.Json.Serialization;
 namespace Fumo.Shared.ThirdParty.Emotes.SevenTV.Models;
 
 [JsonConverter(typeof(Converter))]
-public record SevenTVBasicEmote(string ID, string Name)
+public record SevenTVBasicEmote(string ID, string Name, string OriginalName)
 {
+    public bool HasAlias => Name != OriginalName;
+
     internal class Converter : JsonConverter<SevenTVBasicEmote>
     {
         public override SevenTVBasicEmote? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -17,7 +19,14 @@ public record SevenTVBasicEmote(string ID, string Name)
                 ? defaultName.GetString()!
                 : json.GetProperty("alias").GetString();
 
-            return new SevenTVBasicEmote(id, name!);
+            if (json.TryGetProperty("emote", out var emoteDataWithinInstance))
+            {
+                var origName = emoteDataWithinInstance.GetProperty("defaultName").GetString();
+
+                return new(id, name!, origName!);
+            }
+
+            return new(id, name!, name!);
         }
 
         public override void Write(Utf8JsonWriter writer, SevenTVBasicEmote value, JsonSerializerOptions options)

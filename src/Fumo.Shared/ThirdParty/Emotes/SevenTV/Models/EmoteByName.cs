@@ -18,7 +18,7 @@ public record SevenTVEmoteByName(ImmutableList<SevenTVEmoteByName.Item> Items)
 
         public List<string> Tags { get; init; }
 
-        public SevenTVBasicEmote AsBasicEmote() => new(ID, Name);
+        public SevenTVBasicEmote AsBasicEmote() => new(ID, Name, Name);
     }
 
     public record Owner(

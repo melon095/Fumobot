@@ -41,7 +41,7 @@ public class SevenTVAliasCommand : ChatCommand
         // 1. Given alias
         // 2. Source emote for reset
         var dstEmoteName = Input.ElementAtOrDefault(1)
-            ?? srcEmote.Name;
+            ?? srcEmote.OriginalName;
 
         try
         {

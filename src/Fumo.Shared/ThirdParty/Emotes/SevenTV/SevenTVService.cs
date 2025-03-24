@@ -357,6 +357,7 @@ public class SevenTVService : AbstractGraphQLClient, ISevenTVService
                     items {
                       id
                       alias
+                      emote {defaultName}
                     }
                   }
                 }
