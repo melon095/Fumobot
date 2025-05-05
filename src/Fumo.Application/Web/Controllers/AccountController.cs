@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fumo.Application.Web.Controllers;
 
-[Route("[controller]"), ApiController, Authorize]
+[Route("[controller]"), ApiController]
 public class AccountController : ControllerBase
 {
     private readonly HttpUserService HttpUserService;
@@ -22,15 +22,15 @@ public class AccountController : ControllerBase
         BotId = settings.Twitch.UserID;
     }
 
-    [HttpGet("Login"), AllowAnonymous]
+    [HttpGet("Login")]
     public IActionResult Login(string returnUrl = "/")
         => Challenge(new AuthenticationProperties { RedirectUri = returnUrl }, TwitchAuthenticationDefaults.AuthenticationScheme);
 
-    [HttpGet("Logout")]
+    [HttpGet("Logout"), Authorize]
     public IActionResult Logout()
         => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
 
-    [HttpGet("__BotLogin")]
+    [HttpGet("__BotLogin"), Authorize]
     public async ValueTask<IActionResult> BotLogin(CancellationToken ct)
     {
         var user = await HttpUserService.GetUser(ct);
@@ -41,7 +41,7 @@ public class AccountController : ControllerBase
         return Challenge(new AuthenticationProperties { RedirectUri = "/" }, OAuthProviderName.TwitchBot);
     }
 
-    [HttpGet("Me")]
+    [HttpGet("Me"), Authorize]
     public async ValueTask<IActionResult> Me()
     {
         var user = await HttpUserService.GetUser();
@@ -53,7 +53,7 @@ public class AccountController : ControllerBase
         });
     }
 
-    [HttpGet("Join")]
+    [HttpGet("Join"), Authorize]
     public async ValueTask<IActionResult> Join(IEventsubManager eventsubManager, CancellationToken ct)
     {
         var user = await HttpUserService.GetUser(ct);
