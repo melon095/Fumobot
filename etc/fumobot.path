@@ -2,7 +2,7 @@
 Description=Fumbot Update
 
 [Path]
-PathChanged=/usr/local/fumobot/bin/linux-x64/fumobot
+PathChanged=/usr/local/bin/fumobot/linux-x64/Fumo.Application.dll
 Unit=fumobot-restart.service
 
 [Install]
