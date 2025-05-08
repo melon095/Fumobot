@@ -49,21 +49,4 @@
 		</Reference>
 	</ItemGroup>
 
-	<PropertyGroup>
-		<FrontendRoot>..\Fumo.Frontend\</FrontendRoot>
-		<FrontendOutputRoot>$(FrontendRoot)build\</FrontendOutputRoot>
-	</PropertyGroup>
-
-	<Target Name="ShipFrontend" BeforeTargets="AfterBuild" Condition="'$(Configuration)' == 'Release' AND '$(BuildFrontend)' == 'true'">
-		<!-- force because pnpm thinks its own node version is lower than some dependecies expect. Even though pnpm has zero node binaries shipped. And system wide version is well above required :) -->
-		<Exec Command="pnpm install --force" WorkingDirectory="$(FrontendRoot)" />
-		<Exec Command="pnpm run build" WorkingDirectory="$(FrontendRoot)" />
-
-		<ItemGroup>
-			<FrontendFiles Include="$(FrontendOutputRoot)**\*.*" />
-		</ItemGroup>
-
-		<Copy SourceFiles="@(FrontendFiles)" DestinationFolder="$(OutDir)wwwroot\%(RecursiveDir)" />
-	</Target>
-
 </Project>

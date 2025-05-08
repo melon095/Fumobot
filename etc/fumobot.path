@@ -1,0 +1,9 @@
+[Unit]
+Description=Fumbot Update
+
+[Path]
+PathChanged=/usr/local/fumobot/bin/linux-x64/fumobot
+Unit=fumobot-restart.service
+
+[Install]
+WantedBy=multi-user.target
