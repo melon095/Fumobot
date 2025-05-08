@@ -1,0 +1,22 @@
+[Unit]
+Description=Fumobot
+Wants=network-online.target postgresql.service valkey.service
+After=network-online.target postgresql.service valkey.service
+
+[Service]
+Type=simple
+
+User=fumobot
+Group=fumobot
+
+ExecStart=/usr/lib/fumobot/bin/linux-x64/fumobot /etc/fumobot/config.json
+
+KillMode=process
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=20
+
+WorkingDirectory=/var/lib/fumobot
+
+[Install]
+WantedBy=multi-user.target

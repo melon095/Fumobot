@@ -7,3 +7,6 @@ obj/
 Properties/
 Release/
 deno.lock
+Fumobot
+src/Fumobot
+pkg
