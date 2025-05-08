@@ -10,7 +10,7 @@ replaces=()
 backup=()
 options=()
 install=
-source=('git+https://github.com/melon095/fumobot.git')
+source=('git+https://github.com/melon095/fumobot.git#branch=makepkg')
 noextract=()
 sha256sums=('SKIP')
 

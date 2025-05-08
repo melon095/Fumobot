@@ -9,7 +9,7 @@ Type=simple
 User=fumobot
 Group=fumobot
 
-ExecStart=/usr/local/bin/fumobot/linux-x64/Fumo.Application.dll /etc/fumobot/config.json
+ExecStart=/usr/bin/dotnet /usr/local/bin/fumobot/linux-x64/Fumo.Application.dll /etc/fumobot/config.json
 
 KillMode=process
 Restart=on-failure
