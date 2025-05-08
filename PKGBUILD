@@ -55,7 +55,7 @@ package() {
     install -dm755 "${pkgdir}/usr/lib/fumobot/bin"
 
     cp -dr "${_outdir}/" "${pkgdir}/usr/lib/fumobot/bin"
-    cp -dr "$srcdir/${pkgname%-git}/src/Fumo.Frontend/build/" "${pkgdir}/usr/lib/fumobot/bin/wwwroot"
+    cp -dr "$srcdir/${pkgname%-git}/src/Fumo.Frontend/build/" "${pkgdir}/usr/lib/fumobot/bin/linux-x64/wwwroot"
 
     install -Dm644 etc/fumobot.service "${pkgdir}/usr/lib/systemd/system/fumobot.service"
     install -Dm644 etc/fumobot-restart.service "${pkgdir}/usr/lib/systemd/system/fumobot-restart.service"
