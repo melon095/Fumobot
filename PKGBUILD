@@ -1,10 +1,7 @@
-pkgname=Fumobot-git
+pkgname=fumobot-git
 pkgrel=1
-pkgver=r212.05de798
+pkgver=0
 arch=(x86_64)
-url=""
-license=('GPL')
-groups=()
 depends=("dotnet-runtime>=9.0")
 makedepends=("git" "dotnet-sdk>=9.0" "nodejs" "pnpm")
 provides=("${pkgname}")
@@ -13,7 +10,7 @@ replaces=()
 backup=()
 options=()
 install=
-source=('git+https://github.com/melon095/Fumobot.git')
+source=('git+https://github.com/melon095/fumobot.git')
 noextract=()
 sha256sums=('SKIP')
 
