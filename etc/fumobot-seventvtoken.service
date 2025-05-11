@@ -1,0 +1,9 @@
+[Unit]
+Description=Update 7TV token every 5 minutes
+OnFailure=failure-notification@%n.service
+
+[Service]
+Type=simple
+User=fumobot
+WorkingDirectory=/var/lib/fumobot
+ExecStart=/usr/bin/python3 /usr/local/bin/fumobot/Scripts/cron/SevenTVToken.py

@@ -1,0 +1,10 @@
+[Unit]
+Description=Update 7TV token every 5 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

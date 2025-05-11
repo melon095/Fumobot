@@ -10,3 +10,5 @@ deno.lock
 fumobot
 src/fumobot
 pkg
+.certs
+.idea
