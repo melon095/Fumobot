@@ -57,6 +57,8 @@ package() {
 
     install -Dm644 etc/fumobot.service "${pkgdir}/usr/lib/systemd/system/fumobot.service"
     install -Dm644 etc/fumobot-restart.service "${pkgdir}/usr/lib/systemd/system/fumobot-restart.service"
+    install -Dm644 etc/fumobot-seventvtoken.service "${pkgdir}/usr/lib/systemd/system/fumobot-seventvtoken.service"
+    install -Dm644 etc/fumobot-seventvtoken.timer "${pkgdir}/usr/lib/systemd/system/fumobot-seventvtoken.timer"
     install -Dm644 etc/fumobot.path "${pkgdir}/usr/lib/systemd/system/fumobot.path"
     install -Dm644 etc/fumobot.sysusers "${pkgdir}/usr/lib/sysusers.d/fumobot.conf"
     install -Dm644 etc/fumobot.tmpfiles "${pkgdir}/usr/lib/tmpfiles.d/fumobot.conf"
