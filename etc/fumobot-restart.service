@@ -1,0 +1,6 @@
+[Unit]
+Description=Fumobot Restart
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart fumobot.service

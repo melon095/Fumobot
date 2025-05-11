@@ -1,0 +1,9 @@
+[Unit]
+Description=Fumbot Update
+
+[Path]
+PathChanged=/usr/local/bin/fumobot/linux-x64/Fumo.Application.dll
+Unit=fumobot-restart.service
+
+[Install]
+WantedBy=multi-user.target
