@@ -51,7 +51,7 @@ package() {
     msg "${_outdir}"
     install -dm755 "${pkgdir}/usr/local/bin/fumobot"
 
-    cp -dr "$srcdir/${pkgname%-git}/src/Scripts/" "${pkgdir}/usr/local/bin/fumobot/Scripts"
+    cp -dr "$srcdir/${pkgname%-git}/Scripts/" "${pkgdir}/usr/local/bin/fumobot/Scripts"
     cp -dr "${_outdir}/" "${pkgdir}/usr/local/bin/fumobot"
     cp -dr "$srcdir/${pkgname%-git}/src/Fumo.Frontend/build/" "${pkgdir}/usr/local/bin/fumobot/linux-x64/wwwroot"
 
