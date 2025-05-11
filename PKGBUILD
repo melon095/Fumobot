@@ -2,7 +2,7 @@ pkgname=fumobot-git
 pkgrel=1
 pkgver=0
 arch=(x86_64)
-depends=("dotnet-runtime>=9.0" "aspnet-runtime>=9.0", "python-requests", "python-pyjwt")
+depends=("dotnet-runtime>=9.0" "aspnet-runtime>=9.0" "python-requests" "python-pyjwt")
 makedepends=("git" "dotnet-sdk>=9.0" "nodejs" "pnpm")
 provides=("${pkgname}")
 conflicts=("${pkgname}")
