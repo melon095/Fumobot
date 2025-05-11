@@ -6,11 +6,8 @@ depends=("dotnet-runtime>=9.0" "aspnet-runtime>=9.0")
 makedepends=("git" "dotnet-sdk>=9.0" "nodejs" "pnpm")
 provides=("${pkgname}")
 conflicts=("${pkgname}")
-replaces=()
-backup=()
-options=()
-install=
-source=('git+https://github.com/melon095/fumobot.git#branch=makepkg')
+backup=(etc/fumobot/config.json)
+source=('git+https://github.com/melon095/fumobot.git')
 noextract=()
 sha256sums=('SKIP')
 
