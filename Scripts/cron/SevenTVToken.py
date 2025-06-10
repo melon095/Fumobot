@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3
 
 import requests
 import json
@@ -71,7 +71,7 @@ def main():
 
     session = requests.Session()
 
-    if token and jwt_not_near_expiration(token) and check_auth(session, token):
+    if (token and jwt_not_near_expiration(token)) or check_auth(session, token):
         print("Token is still valid")
         return
 
