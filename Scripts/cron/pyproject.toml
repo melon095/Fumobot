@@ -9,6 +9,6 @@ dependencies = [
     "bs4>=0.0.2",
     "curl-cffi>=0.11.4",
     "datetime>=5.5",
-    "jwt>=1.4.0",
+    "pyjwt>=2.10.1",
     "requests>=2.32.4",
 ]
