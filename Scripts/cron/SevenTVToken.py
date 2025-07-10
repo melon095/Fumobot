@@ -103,18 +103,18 @@ def refresh_token(session: requests.Session, twitch_cookies: str) -> str:
         raise Exception("Failed to find redirect URL")
 
     # Callback
-    def callback_fn(stage_three_url):
-        c = Curl()
-        c.setopt(CurlOpt.URL, stage_three_url)
-        c.setopt(CurlOpt.CUSTOMREQUEST, "GET")
-        c.impersonate("chrome124")
-        try:
-            c.perform()
-        except CurlError as e:
-            print(f"Error during cURL perform: {e}")
-        finally:
-            c.close()
-
+    # def callback_fn(stage_three_url):
+    #     c = Curl()
+    #     c.setopt(CurlOpt.URL, stage_three_url)
+    #     c.setopt(CurlOpt.CUSTOMREQUEST, "GET")
+    #     c.impersonate("chrome124")
+    #     try:
+    #         c.perform()
+    #     except CurlError as e:
+    #         print(f"Error during cURL perform: {e}")
+    #     finally:
+    #         c.close()
+    #
     # callback_fn(stage_three_url.geturl())
 
     def finalize_fn(csrf, stage_three_code):

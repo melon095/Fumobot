@@ -6,4 +6,4 @@ OnFailure=failure-notification@%n.service
 Type=simple
 User=fumobot
 WorkingDirectory=/var/lib/fumobot
-ExecStart=/usr/bin/python3 /usr/local/bin/fumobot/Scripts/cron/SevenTVToken.py
+ExecStart=/usr/bin/env bash -c 'source /usr/local/bin/fumobot/Scripts/cron/.venv/bin/activate && exec /usr/local/bin/fumobot/Scripts/cron/SevenTVToken.py'
