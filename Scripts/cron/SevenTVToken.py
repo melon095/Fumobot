@@ -1,8 +1,8 @@
 #!/usr/bin/env -S python3
 
 from curl_cffi import requests, Curl, CurlOpt, CurlInfo, CurlError
+from curl_cffi.requests import CaseInsensitiveDict
 from io import BytesIO
-from requests.structures import CaseInsensitiveDict
 import json
 import jwt
 from datetime import datetime, timedelta
