@@ -65,6 +65,13 @@ builder
 
 var app = builder.Build();
 
+// https://github.com/dotnet/aspnetcore/issues/45374#issuecomment-1333160959 
+app.Use((c, n) => 
+{
+    c.Request.Scheme = "https";
+    return n(c);
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSerilogRequestLogging();
